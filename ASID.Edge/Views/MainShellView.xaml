@@ -1,0 +1,82 @@
+﻿<UserControl x:Class="ASID.Edge.Views.MainShellView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:pubody="clr-namespace:ASID.Edge.Views.PUBody">
+   <Grid>
+
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="220"/>
+        <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <!-- ================= LEFT NAVIGATION ================= -->
+
+    <Border Grid.Column="0"
+                Background="#0B3A66">
+
+        <DockPanel>
+
+            <TextBlock DockPanel.Dock="Top"
+                           Text="ASID EDGE"
+                           Foreground="White"
+                           FontWeight="Bold"
+                           FontSize="20"
+                           Margin="15"/>
+
+            <StackPanel Margin="10">
+
+                <TextBlock Text="PU BODY"
+                               Foreground="White"
+                               FontWeight="Bold"
+                               Margin="5"/>
+
+                <Button x:Name="btnStorage"
+                            Content="ST001 - Storage"
+                            Click="btnStorage_Click"
+                            Margin="5"
+                            Height="35"/>
+                
+
+                <Button x:Name="btnWithdrawal"
+                            Content="ST002 - Withdrawal"
+                            Click="btnWithdrawal_Click"
+                            Margin="5"
+                            Height="35"/>
+
+                    <Button x:Name="btnP2LoadingBay"
+                            Content="ST003 - P2 Loading Bay"
+                            Click="btnP2LoadingBay_Click"
+                            Margin="5"
+                            Height="35"/>
+
+                    <Button x:Name="btnP1LoadingBay"
+                            Content="ST004 - P1 Loading Bay"
+                            Click="btnP1LoadingBay_Click"
+                            Margin="5"
+                            Height="35"/>
+
+                    <Button x:Name="btnP1Production"
+                            Content="ST005 - P1 Production"
+                            Click="btnP1Production_Click"
+                            Margin="5"
+                            Height="35"/>
+
+                </StackPanel>
+
+        </DockPanel>
+
+    </Border>
+
+    <!-- ================= ACTIVE WORKSTATION ================= -->
+
+    <Border Grid.Column="1"
+                Background="#F2F2F2">
+
+        <ContentControl x:Name="StationHost"/>
+
+    </Border>
+
+    </Grid>
+</UserControl>

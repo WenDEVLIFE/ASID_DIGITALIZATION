@@ -1,0 +1,98 @@
+﻿<UserControl x:Class="ASID.Edge.Views.Controls.DailyDemandControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ASID.Edge.Views.Controls"
+             mc:Ignorable="d" 
+              d:DesignHeight="600"
+             d:DesignWidth="900"
+             d:Background="LightGray">
+
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- Sort buttons -->
+            <RowDefinition Height="*"/>
+            <!-- DataGrid -->
+        </Grid.RowDefinitions>
+
+        <!-- ================= HEADER ================= -->
+        <TextBlock Grid.Row="0"
+                   Text="DAILY DEMAND AND DELIVERY"
+                   Background="#0B3A66"
+                   Foreground="White"
+                   FontWeight="Bold"
+                   Padding="8"
+                   TextAlignment="Center"/>
+
+        <!-- ================= SORT BUTTONS ================= -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Margin="5">
+
+            <!-- MODEL SORT -->
+            <Button Click="SortByModel"
+                    Margin="5"
+                    Padding="10,5"
+                    Background="#E0E0E0"
+                    BorderBrush="#CCCCCC"
+                    BorderThickness="1"
+                    Cursor="Hand">
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Model" Margin="0,0,5,0"/>
+                    <TextBlock Text="▲▼"/>
+                </StackPanel>
+
+            </Button>
+
+            <!-- DATE SORT -->
+            <Button Click="SortByDate"
+                    Margin="5"
+                    Padding="10,5"
+                    Background="#E0E0E0"
+                    BorderBrush="#CCCCCC"
+                    BorderThickness="1"
+                    Cursor="Hand">
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Date" Margin="0,0,5,0"/>
+                    <TextBlock Text="▲▼"/>
+                </StackPanel>
+
+            </Button>
+
+        </StackPanel>
+
+        <!-- ================= DATA GRID ================= -->
+        <DataGrid x:Name="DailyDemandGrid"
+                  Grid.Row="2"
+                  Margin="5"
+                  AutoGenerateColumns="False"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  d:ItemsSource="{d:SampleData ItemCount=10}"
+
+                  RowBackground="White"
+                  AlternatingRowBackground="#EAEAEA"
+                  GridLinesVisibility="All"
+                  HeadersVisibility="Column">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="*"/>
+                <DataGridTextColumn Header="Model Name" Binding="{Binding Model}" Width="*"/>
+                <DataGridTextColumn Header="Part No" Binding="{Binding PartNo}" Width="*"/>
+                <DataGridTextColumn Header="Demand" Binding="{Binding Demand}" Width="*"/>
+                <DataGridTextColumn Header="Delivered to P1" Binding="{Binding DeliveredToP1}" Width="*"/>
+                <DataGridTextColumn Header="Variance" Binding="{Binding Variance}" Width="*"/>
+            </DataGrid.Columns>
+
+        </DataGrid>
+
+    </Grid>
+
+</UserControl>

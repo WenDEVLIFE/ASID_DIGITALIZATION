@@ -1,0 +1,225 @@
+﻿<UserControl x:Class="ASID.Edge.Views.Controls.TransactionHistoryControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600"
+             d:DesignWidth="900"
+             d:Background="LightGray">
+
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+
+            <RowDefinition Height="Auto"/>
+            <!-- Sort Buttons -->
+
+            <RowDefinition Height="Auto"/>
+            <!-- Status Bar -->
+
+            <RowDefinition Height="*"/>
+            <!-- Data Grid -->
+        </Grid.RowDefinitions>
+
+        <!-- ========================================================= -->
+        <!-- HEADER -->
+        <!-- ========================================================= -->
+
+        <Border Grid.Row="0"
+                Background="#0B3A66"
+                Padding="8">
+
+            <TextBlock Text="PU SUPERMARKET TRANSACTION HISTORY"
+                       Foreground="White"
+                       FontWeight="Bold"
+                       FontSize="15"
+                       HorizontalAlignment="Center"/>
+
+        </Border>
+
+        <!-- ========================================================= -->
+        <!-- SORT BUTTONS -->
+        <!-- ========================================================= -->
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Margin="5">
+
+            <!-- Sort by Model -->
+
+            <Button Click="OnSortByModelClick"
+                    Margin="5"
+                    Padding="10,5"
+                    Background="#E0E0E0"
+                    BorderBrush="#CCCCCC"
+                    BorderThickness="1"
+                    Cursor="Hand">
+
+                <Button.Style>
+                    <Style TargetType="Button">
+
+                        <Setter Property="Template">
+
+                            <Setter.Value>
+
+                                <ControlTemplate TargetType="Button">
+
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="6"
+                                            Padding="{TemplateBinding Padding}">
+
+                                        <ContentPresenter
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+
+                                    </Border>
+
+                                </ControlTemplate>
+
+                            </Setter.Value>
+
+                        </Setter>
+
+                        <Style.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter Property="Background"
+                                        Value="#D0D0D0"/>
+
+                            </Trigger>
+
+                        </Style.Triggers>
+
+                    </Style>
+                </Button.Style>
+
+                <StackPanel Orientation="Horizontal">
+
+                    <TextBlock Text="Model"/>
+
+                    <TextBlock Text=" ▲▼"
+                               FontSize="11"/>
+
+                </StackPanel>
+
+            </Button>
+
+            <Button Click="OnSortByDateClick"
+        Margin="5"
+        Padding="10,5"
+        Background="#E0E0E0">
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Date"/>
+                    <TextBlock Text=" ▲▼"/>
+                </StackPanel>
+
+            </Button>
+
+        </StackPanel>
+
+        <!-- ========================================================= -->
+        <!-- STATUS BAR -->
+        <!-- ========================================================= -->
+
+        <Border Grid.Row="2"
+                Margin="5"
+                Padding="6"
+                BorderBrush="#CFCFCF"
+                BorderThickness="1"
+                Background="#F5F5F5">
+
+            <DockPanel>
+
+                <TextBlock Text="Records : "
+                           FontWeight="Bold"/>
+
+                <TextBlock x:Name="TxtRecordCount"
+                           Text="0"/>
+
+                <TextBlock Margin="25,0,0,0"
+                           Text="Last Refresh : "
+                           FontWeight="Bold"/>
+
+                <TextBlock x:Name="TxtLastRefresh"
+                           Text="--"/>
+
+            </DockPanel>
+
+        </Border>
+
+        <!-- ========================================================= -->
+        <!-- TRANSACTION GRID -->
+        <!-- ========================================================= -->
+
+        <DataGrid x:Name="TransactionGrid"
+                  Grid.Row="3"
+                  Margin="5"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  GridLinesVisibility="All"
+                  HeadersVisibility="Column"
+                  RowBackground="White"
+                  AlternatingRowBackground="#EAEAEA"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  d:ItemsSource="{d:SampleData ItemCount=10}">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn
+                                    Header="Status"
+                                    Binding="{Binding Status}"
+                                    Width="*" />
+
+                <DataGridTextColumn Header="Model"
+                                    Binding="{Binding Model}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Part No"
+                                    Binding="{Binding PartNo}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Serial No"
+                                    Binding="{Binding SerialNo}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="SNP"
+                                    Binding="{Binding SNP}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Line No"
+                                    Binding="{Binding LineNo}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Trolley No"
+                                    Binding="{Binding TrolleyNo}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Lane No"
+                                    Binding="{Binding LaneNo}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Date"
+                                    Binding="{Binding Date}"
+                                    Width="*"/>
+
+                <DataGridTextColumn Header="Time"
+                                    Binding="{Binding Time}"
+                                    Width="*"/>
+
+            </DataGrid.Columns>
+
+        </DataGrid>
+
+    </Grid>
+
+</UserControl>

@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ASID.Edge/ASID.Edge.csproj" />
+  <Project Path="ASID_Setup/ASID_Setup.vdproj" Type="Installer">
+    <Build />
+  </Project>
+</Solution>

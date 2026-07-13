@@ -1,0 +1,167 @@
+﻿<UserControl x:Class="ASID.Edge.Views.LeatherLoop.WorkStationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <Grid Margin="10">
+
+        <Grid.RowDefinitions>
+            <!-- Workflow Status -->
+            <RowDefinition Height="Auto"/>
+
+            <!-- Main Content -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===================================================== -->
+        <!-- Workflow Status Banner -->
+        <!-- ===================================================== -->
+
+        <Border Grid.Row="0"
+                Background="#E8F4FD"
+                BorderBrush="DarkGray"
+                BorderThickness="1"
+                Padding="10"
+                Margin="0,0,0,10">
+
+            <StackPanel>
+
+                <TextBlock Text="READY"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="DarkGreen"/>
+
+                <TextBlock Text="Please Scan Operator ID"
+                           Margin="0,5,0,0"/>
+
+            </StackPanel>
+
+        </Border>
+
+        <!-- ===================================================== -->
+        <!-- Workstation -->
+        <!-- ===================================================== -->
+
+        <Grid Grid.Row="1">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ========================================= -->
+            <!-- LEFT PANEL -->
+            <!-- ========================================= -->
+
+            <Border Grid.Column="0"
+                    BorderBrush="Gray"
+                    BorderThickness="1"
+                    Margin="0,0,10,0">
+
+                <Grid>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Login Panel Placeholder -->
+
+                    <Border Margin="10"
+                            BorderBrush="DarkBlue"
+                            BorderThickness="1">
+
+                        <TextBlock Text="Login Panel"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontWeight="Bold"/>
+
+                    </Border>
+
+                </Grid>
+
+            </Border>
+
+            <!-- ========================================= -->
+            <!-- RIGHT PANEL -->
+            <!-- ========================================= -->
+
+            <Grid Grid.Column="1">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="2*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Transaction History -->
+
+                <Border Grid.Row="0"
+                        BorderBrush="Gray"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
+                    <TextBlock Text="TransactionHistoryControl"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontWeight="Bold"/>
+
+                </Border>
+
+                <!-- Inventory + Withdrawal -->
+
+                <Grid Grid.Row="1" Margin="0,0,0,10">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            BorderBrush="Gray"
+                            BorderThickness="1"
+                            Margin="0,0,5,0">
+
+                        <TextBlock Text="InventoryControl"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontWeight="Bold"/>
+
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            BorderBrush="Gray"
+                            BorderThickness="1"
+                            Margin="5,0,0,0">
+
+                        <TextBlock Text="WithdrawalControl"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontWeight="Bold"/>
+
+                    </Border>
+
+                </Grid>
+
+                <!-- Daily Demand -->
+
+                <Border Grid.Row="2"
+                        BorderBrush="Gray"
+                        BorderThickness="1">
+
+                    <TextBlock Text="DailyDemandControl"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontWeight="Bold"/>
+
+                </Border>
+
+            </Grid>
+
+        </Grid>
+
+    </Grid>
+
+</UserControl>

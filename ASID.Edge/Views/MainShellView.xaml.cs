@@ -1,0 +1,104 @@
+﻿using ASID.Edge.Services;
+using ASID.Edge.Views.PUBody;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+namespace ASID.Edge.Views
+{
+    public partial class MainShellView : UserControl
+    {
+        private readonly TcpScannerService _scanner = new();
+
+        private readonly StorageWorkStationView _storage;
+        private readonly WithdrawalWorkStationView _withdrawal;
+        private readonly P2LoadingBayWorkStationView _p2LoadingBay;
+        private readonly P1LoadingBayWorkStationView _p1LoadingBay;
+        private readonly P1ProductionWorkStationView _p1Production;
+
+        public MainShellView()
+        {
+            InitializeComponent();
+
+            _storage = new StorageWorkStationView(_scanner);
+            _withdrawal = new WithdrawalWorkStationView(_scanner);
+            _p2LoadingBay = new P2LoadingBayWorkStationView(_scanner);
+            _p1LoadingBay = new P1LoadingBayWorkStationView(_scanner);
+            _p1Production = new P1ProductionWorkStationView(_scanner);
+
+            _ = _scanner.StartAsync();
+
+            _storage.Activate();
+
+            StationHost.Content = _storage;
+
+        }
+
+        private void btnStorage_Click(object sender, RoutedEventArgs e)
+        {
+            _storage.Activate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Deactivate();
+
+            StationHost.Content = _storage;
+        }
+
+        private void btnWithdrawal_Click(object sender, RoutedEventArgs e)
+        {
+
+            _storage.Deactivate();
+            _withdrawal.Activate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Deactivate();
+
+            StationHost.Content = _withdrawal;
+        }
+
+        private void btnP2LoadingBay_Click(object sender, RoutedEventArgs e)
+        {
+
+            _storage.Deactivate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Activate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Deactivate();
+
+            StationHost.Content = _p2LoadingBay;
+        }
+
+        private void btnP1LoadingBay_Click(object sender, RoutedEventArgs e)
+        {
+
+            _storage.Deactivate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Activate();
+            _p1Production.Deactivate();
+
+            StationHost.Content = _p1LoadingBay;
+        }
+
+        private void btnP1Production_Click(object sender, RoutedEventArgs e)
+        {
+
+            _storage.Deactivate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Activate();
+
+            StationHost.Content = _p1Production;
+        }
+
+    }
+}
