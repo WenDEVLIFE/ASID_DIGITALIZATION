@@ -12,9 +12,9 @@ namespace ASID.Edge.Services
             {
                 ProductionLoop = p.ElementAtOrDefault(0) ?? "",
                 
-                Model = "PU BODY RH", //change this later to get from datbase
+                Model = "PU BODY", //change this later to get from datbase
 
-                PartNo = p.ElementAtOrDefault(1) ?? "",
+                PartNo = (p.ElementAtOrDefault(1) ?? "").TrimStart('P'),
 
                 Quantity = ParseQty(p.ElementAtOrDefault(2)),
 

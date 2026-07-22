@@ -9,8 +9,10 @@ namespace ASID.Edge.Repositories.Interfaces
     {
         void Add(StorageTransaction transaction);
 
+        StorageTransaction? GetByDataMatrix(string dataMatrix);
+
         IReadOnlyList<StorageTransaction> GetAll();
 
-        void Clear();
+        void Update(StorageTransaction transaction);
     }
 }

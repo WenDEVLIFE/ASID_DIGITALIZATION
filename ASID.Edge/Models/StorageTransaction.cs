@@ -6,6 +6,7 @@ namespace ASID.Edge.Models
 {
     public class StorageTransaction
     {
+        public string Station { get; set; } = "";
         public string DataMatrix { get; set; } = "";
 
         public string OperatorId { get; set; } = "";
@@ -31,5 +32,11 @@ namespace ASID.Edge.Models
         public DateTime CreatedAt { get; set; }
 
         public DateTime? WithdrawnAt { get; set; }
+
+        public DateTime? ForPickupAt { get; set; }
+
+        public DateTime? ReceivedAt { get; set; }
+
+        public DateTime? ConsumedAt { get; set; }
     }
 }

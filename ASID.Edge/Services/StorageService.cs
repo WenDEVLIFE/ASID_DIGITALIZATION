@@ -1,15 +1,18 @@
 ﻿using ASID.Edge.Mapping;
 using ASID.Edge.Models;
+using ASID.Edge.Repositories.Interfaces;
 using ASID.Edge.Repositories.Memory;
+using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
 using ASID.Edge.Workflows.PUBody.Storage;
 using System;
 
 public class StorageService
 {
-    private readonly MemoryTransactionRepository _repository;
+    //private readonly MemoryTransactionRepository _repository;
+    private readonly ITransactionRepository _repository;
 
-    public StorageService(MemoryTransactionRepository repository)
+    public StorageService(ITransactionRepository repository)
     {
         _repository = repository;
     }
@@ -47,11 +50,15 @@ public class StorageService
         };
 
         transaction.SerialNo = serial;
+        transaction.Station = "ST001";
         transaction.Status = MaterialStatus.Stored;
 
         transaction.Model = item.Model;
         transaction.PartNo = item.PartNo;
         transaction.SNP = item.SNP;
+        transaction.Station = "ST001";
+        //TODO: Change later to this --
+        //transaction.Station = AppConfig.StationId;
 
         // Save to repository
         _repository.Add(transaction);

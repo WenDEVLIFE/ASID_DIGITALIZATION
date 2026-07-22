@@ -1,9 +1,12 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories;
+using ASID.Edge.Repositories.Interfaces;
 using ASID.Edge.Repositories.Memory;
 using ASID.Edge.Services;
+using ASID.Edge.Views.Controllers;
 using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.Dialogs;
+using ASID.Edge.Workflows;
 using ASID.Edge.Workflows.PUBody.Withdrawal;
 using System;
 using System.Collections.Generic;
@@ -27,34 +30,37 @@ namespace ASID.Edge.Views.PUBody
     {
         private readonly WorkflowManager _workflowManager = new();
         private readonly TcpScannerService _scanner = new();
-        private readonly MemoryTransactionRepository _transactionRepository = RepositoryProvider.Transactions;
-        private readonly List<PUBodyTransactionHistoryItem> _history = RepositoryProvider.TransactionHistory;
-        private readonly List<PUBodyInventoryItem> _inventory = RepositoryProvider.Inventory;
-        private readonly List<PUBodyWithdrawalItem> _withdrawal = RepositoryProvider.Withdrawal;
-
-
         private bool _isListening;
+        private readonly DashboardController _dashboardController;
+
+        private readonly WithdrawalService _withdrawalService =
+            ServiceProvider.Withdrawal;
 
         public WithdrawalWorkStationView(TcpScannerService scanner)
         {
             InitializeComponent();
+
             WithdrawalPortal.ScanCompleted += WithdrawalPortal_ScanCompleted;
+
             _scanner = scanner;
+
+            _dashboardController =
+                new DashboardController(
+                    ServiceProvider.Dashboard,
+                    TransactionHistory,
+                    Inventory,
+                    Withdrawal,
+                    DailyDemand);
 
             var workflow = new WithdrawalWorkflow();
 
             workflow.Start();
-            RefreshUI();
-            Loaded += (_, _) => RefreshUI();
 
             _workflowManager.LoadWorkflow(workflow);
 
             workflow.Completed += Workflow_Completed;
 
-            WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
-
-
-
+            Loaded += (_, _) => RefreshUI();
         }
 
         public void Activate()
@@ -78,23 +84,24 @@ namespace ASID.Edge.Views.PUBody
         }
 
         private void WithdrawalPortal_ScanCompleted(
-                object? sender,
-                string barcode)
+            object? sender,
+            string barcode)
         {
             if (_workflowManager.CurrentWorkflow == null)
                 return;
 
             _workflowManager.CurrentWorkflow.ProcessScan(barcode);
 
-            WorkflowStatus.UpdateMessage(
-                _workflowManager.CurrentWorkflow.CurrentMessage);
+            RefreshUI();
         }
 
-        private void Scanner_BarcodeReceived(object? sender, string barcode)
+        private void Scanner_BarcodeReceived(
+            object? sender,
+            string barcode)
         {
             Dispatcher.Invoke(() =>
             {
-                if (_workflowManager.CurrentWorkflow == null)
+                if (_workflowManager.CurrentWorkflow is null)
                     return;
 
                 _workflowManager.CurrentWorkflow.ProcessScan(barcode);
@@ -103,94 +110,33 @@ namespace ASID.Edge.Views.PUBody
                     _workflowManager.CurrentWorkflow.CurrentMessage);
 
             });
-
         }
 
-        private void Workflow_Completed(object? sender, EventArgs e)
+        private async void Workflow_Completed(object? sender, EventArgs e)
         {
+            var workflow =
+                (WithdrawalWorkflow)_workflowManager.CurrentWorkflow!;
 
-            //MessageBox.Show("Workflow_Completed fired");
+            _withdrawalService.Commit(workflow.Context);
 
-            var workflow = (WithdrawalWorkflow)_workflowManager.CurrentWorkflow!;
+            MessageBox.Show("Withdrawal Transaction Completed");
 
-            //MessageBox.Show(workflow.Context.Transaction.DataMatrix);
+            await Task.Delay(3000);
 
-            var transaction = workflow.Context.Transaction;
-
-            transaction.Status = MaterialStatus.Withdrawn;
-
-            RepositoryProvider.Withdrawal.Insert(0,
-            new PUBodyWithdrawalItem
-            {
-                Date = DateTime.Now.ToString("yyyy-MM-dd"),
-
-                Time = DateTime.Now.ToString("HH:mm:ss"),
-
-                Model = transaction.Model,
-
-                PartNo = transaction.PartNo,
-
-                TrolleyNo = transaction.TrolleyNo,
-
-                Quantity = Convert.ToInt32(transaction.SNP),
-            });
-
-
-            var inventory = RepositoryProvider.Inventory
-            .FirstOrDefault(x =>
-                x.Model == transaction.Model &&
-                x.PartNo == transaction.PartNo);
-
-            var history = RepositoryProvider.TransactionHistory
-                .FirstOrDefault(x =>
-                    x.SerialNo == transaction.SerialNo);
-
-            if (history != null)
-            {
-                history.Status = MaterialStatus.Withdrawn;
-                transaction.Status = MaterialStatus.Withdrawn;
-            }
-
-            if (inventory != null)
-            {
-                inventory.InventoryByLocation_PUBodySupermarket -= transaction.SNP;
-
-                inventory.InventoryFloating += transaction.SNP;
-            }
-
-                    Inventory.Load(
-            RepositoryProvider.Inventory);
-
-            TransactionHistory.Load(
-                RepositoryProvider.TransactionHistory);
-
-            Withdrawal.Load(
-                RepositoryProvider.Withdrawal.ToList());
-
-            MessageBox.Show("Withdrawal Completed");
+            workflow.Reset();
 
             RefreshUI();
         }
 
-
         private void RefreshUI()
         {
-            if (_workflowManager.CurrentWorkflow is WithdrawalWorkflow workflow)
-            {
-                WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
-            }
+            if (_workflowManager.CurrentWorkflow is not WithdrawalWorkflow workflow)
+                return;
 
-            //TransactionHistory.Load(_history);
+            WorkflowStatus.UpdateMessage(
+                workflow.CurrentMessage);
 
-            //Inventory.Load(_inventory);
-
-            TransactionHistory.Load(RepositoryProvider.TransactionHistory);
-
-            Inventory.Load(RepositoryProvider.Inventory);
-
-            Withdrawal.Load(RepositoryProvider.Withdrawal);
-
-            DailyDemand.Load(RepositoryProvider.DailyDemand);
+            _dashboardController.Refresh();
         }
 
     }

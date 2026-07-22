@@ -68,11 +68,11 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Model Name" Binding="{Binding Model}" Width="*"/>
                 <DataGridTextColumn Header="Part No" Binding="{Binding PartNo}" Width="*"/>
-                <DataGridTextColumn Header="P2 Supermarket" Binding="{Binding InventoryByLocation_PUBodySupermarket}" Width="*"/>
+                <DataGridTextColumn Header="P2 Supermarket" Binding="{Binding InventoryP2Supermarket}" Width="*"/>
                 <DataGridTextColumn Header="Floating" Binding="{Binding InventoryFloating}" Width="*"/>
-                <DataGridTextColumn Header="P2 Loading Bay" Binding="{Binding InventoryByLocation_P2LoadingBay}" Width="*"/>
-                <DataGridTextColumn Header="P1 Loading Bay" Binding="{Binding InventoryByLocation_P1LoadingBay}" Width="*"/>
-                <DataGridTextColumn Header="P1 Production" Binding="{Binding InventoryByLocation_P1Production}" Width="*"/>
+                <DataGridTextColumn Header="P2 Loading Bay" Binding="{Binding InventoryP2LoadingBay}" Width="*"/>
+                <DataGridTextColumn Header="P1 Loading Bay" Binding="{Binding InventoryP1LoadingBay}" Width="*"/>
+                <DataGridTextColumn Header="P1 Production" Binding="{Binding InventoryP1Production}" Width="*"/>
             </DataGrid.Columns>
 
         </DataGrid>

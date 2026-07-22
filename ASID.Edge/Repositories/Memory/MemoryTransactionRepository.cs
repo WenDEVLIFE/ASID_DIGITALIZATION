@@ -21,6 +21,25 @@ namespace ASID.Edge.Repositories.Memory
             return _transactions;
         }
 
+        public StorageTransaction? GetByDataMatrix(string dataMatrix)
+        {
+            return _transactions
+                .FirstOrDefault(x => x.DataMatrix == dataMatrix);
+        }
+
+        public void Update(StorageTransaction transaction)
+        {
+            var existing = _transactions
+                .FirstOrDefault(x => x.DataMatrix == transaction.DataMatrix);
+
+            if (existing == null)
+                return;
+
+            existing.Status = transaction.Status;
+            existing.WithdrawnAt = transaction.WithdrawnAt;
+            existing.Station = transaction.Station;
+        }
+
         public void Clear()
         {
             _transactions.Clear();

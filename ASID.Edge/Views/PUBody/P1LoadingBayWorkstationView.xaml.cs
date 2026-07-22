@@ -1,7 +1,9 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories;
+using ASID.Edge.Repositories.Interfaces;
 using ASID.Edge.Repositories.Memory;
 using ASID.Edge.Services;
+using ASID.Edge.Views.Controllers;								  
 using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.Dialogs;
 using ASID.Edge.Workflows.PUBody.P1LoadingBay;
@@ -27,34 +29,39 @@ namespace ASID.Edge.Views.PUBody
     {
         private readonly WorkflowManager _workflowManager = new();
         private readonly TcpScannerService _scanner =new();
-        private readonly MemoryTransactionRepository _transactionRepository = RepositoryProvider.Transactions;
-        private readonly List<PUBodyTransactionHistoryItem> _history =
-    RepositoryProvider.TransactionHistory;
-
-        private readonly List<PUBodyInventoryItem> _inventory =
-            RepositoryProvider.Inventory;
+							 
 
         private bool _isListening;
+		private readonly DashboardController _dashboardController;
+       private readonly P1LoadingBayService _p1LoadingBayService =
+            ServiceProvider.P1LoadingBay;
+
 
         public P1LoadingBayWorkStationView(TcpScannerService scanner)
         {
             InitializeComponent();
             P1LoadingBayPortal.ScanCompleted += P1LoadingBayPortal_ScanCompleted;
-            // _scanner.BarcodeReceived += Scanner_BarcodeReceived;
+																   
             _scanner = scanner;
-            //_ = _scanner.StartAsync();
+			            _dashboardController =
+                new DashboardController(
+                    ServiceProvider.Dashboard,
+                    TransactionHistory,
+                    Inventory,
+                    Withdrawal,
+                    DailyDemand);							
 
             var workflow = new P1LoadingBayWorkflow();
 
             workflow.Start();
-            RefreshUI();
-            Loaded += (_, _) => RefreshUI();
+
+											
 
             _workflowManager.LoadWorkflow(workflow);
 
             workflow.Completed += Workflow_Completed;
 
-            WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
+            Loaded += (_, _) => RefreshUI();
 
 
         }
@@ -87,16 +94,16 @@ namespace ASID.Edge.Views.PUBody
                 return;
 
             _workflowManager.CurrentWorkflow.ProcessScan(barcode);
-
-            WorkflowStatus.UpdateMessage(
-                _workflowManager.CurrentWorkflow.CurrentMessage);
+				
+				RefreshUI();
+																 
         }
 
         private void Scanner_BarcodeReceived(object? sender, string barcode)
         {
             Dispatcher.Invoke(() =>
             {
-                if (_workflowManager.CurrentWorkflow == null)
+                if (_workflowManager.CurrentWorkflow is null)
                     return;
 
                 _workflowManager.CurrentWorkflow.ProcessScan(barcode);
@@ -104,96 +111,43 @@ namespace ASID.Edge.Views.PUBody
                 WorkflowStatus.UpdateMessage(
                     _workflowManager.CurrentWorkflow.CurrentMessage);
 
-                //WithdrawalPortal.UpdateFromContext(
-                //    ((StorageWorkflow)_workflowManager.CurrentWorkflow).Context);
+													 
+																				   
             });
 
-            //RefreshUI();
+						  
         }
 
-        private void Workflow_Completed(object? sender, EventArgs e)
+        private async void Workflow_Completed(object? sender, EventArgs e)
         {
-
-            //MessageBox.Show("Workflow_Completed fired");
+												  
 
             var workflow =
                 (P1LoadingBayWorkflow)_workflowManager.CurrentWorkflow!;
 
-            //MessageBox.Show(workflow.Context.Transaction.DataMatrix);
-
-            var transaction = workflow.Context.Transaction;
-
-            transaction.Status = MaterialStatus.Received;
-
-            //MessageBox.Show(transaction.Status.ToString());
-
-
-            var inventory = RepositoryProvider.Inventory
-            .FirstOrDefault(x =>
-                x.Model == transaction.Model &&
-                x.PartNo == transaction.PartNo);
-
-            var history = RepositoryProvider.TransactionHistory
-                .FirstOrDefault(x =>
-                    x.SerialNo == transaction.SerialNo);
-
-            if (history != null)
-            {
-                history.Status = MaterialStatus.Received;
-                transaction.Status = MaterialStatus.Received;
-            }
-
-            if (inventory != null)
-            {
-
-                inventory.InventoryByLocation_P2LoadingBay -= transaction.SNP;
-
-                inventory.InventoryByLocation_P1LoadingBay += transaction.SNP;
-            }
-
-                    Inventory.Load(
-            RepositoryProvider.Inventory);
-
-            TransactionHistory.Load(
-                RepositoryProvider.TransactionHistory);
-
-            //Update Daily Demand
-
-            var demand = RepositoryProvider.DailyDemand
-                .FirstOrDefault(x =>
-                    x.PartNo == transaction.PartNo &&
-                    x.Date == DateTime.Now.ToString("yyyy-MM-dd"));
-
-            if (demand != null)
-            {
-                demand.DeliveredToP1 += Convert.ToInt32(transaction.SNP);
-            }
-
+            _p1LoadingBayService.Commit(workflow.Context);
 
             MessageBox.Show("P1 Loading Bay Transaction Completed");
 
+            await Task.Delay(3000);
+
+            workflow.Reset();
+										
+
             RefreshUI();
         }
-            
+
 
         private void RefreshUI()
         {
-            if (_workflowManager.CurrentWorkflow is P1LoadingBayWorkflow workflow)
-            {
-                WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
-            }
+            if (_workflowManager.CurrentWorkflow is not P1LoadingBayWorkflow workflow)
+                return;
 
-            //TransactionHistory.Load(_history);
+            WorkflowStatus.UpdateMessage(
+                workflow.CurrentMessage);
 
-            //Inventory.Load(_inventory);
-
-            TransactionHistory.Load(RepositoryProvider.TransactionHistory);
-
-            Inventory.Load(RepositoryProvider.Inventory);
-
-            Withdrawal.Load(RepositoryProvider.Withdrawal);
-
-            DailyDemand.Load(RepositoryProvider.DailyDemand);
+            _dashboardController.Refresh();				 
+											 								 
         }
 
     }

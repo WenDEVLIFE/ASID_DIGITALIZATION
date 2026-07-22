@@ -3,4 +3,5 @@
   <Project Path="ASID_Setup/ASID_Setup.vdproj" Type="Installer">
     <Build />
   </Project>
+  <Project Path="dbTest/dbTest.csproj" Id="a57eb8d6-75ee-4c0d-87ca-16cbc177f779" />
 </Solution>

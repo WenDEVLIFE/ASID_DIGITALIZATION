@@ -1,5 +1,6 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories;
+using ASID.Edge.Repositories.Interfaces;
 using ASID.Edge.Repositories.Memory;
 using ASID.Edge.Validation;
 using System;
@@ -12,14 +13,14 @@ namespace ASID.Edge.Services
 {
     public class P1LoadingBayValidationService
     {
-        private readonly MemoryTransactionRepository _repository =
-            RepositoryProvider.Transactions;
+		private readonly ITransactionRepository _repository = RepositoryProvider.Transactions;
 
         public ValidationResult Validate(string dataMatrix)
         {
-            var transaction = _repository
-                .GetAll()
-                .FirstOrDefault(x => x.DataMatrix == dataMatrix);
+            // var transaction = _repository
+                // .GetAll()
+                // .FirstOrDefault(x => x.DataMatrix == dataMatrix);
+			var transaction = _repository.GetByDataMatrix(dataMatrix);																 
 
             if (transaction == null)
             {

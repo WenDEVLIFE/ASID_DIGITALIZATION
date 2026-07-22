@@ -1,10 +1,14 @@
 ﻿
 //#define OFFLINE
 using ASID.Edge.Models;
+using ASID.Edge.Repositories;
+using ASID.Edge.Repositories.Interfaces;
 using ASID.Edge.Repositories.Memory;
 using ASID.Edge.Services;
+using ASID.Edge.Views.Controllers;
 using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.Dialogs;
+using ASID.Edge.Workflows;
 using ASID.Edge.Workflows.PUBody.Storage;
 using System;
 using System.Collections.Generic;
@@ -17,7 +21,6 @@ using System.Windows.Input;
 using System.Windows.Media; 
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using ASID.Edge.Repositories;
 
 
 namespace ASID.Edge.Views.PUBody
@@ -29,20 +32,11 @@ namespace ASID.Edge.Views.PUBody
     {
         private readonly WorkflowManager _workflowManager = new();
         private readonly TcpScannerService _scanner;
-        private readonly MemoryTransactionRepository _transactionRepository = RepositoryProvider.Transactions;
-
-        private readonly StorageService _storageService;
-
-        private readonly List<PUBodyTransactionHistoryItem> _history =
-            RepositoryProvider.TransactionHistory;
-
-        private readonly List<PUBodyInventoryItem> _inventory =
-            RepositoryProvider.Inventory;
-
-        private readonly List<PUBodyDailyDemandItem> _dailyDemand =
-    RepositoryProvider.DailyDemand;
-
         private bool _isListening;
+        private readonly DashboardController _dashboardController;
+        private readonly StorageService _storageService =
+    ServiceProvider.Storage;
+
 
 
         public StorageWorkStationView(TcpScannerService scanner)
@@ -68,7 +62,14 @@ namespace ASID.Edge.Views.PUBody
 
             WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
 
-            _storageService = new StorageService(_transactionRepository);
+            _dashboardController =
+                new DashboardController(
+                    ServiceProvider.Dashboard,
+                    TransactionHistory,
+                    Inventory,
+                    Withdrawal,
+                    DailyDemand);
+
 
 
         }
@@ -126,7 +127,7 @@ namespace ASID.Edge.Views.PUBody
                     ((StorageWorkflow)_workflowManager.CurrentWorkflow).Context);
             });
 
-            RefreshUI();
+            //RefreshUI();
         }
 
         private void LoginPortal_ApplyRequested(object? sender, EventArgs e)
@@ -139,7 +140,7 @@ namespace ASID.Edge.Views.PUBody
             LoginPortal.UpdateFromContext(
                 ((StorageWorkflow)_workflowManager.CurrentWorkflow).Context);
 
-            RefreshUI();
+            //RefreshUI();
         }
 
         private void LoginPortal_PrintRequested(object? sender, EventArgs e)
@@ -215,65 +216,7 @@ namespace ASID.Edge.Views.PUBody
         {
             var workflow = (StorageWorkflow)_workflowManager.CurrentWorkflow!;
 
-            var item = _storageService.Commit(workflow.Context);
-
-            //Update transaction history
-
-            _history.Insert(0, item);
-
-            //Update Daily Demand
-
-            var dailyDemand = RepositoryProvider.DailyDemand
-                .FirstOrDefault(x =>
-                    x.PartNo == item.PartNo &&
-                    x.Date == item.Date);
-
-            if (dailyDemand == null)
-            {
-                dailyDemand = new PUBodyDailyDemandItem
-                {
-                    Date = item.Date,
-                    Model = item.Model,
-                    PartNo = item.PartNo,
-                    Demand = item.SNP,
-                    DeliveredToP1 = 0
-                };
-
-                //RepositoryProvider.DailyDemand.Add(demand);
-                _dailyDemand.Add(dailyDemand);
-            }
-            else
-            {
-                dailyDemand.Demand += item.SNP;
-            }
-
-
-            //Update Inventory
-
-            var inventoryItem = _inventory.FirstOrDefault(x =>
-                x.Model == item.Model &&
-                x.PartNo == item.PartNo);
-
-            if (inventoryItem == null)
-            {
-                inventoryItem = new PUBodyInventoryItem
-                {
-                    Model = item.Model,
-                    PartNo = item.PartNo,
-                    InventoryByLocation_PUBodySupermarket = item.SNP
-                };
-
-                _inventory.Add(inventoryItem);
-            }
-            else
-            {
-                inventoryItem.InventoryByLocation_PUBodySupermarket += item.SNP;
-            }
-
-
-            TransactionHistory.Load(_history);
-            Inventory.Load(_inventory);
-            DailyDemand.Load(_dailyDemand);
+            _storageService.Commit(workflow.Context);
 
             MessageBox.Show("Storage Transaction Completed");
 
@@ -282,36 +225,20 @@ namespace ASID.Edge.Views.PUBody
             workflow.Reset();
             RefreshUI();
 
-            //debug
-            var transactions = RepositoryProvider.Transactions.GetAll();
-
-            var text = string.Join(Environment.NewLine,
-                transactions.Select(t =>
-                    $"{t.DataMatrix} | {t.Model} | {t.SerialNo}"));
-
-            //MessageBox.Show(text);
-
         }
 
         private void RefreshUI()
         {
-            var workflow = (StorageWorkflow)_workflowManager.CurrentWorkflow!;
+            if (_workflowManager.CurrentWorkflow is not StorageWorkflow workflow)
+                return;
 
-            WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
+            WorkflowStatus.UpdateMessage(
+                workflow.CurrentMessage);
 
-            LoginPortal.UpdateFromContext(workflow.Context);
+            LoginPortal.UpdateFromContext(
+                workflow.Context);
 
-            //TransactionHistory.Load(_history);
-
-            //Inventory.Load(_inventory);
-
-            TransactionHistory.Load(RepositoryProvider.TransactionHistory);
-
-            Inventory.Load(RepositoryProvider.Inventory);
-
-            Withdrawal.Load(RepositoryProvider.Withdrawal);
-
-            DailyDemand.Load(RepositoryProvider.DailyDemand);
+            _dashboardController.Refresh();
         }
     }
 }
