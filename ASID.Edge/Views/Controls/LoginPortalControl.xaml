@@ -68,7 +68,7 @@
 
                 <!-- Line -->
                 <Button x:Name="btnLineLabel"
-                        Content="Line No."
+                        Content="Cell No."
                        Grid.Row="2"
                        Grid.Column="0"
                        Margin="5"

@@ -124,7 +124,7 @@ namespace ASID.Edge.Views.PUBody
 
             _p1ProductionService.Commit(workflow.Context);
 
-            MessageBox.Show("P1 Production Transaction Completed");
+            AutoCloseMessageBox.Show("Success", "P1 Production Transaction Completed");
 
             await Task.Delay(3000);
 

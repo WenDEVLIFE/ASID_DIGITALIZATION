@@ -1,6 +1,7 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Services;
 using ASID.Edge.Validation;
+using ASID.Edge.Views.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -108,7 +109,7 @@ namespace ASID.Edge.Workflows.PUBody.P2LoadingBay
 
                 NotifyChanged();
 
-                MessageBox.Show(result.Message);
+                AutoCloseMessageBox.Show("Error", result.Message);
 
                 return;
             }

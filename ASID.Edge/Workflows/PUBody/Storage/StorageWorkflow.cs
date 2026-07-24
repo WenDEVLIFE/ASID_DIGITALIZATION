@@ -144,7 +144,7 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 
         public void ProcessScan(string barcode)
         {
-            //MessageBox.Show(_context.State.ToString());
+
             if (_context.State == WorkflowState.WaitingForVerification)
 
             {

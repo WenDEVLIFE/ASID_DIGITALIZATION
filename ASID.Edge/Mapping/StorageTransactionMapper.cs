@@ -31,7 +31,7 @@ namespace ASID.Edge.Mapping
                 // Transaction metadata
                 Station = "ST001",
                 Status = MaterialStatus.Stored,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now           
             };
         }
     }

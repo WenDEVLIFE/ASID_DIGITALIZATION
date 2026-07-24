@@ -118,7 +118,7 @@ namespace ASID.Edge.Views.PUBody
 
             _p2LoadingBayService.Commit(workflow.Context);
 
-            MessageBox.Show("P2 Loading Bay Transaction Completed");
+            AutoCloseMessageBox.Show("Success", "P2 Loading Bay Transaction Completed");
 
             await Task.Delay(3000);
 

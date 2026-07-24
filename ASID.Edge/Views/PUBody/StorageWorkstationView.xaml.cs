@@ -218,7 +218,7 @@ namespace ASID.Edge.Views.PUBody
 
             _storageService.Commit(workflow.Context);
 
-            MessageBox.Show("Storage Transaction Completed");
+            AutoCloseMessageBox.Show("Success", "Storage Transaction Completed");
 
             await Task.Delay(3000);
             LoginPortal.ClearFields();

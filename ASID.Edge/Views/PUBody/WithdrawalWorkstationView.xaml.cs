@@ -119,7 +119,7 @@ namespace ASID.Edge.Views.PUBody
 
             _withdrawalService.Commit(workflow.Context);
 
-            MessageBox.Show("Withdrawal Transaction Completed");
+            AutoCloseMessageBox.Show("Success", "Withdrawal Transaction Completed");
 
             await Task.Delay(3000);
 
