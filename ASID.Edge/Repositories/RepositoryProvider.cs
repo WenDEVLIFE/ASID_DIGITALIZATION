@@ -15,6 +15,9 @@ namespace ASID.Edge.Repositories
         // Storage Transactions (used by workflows)
         public static ITransactionRepository Transactions
             = new PostgreSqlTransactionRepository();
+        public static IDailyDemandRepository DailyDemands { get; } =
+    new PostgreSqlDailyDemandRepository();
+
 
         // Shared UI Data
         public static List<PUBodyTransactionHistoryItem> TransactionHistory { get; }

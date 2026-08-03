@@ -29,44 +29,72 @@
                    Padding="8"
                    TextAlignment="Center"/>
 
-        <!-- ================= SORT BUTTONS ================= -->
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    Margin="5">
+        <!-- ================= TOOLBAR ================= -->
+        <Grid Grid.Row="1" Margin="5">
 
-            <!-- MODEL SORT -->
-            <Button Click="SortByModel"
-                    Margin="5"
-                    Padding="10,5"
-                    Background="#E0E0E0"
-                    BorderBrush="#CCCCCC"
-                    BorderThickness="1"
-                    Cursor="Hand">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT : Sort Buttons -->
+            <StackPanel Orientation="Horizontal">
+
+                <!-- MODEL SORT -->
+                <Button Click="SortByModel"
+                Margin="5"
+                Padding="10,5"
+                Background="#E0E0E0"
+                BorderBrush="#CCCCCC"
+                BorderThickness="1"
+                Cursor="Hand">
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Model" Margin="0,0,5,0"/>
+                        <TextBlock Text="▲▼"/>
+                    </StackPanel>
+
+                </Button>
+
+                <!-- DATE SORT -->
+                <Button Click="SortByDate"
+                Margin="5"
+                Padding="10,5"
+                Background="#E0E0E0"
+                BorderBrush="#CCCCCC"
+                BorderThickness="1"
+                Cursor="Hand">
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Date" Margin="0,0,5,0"/>
+                        <TextBlock Text="▲▼"/>
+                    </StackPanel>
+
+                </Button>
+
+            </StackPanel>
+
+            <!-- RIGHT : Import Button -->
+            <Button Grid.Column="1"
+            x:Name="ImportPlannerButton"
+            Click="ImportPlanner_Click"
+            Margin="5"
+            Padding="15,5"
+            Background="#0B3A66"
+            Foreground="White"
+            FontWeight="SemiBold"
+            Cursor="Hand">
 
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Model" Margin="0,0,5,0"/>
-                    <TextBlock Text="▲▼"/>
+                    <TextBlock Text="📂"
+                       Margin="0,0,8,0"
+                       FontSize="14"/>
+                    <TextBlock Text="Import Production Plan"/>
                 </StackPanel>
 
             </Button>
 
-            <!-- DATE SORT -->
-            <Button Click="SortByDate"
-                    Margin="5"
-                    Padding="10,5"
-                    Background="#E0E0E0"
-                    BorderBrush="#CCCCCC"
-                    BorderThickness="1"
-                    Cursor="Hand">
-
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Date" Margin="0,0,5,0"/>
-                    <TextBlock Text="▲▼"/>
-                </StackPanel>
-
-            </Button>
-
-        </StackPanel>
+        </Grid>
 
         <!-- ================= DATA GRID ================= -->
         <DataGrid x:Name="DailyDemandGrid"

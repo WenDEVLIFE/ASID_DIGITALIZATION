@@ -1,5 +1,6 @@
 ﻿using ASID.Edge.Services;
 using ASID.Edge.Views.Controls;
+using System.Windows.Threading;
 
 namespace ASID.Edge.Views.Controllers
 {
@@ -11,6 +12,8 @@ namespace ASID.Edge.Views.Controllers
         private readonly InventoryControl _inventory;
         private readonly WithdrawalControl _withdrawal;
         private readonly DailyDemandControl _dailyDemand;
+
+        private readonly DispatcherTimer _refreshTimer = new();
 
         public DashboardController(
             DashboardService dashboard,
@@ -25,6 +28,22 @@ namespace ASID.Edge.Views.Controllers
             _inventory = inventory;
             _withdrawal = withdrawal;
             _dailyDemand = dailyDemand;
+
+            _refreshTimer.Interval = TimeSpan.FromSeconds(5);
+            _refreshTimer.Tick += (_, _) => Refresh();
+
+            Refresh();          // Initial load
+            _refreshTimer.Start();
+        }
+        public void StartAutoRefresh()
+        {
+            Refresh();              // Initial load
+            _refreshTimer.Start();
+        }
+
+        public void StopAutoRefresh()
+        {
+            _refreshTimer.Stop();
         }
 
         public void Refresh()

@@ -1,6 +1,5 @@
-﻿using ASID.Edge.Models;
-using ASID.Edge.Repositories.Interfaces;
-using ASID.Edge.Repositories.PostgreSql;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,17 +8,16 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace ASID.Edge
+namespace ASID.Edge.Views
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for ProductionPlanningView.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class ProductionPlanningView : Window
     {
-        public MainWindow()
+        public ProductionPlanningView()
         {
             InitializeComponent();
         }

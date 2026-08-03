@@ -1,4 +1,9 @@
-﻿using ASID.Edge.Models;
+﻿using ASID.Edge.Helpers;
+using ASID.Edge.Models;
+using ASID.Edge.Repositories.PostgreSql;
+using ASID.Edge.Services;
+using ASID.Edge.Views.Dialogs;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -59,6 +64,44 @@ namespace ASID.Edge.Views.Controls
                 dateAsc ? ListSortDirection.Ascending : ListSortDirection.Descending));
 
             dateAsc = !dateAsc;
+        }
+
+        private readonly DailyDemandService _dailyDemandService = new(
+            new PostgreSqlDailyDemandRepository());
+
+        private void ImportPlanner_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Import Production Plan",
+                Filter = "Excel Files (*.xlsx)|*.xlsx"
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            try
+            {
+                var repository = new PostgreSqlDailyDemandRepository();
+
+                var demands = ExcelImporter.Parse(dialog.FileName);
+
+                repository.DeleteAll();
+
+                repository.Insert(demands);
+
+                AutoCloseMessageBox.Show(
+                    "Import Successful",
+                    $"{demands.Count} records imported successfully.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.ToString(),
+                    "Import Failed",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
     }
 }

@@ -6,7 +6,9 @@ namespace ASID.Edge.Services
     {
         public static DashboardService Dashboard { get; } =
             new DashboardService(
-                RepositoryProvider.Transactions);
+                RepositoryProvider.Transactions,
+                RepositoryProvider.DailyDemands);
+
 
         public static StorageService Storage { get; } =
             new StorageService(
