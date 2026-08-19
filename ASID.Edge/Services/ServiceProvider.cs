@@ -29,5 +29,9 @@ RepositoryProvider.Transactions);
         public static P1ProductionService P1Production { get; } =
 new P1ProductionService(
 RepositoryProvider.Transactions);
+
+        public static NonConformanceService NonConformance { get; } =
+        new NonConformanceService(
+            RepositoryProvider.Transactions);
     }
 }

@@ -38,5 +38,7 @@ namespace ASID.Edge.Models
         public DateTime? ReceivedAt { get; set; }
 
         public DateTime? ConsumedAt { get; set; }
+        public bool IsSuspectedNC { get; set; }
+
     }
 }

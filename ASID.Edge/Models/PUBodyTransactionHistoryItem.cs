@@ -26,5 +26,10 @@ namespace ASID.Edge.Models
         public string Date { get; set; } = "";
 
         public string Time { get; set; } = "";
+
+        public bool IsSuspectedNC { get; set; }
+
+        public string NCIndicator =>
+    IsSuspectedNC ? "⚠" : "";
     }
 }

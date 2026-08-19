@@ -72,6 +72,7 @@ SELECT
     trolley_no AS TrolleyNo,
     station AS Station,
     status AS Status,
+    is_suspected_nc AS IsSuspectedNC,
     created_at AS CreatedAt,
     withdrawn_at AS WithdrawnAt,
 forpickup_at AS ForPickupAt,
@@ -108,6 +109,7 @@ SELECT
     trolley_no AS TrolleyNo,
     station AS Station,
     status AS Status,
+    is_suspected_nc AS IsSuspectedNC,
     created_at AS CreatedAt,
     withdrawn_at AS WithdrawnAt,
 forpickup_at AS ForPickupAt,
@@ -129,6 +131,7 @@ FROM transactions;
 UPDATE transactions
 SET
     status = @Status,
+    is_suspected_nc = @IsSuspectedNC,
     station = @Station,
     withdrawn_at = @WithdrawnAt,
     forpickup_at = @ForPickupAt,
