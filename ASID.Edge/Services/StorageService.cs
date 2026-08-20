@@ -1,7 +1,6 @@
 ﻿using ASID.Edge.Mapping;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
-using ASID.Edge.Repositories.Memory;
 using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
 using ASID.Edge.Workflows.PUBody.Storage;
@@ -9,7 +8,6 @@ using System;
 
 public class StorageService
 {
-    //private readonly MemoryTransactionRepository _repository;
     private readonly ITransactionRepository _repository;
 
     public StorageService(ITransactionRepository repository)

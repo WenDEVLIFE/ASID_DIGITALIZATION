@@ -1,7 +1,6 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories;
 using ASID.Edge.Repositories.Interfaces;
-using ASID.Edge.Repositories.Memory;
 using ASID.Edge.Validation;
 using System;
 using System.Collections.Generic;

@@ -1,6 +1,5 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
-using ASID.Edge.Repositories.Memory;
 using ASID.Edge.Repositories.PostgreSql;
 using System;
 using System.Collections.Generic;
