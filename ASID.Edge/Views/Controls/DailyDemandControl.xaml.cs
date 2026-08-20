@@ -1,5 +1,4 @@
-﻿using ASID.Edge.Helpers;
-using ASID.Edge.Models;
+﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Dialogs;
@@ -25,6 +24,12 @@ namespace ASID.Edge.Views.Controls
     /// </summary>
     public partial class DailyDemandControl : UserControl
     {
+        /// <summary>
+        /// Raised after a successful Excel import so the hosting view
+        /// can refresh its own dashboard immediately.
+        /// </summary>
+        public event EventHandler? ImportCompleted;
+
         public DailyDemandControl()
         {
             InitializeComponent();
@@ -82,17 +87,13 @@ namespace ASID.Edge.Views.Controls
 
             try
             {
-                var repository = new PostgreSqlDailyDemandRepository();
-
-                var demands = ExcelImporter.Parse(dialog.FileName);
-
-                repository.DeleteAll();
-
-                repository.Insert(demands);
+                var count = _dailyDemandService.ImportExcel(dialog.FileName);
 
                 AutoCloseMessageBox.Show(
                     "Import Successful",
-                    $"{demands.Count} records imported successfully.");
+                    $"{count} records imported successfully.");
+
+                ImportCompleted?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
