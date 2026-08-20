@@ -91,14 +91,26 @@ public static class Database
 
     private static string BuildConnectionString(IReadOnlyDictionary<string, string> values)
     {
-        string host = GetRequiredValue(values, "ASID_DB_HOST");
-        string port = GetRequiredValue(values, "ASID_DB_PORT");
-        string database = GetRequiredValue(values, "ASID_DB_NAME");
-        string username = GetRequiredValue(values, "ASID_DB_USER");
-        string password = GetRequiredValue(values, "ASID_DB_PASSWORD");
+        // Choose the active variable prefix based on the ASID_USE_LOCAL toggle.
+        //   ASID_USE_LOCAL=true  -> ASID_LOCAL_DB_* (localhost)
+        //   ASID_USE_LOCAL=false -> ASID_DB_*       (cloud / Neon)
+        bool useLocal = GetRequiredValue(values, "ASID_USE_LOCAL")
+            .Equals("true", StringComparison.OrdinalIgnoreCase);
+
+        string prefix = useLocal ? "ASID_LOCAL_DB_" : "ASID_DB_";
+
+        string host = GetRequiredValue(values, prefix + "HOST");
+        string port = GetRequiredValue(values, prefix + "PORT");
+        string database = GetRequiredValue(values, prefix + "NAME");
+        string username = GetRequiredValue(values, prefix + "USER");
+        string password = GetRequiredValue(values, prefix + "PASSWORD");
+
+        // Local connections use plain password auth over TCP; the SSL/Channel
+        // Binding options are only meaningful for the Neon (cloud) endpoint.
+        string sslOptions = useLocal ? "" : "SSL Mode=Require;Channel Binding=Require;";
 
         return $"Host={host};Port={port};Database={database};Username={username};Password={password};" +
-               "SSL Mode=Require;Channel Binding=Require;";
+               sslOptions;
     }
 
     private static string GetRequiredValue(
