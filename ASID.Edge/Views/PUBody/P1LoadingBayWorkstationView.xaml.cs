@@ -48,7 +48,10 @@ namespace ASID.Edge.Views.PUBody
                     TransactionHistory,
                     Inventory,
                     Withdrawal,
-                    DailyDemand);							
+                    DailyDemand);
+
+            TransactionHistory.RefreshRequested += (_, _) => _dashboardController.Refresh();
+            DailyDemand.ImportCompleted += (_, _) => _dashboardController.Refresh();
 
             var workflow = new P1LoadingBayWorkflow();
 

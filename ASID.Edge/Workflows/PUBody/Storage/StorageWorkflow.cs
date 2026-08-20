@@ -13,9 +13,11 @@ namespace ASID.Edge.Workflows.PUBody.Storage
         public StorageContext Context => _context;
         public WorkflowState CurrentState => _context.State;
 
-        private readonly StorageValidationService _validation = new();
+        private readonly StorageValidationService _validation =
+            ServiceProvider.StorageValidation;
         public event EventHandler? WorkflowChanged;
         public event EventHandler? Completed;
+        public event EventHandler? LaneSelectionRequested;
 
         private readonly DataMatrixService _dmService = new();
 
@@ -213,11 +215,30 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             _context.TrolleyNo = barcode;
             _context.State = WorkflowState.WaitingForLane;
             NotifyChanged();
+
+            // The view owns the vacancy UI: it queries vacant lanes,
+            // shows the selection popup and calls ConfirmLane with the result.
+            LaneSelectionRequested?.Invoke(this, EventArgs.Empty);
         }
         private void HandleLane(string barcode)
         {
-            _context.LaneNo = barcode;
+            // While waiting for the lane, any scan re-triggers the vacancy
+            // popup (fresh vacancy query). The lane is only confirmed through
+            // ConfirmLane, which is called by the view after the operator
+            // selects a vacant lane in the popup.
+            LaneSelectionRequested?.Invoke(this, EventArgs.Empty);
+        }
 
+        /// <summary>
+        /// Confirms the selected lane and moves the workflow to validation.
+        /// Only valid while waiting for the lane scan.
+        /// </summary>
+        public void ConfirmLane(string laneNo)
+        {
+            if (_context.State != WorkflowState.WaitingForLane)
+                return;
+
+            _context.LaneNo = laneNo;
             _context.State = WorkflowState.ReadyForValidation;
             NotifyChanged();
         }
@@ -230,6 +251,8 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             var threshold =
                 _validation.CheckInventoryThreshold(_context.KanbanNo);
 
+            _context.ThresholdValidated = threshold.Success;
+
             if (!threshold.Success)
             {
                 _context.State = WorkflowState.Error;
@@ -241,6 +264,8 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 
             var lane =
                 _validation.CheckAssignedLane(_context.LaneNo);
+
+            _context.LaneValidated = lane.Success;
 
             if (!lane.Success)
             {
@@ -307,6 +332,8 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             _context.TrolleyNo = "";
             _context.LaneNo = "";
             _context.DataMatrix = "";
+            _context.ThresholdValidated = false;
+            _context.LaneValidated = false;
 
             Start();
 

@@ -23,6 +23,12 @@ namespace ASID.Edge.Views.Controls
     /// </summary>
     public partial class TransactionHistoryControl : UserControl
     {
+        /// <summary>
+        /// Raised after a successful suspected-NC flag so the hosting view
+        /// can refresh its own dashboard immediately.
+        /// </summary>
+        public event EventHandler? RefreshRequested;
+
         public TransactionHistoryControl()
         {
             InitializeComponent();
@@ -93,7 +99,7 @@ namespace ASID.Edge.Views.Controls
                     "Success",
                     "Material flagged as Suspected NC.");
 
-                //DashboardController.Refresh();
+                RefreshRequested?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {

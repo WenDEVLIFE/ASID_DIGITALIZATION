@@ -35,6 +35,7 @@ namespace ASID.Edge.Views.PUBody
         private readonly DashboardController _dashboardController;
         private readonly StorageService _storageService =
     ServiceProvider.Storage;
+        private LaneSelectionDialog? _laneDialog;
 
 
 
@@ -56,6 +57,8 @@ namespace ASID.Edge.Views.PUBody
             _workflowManager.LoadWorkflow(workflow);
             workflow.Completed += Workflow_Completed;
 
+            workflow.LaneSelectionRequested += Workflow_LaneSelectionRequested;
+
             WorkflowStatus.UpdateMessage(
                 _workflowManager.CurrentWorkflow!.CurrentMessage);
 
@@ -68,6 +71,9 @@ namespace ASID.Edge.Views.PUBody
                     Inventory,
                     Withdrawal,
                     DailyDemand);
+
+            TransactionHistory.RefreshRequested += (_, _) => _dashboardController.Refresh();
+            DailyDemand.ImportCompleted += (_, _) => _dashboardController.Refresh();
 
 
 
@@ -94,6 +100,54 @@ namespace ASID.Edge.Views.PUBody
             _scanner.BarcodeReceived -= Scanner_BarcodeReceived;
 
             _isListening = false;
+        }
+
+        /// <summary>
+        /// Raised by the workflow on entering the lane step (and on any
+        /// re-scan while waiting for the lane). Queries the vacant lanes and
+        /// shows the modal selection dialog; on confirmation, hands the
+        /// selected lane back to the workflow.
+        /// </summary>
+        private void Workflow_LaneSelectionRequested(object? sender, EventArgs e)
+        {
+            // The dialog is modal and pumps the dispatcher; a hardware scan
+            // arriving while it is open re-enters this handler. Skip it — the
+            // dialog itself validates scans against the vacant list.
+            if (_laneDialog != null)
+                return;
+
+            var vacantLanes =
+                ServiceProvider.StorageValidation.GetVacantLanes();
+
+            if (vacantLanes.Count == 0)
+            {
+                AutoCloseMessageBox.Show(
+                    "No Vacant Lanes",
+                    "All lanes are currently occupied. Please wait until a lane becomes vacant.");
+
+                return;
+            }
+
+            var dialog = new LaneSelectionDialog(vacantLanes)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            _laneDialog = dialog;
+
+            var result = dialog.ShowDialog();
+
+            _laneDialog = null;
+
+            if (result == true)
+            {
+                if (_workflowManager.CurrentWorkflow is StorageWorkflow workflow)
+                {
+                    workflow.ConfirmLane(dialog.SelectedLane);
+
+                    RefreshUI();
+                }
+            }
         }
 
 

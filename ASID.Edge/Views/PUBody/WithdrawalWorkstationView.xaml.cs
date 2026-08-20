@@ -51,6 +51,9 @@ namespace ASID.Edge.Views.PUBody
                     Withdrawal,
                     DailyDemand);
 
+            TransactionHistory.RefreshRequested += (_, _) => _dashboardController.Refresh();
+            DailyDemand.ImportCompleted += (_, _) => _dashboardController.Refresh();
+
             var workflow = new WithdrawalWorkflow();
 
             workflow.Start();
