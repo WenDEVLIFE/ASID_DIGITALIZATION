@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Mapping;
+using ASID.Edge.Mapping;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
 using System.Collections.Generic;
@@ -49,7 +49,7 @@ namespace ASID.Edge.Services
 
         public List<PUBodyDailyDemandItem> GetDailyDemand()
         {
-            var demands = _dailyDemandRepository.GetByDate(DateTime.Today);
+            var demands = _dailyDemandRepository.GetAll();
 
             return demands
                 .GroupBy(x => new

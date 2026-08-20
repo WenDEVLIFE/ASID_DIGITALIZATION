@@ -1,7 +1,8 @@
-﻿using ASID.Edge.Models;
+using ASID.Edge.Models;
 using OfficeOpenXml;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ASID.Edge.Helpers
 {
@@ -12,7 +13,8 @@ namespace ASID.Edge.Helpers
         private const int FirstDataRow = 5;
 
         private const int ModelColumn = 2;
-        private const int FirstDemandColumn = 5;
+        private const int PartNoColumn = 4;
+        private const int FirstDemandColumn = 6;
 
         public static List<DailyDemand> Parse(string filePath)
         {
@@ -21,6 +23,10 @@ namespace ASID.Edge.Helpers
             using var package = new ExcelPackage(new FileInfo(filePath));
 
             var worksheet = package.Workbook.Worksheets["Body Supply"];
+            if (worksheet == null || worksheet.Dimension == null)
+            {
+                return new List<DailyDemand>();
+            }
 
             var result = new List<DailyDemand>();
 
@@ -29,15 +35,20 @@ namespace ASID.Edge.Helpers
 
             for (int row = FirstDataRow; row <= lastRow; row++)
             {
-                string model =
-                    worksheet.Cells[row, ModelColumn].Text.Trim();
+                string model = worksheet.Cells[row, ModelColumn].Text.Trim();
 
                 if (string.IsNullOrWhiteSpace(model))
                     continue;
 
+                string partNo = worksheet.Cells[row, PartNoColumn].Text.Trim();
+                if (string.IsNullOrWhiteSpace(partNo))
+                {
+                    partNo = model;
+                }
+
                 for (int col = FirstDemandColumn; col <= lastColumn; col++)
                 {
-                    //Read qunatity
+                    // Read quantity
                     string quantityText = worksheet.Cells[row, col].Text.Trim();
 
                     int quantity = 0;
@@ -53,24 +64,31 @@ namespace ASID.Edge.Helpers
 
                     // Read production date
                     int dateColumn = col - ((col - FirstDemandColumn) % 3);
+                    var dateCellVal = worksheet.Cells[DateRow, dateColumn].Value;
+                    DateTime productionDate;
 
-                    if (!DateTime.TryParse(
-                        worksheet.Cells[DateRow, dateColumn].Text,
-                        out DateTime productionDate))
+                    if (dateCellVal is double dVal)
+                    {
+                        productionDate = DateTime.FromOADate(dVal);
+                    }
+                    else if (dateCellVal is DateTime dtVal)
+                    {
+                        productionDate = dtVal;
+                    }
+                    else if (!DateTime.TryParse(worksheet.Cells[DateRow, dateColumn].Text, out productionDate))
                     {
                         continue;
                     }
 
                     // Read shift
-                    short shift = GetShift(
-                        worksheet.Cells[ShiftRow, col].Text);
+                    short shift = GetShift(worksheet.Cells[ShiftRow, col].Text);
 
                     result.Add(new DailyDemand
                     {
                         ProductionDate = productionDate,
                         Shift = shift,
                         Model = model,
-                        PartNo = model, //temporary workaround because no mapping of model and partNo
+                        PartNo = partNo,
                         Quantity = quantity
                     });
                 }

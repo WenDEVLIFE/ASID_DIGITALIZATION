@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Helpers;
+using ASID.Edge.Helpers;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
@@ -89,6 +89,26 @@ namespace ASID.Edge.Views.Controls
                 repository.DeleteAll();
 
                 repository.Insert(demands);
+
+                var displayItems = demands
+                    .GroupBy(x => new
+                    {
+                        x.Model,
+                        x.PartNo,
+                        x.ProductionDate
+                    })
+                    .Select(g => new PUBodyDailyDemandItem
+                    {
+                        Date = g.Key.ProductionDate.ToString("yyyy-MM-dd"),
+                        Model = g.Key.Model,
+                        PartNo = g.Key.PartNo,
+                        Demand = g.Sum(x => x.Quantity),
+                        DeliveredToP1 = 0
+                    })
+                    .OrderBy(x => x.Model)
+                    .ToList();
+
+                Load(displayItems);
 
                 AutoCloseMessageBox.Show(
                     "Import Successful",

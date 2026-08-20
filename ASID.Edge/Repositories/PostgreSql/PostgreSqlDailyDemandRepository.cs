@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Database;
+using ASID.Edge.Database;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
 using Dapper;
@@ -71,5 +71,29 @@ ORDER BY
             sql,
             new { date })
             .ToList();
+    }
+
+    public List<DailyDemand> GetAll()
+    {
+        using var connection =
+            Database.Database.CreateConnection();
+
+        connection.Open();
+
+        const string sql = @"
+SELECT
+    id AS Id,
+    CAST(production_date AS timestamp) AS ProductionDate,
+    shift AS Shift,
+    model AS Model,
+    part_no AS PartNo,
+    quantity AS Quantity
+FROM daily_demand
+ORDER BY
+    production_date,
+    part_no,
+    shift;";
+
+        return connection.Query<DailyDemand>(sql).ToList();
     }
 }
