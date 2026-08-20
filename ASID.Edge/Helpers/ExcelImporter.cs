@@ -5,6 +5,21 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ASID.Edge.Helpers
 {
+    /// <summary>
+    /// Parses the daily production plan from an Excel workbook.
+    /// </summary>
+    /// <remarks>
+    /// Confirmed layout (worksheet "Body Supply"):
+    /// <list type="bullet">
+    /// <item>Date row = 2</item>
+    /// <item>Shift row = 4</item>
+    /// <item>First data row = 5</item>
+    /// <item>Model column = 2</item>
+    /// <item>First demand column = 5</item>
+    /// <item>Demand blocks of 3 columns (3 shifts per production date)</item>
+    /// </list>
+    /// Quantity cells containing "-" or empty parse as zero.
+    /// </remarks>
     public static class ExcelImporter
     {
         private const int DateRow = 2;
