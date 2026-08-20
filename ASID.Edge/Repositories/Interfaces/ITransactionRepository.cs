@@ -13,6 +13,8 @@ namespace ASID.Edge.Repositories.Interfaces
 
         IReadOnlyList<StorageTransaction> GetAll();
 
+        IReadOnlyList<LaneOccupancy> GetLaneOccupancy();
+
         void Update(StorageTransaction transaction);
     }
 }
