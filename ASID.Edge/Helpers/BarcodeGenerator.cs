@@ -88,7 +88,12 @@ namespace ASID.Edge.Helpers
                 }
             }
 
-            return new DrawingImage(drawingGroup);
+            DrawingImage img = new DrawingImage(drawingGroup);
+            if (img.CanFreeze)
+            {
+                img.Freeze();
+            }
+            return img;
         }
     }
 }

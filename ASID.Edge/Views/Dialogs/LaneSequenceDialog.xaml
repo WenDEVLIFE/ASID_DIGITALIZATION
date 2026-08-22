@@ -1,0 +1,14 @@
+<Window x:Class="ASID.Edge.Views.Dialogs.LaneSequenceDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:ASID.Edge.Views.Controls"
+        Title="Lane Sequence"
+        Height="420"
+        Width="340"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="White">
+    <Grid Margin="10">
+        <controls:LaneSequenceControl x:Name="LaneSequence"/>
+    </Grid>
+</Window>

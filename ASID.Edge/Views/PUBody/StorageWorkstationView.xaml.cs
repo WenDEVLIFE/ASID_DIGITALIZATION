@@ -73,19 +73,29 @@ namespace ASID.Edge.Views.PUBody
 
         private void LaneSequence_LaneSelected(object? sender, string laneCode)
         {
-            var dlg = new LaneBarcodeDialog(laneCode)
+            try
             {
-                Owner = Window.GetWindow(this)
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                if (_workflowManager.CurrentWorkflow is StorageWorkflow workflow)
+                var dlg = new LaneBarcodeDialog(laneCode);
+                var window = Window.GetWindow(this);
+                if (window != null && window.IsLoaded && window.IsVisible)
                 {
-                    workflow.ProcessScan(dlg.LaneCode);
-                    WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
-                    LoginPortal.UpdateFromContext(workflow.Context);
+                    dlg.Owner = window;
+                    dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 }
+
+                if (dlg.ShowDialog() == true)
+                {
+                    if (_workflowManager.CurrentWorkflow is StorageWorkflow workflow)
+                    {
+                        workflow.ProcessScan(dlg.LaneCode);
+                        WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
+                        LoginPortal.UpdateFromContext(workflow.Context);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to display lane barcode dialog: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
