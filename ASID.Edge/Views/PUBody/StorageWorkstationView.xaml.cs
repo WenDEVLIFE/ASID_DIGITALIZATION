@@ -45,7 +45,6 @@ namespace ASID.Edge.Views.PUBody
             LoginPortal.ApplyRequested += LoginPortal_ApplyRequested;
             LoginPortal.PrintRequested += LoginPortal_PrintRequested;
             LoginPortal.CancelRequested += LoginPortal_CancelRequested;
-            LaneSequence.LaneSelected += LaneSequence_LaneSelected;
             //Loaded += WorkStationView_Loaded;
             _scanner = scanner;
 
@@ -71,31 +70,41 @@ namespace ASID.Edge.Views.PUBody
                     DailyDemand);
         }
 
-        private void LaneSequence_LaneSelected(object? sender, string laneCode)
+        private void CheckAndShowLaneSequenceDialog()
         {
-            try
+            if (_workflowManager.CurrentWorkflow is StorageWorkflow workflow &&
+                workflow.CurrentState == WorkflowState.WaitingForLane)
             {
-                var dlg = new LaneBarcodeDialog(laneCode);
-                var window = Window.GetWindow(this);
-                if (window != null && window.IsLoaded && window.IsVisible)
+                try
                 {
-                    dlg.Owner = window;
-                    dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-                }
-
-                if (dlg.ShowDialog() == true)
-                {
-                    if (_workflowManager.CurrentWorkflow is StorageWorkflow workflow)
+                    var seqDlg = new LaneSequenceDialog();
+                    var window = Window.GetWindow(this);
+                    if (window != null && window.IsLoaded && window.IsVisible)
                     {
-                        workflow.ProcessScan(dlg.LaneCode);
-                        WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
-                        LoginPortal.UpdateFromContext(workflow.Context);
+                        seqDlg.Owner = window;
+                    }
+
+                    if (seqDlg.ShowDialog() == true && !string.IsNullOrEmpty(seqDlg.SelectedLane))
+                    {
+                        var barcodeDlg = new LaneBarcodeDialog(seqDlg.SelectedLane);
+                        if (window != null && window.IsLoaded && window.IsVisible)
+                        {
+                            barcodeDlg.Owner = window;
+                        }
+
+                        if (barcodeDlg.ShowDialog() == true)
+                        {
+                            workflow.ProcessScan(barcodeDlg.LaneCode);
+                            WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
+                            LoginPortal.UpdateFromContext(workflow.Context);
+                            RefreshUI();
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Unable to display lane barcode dialog: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Unable to display lane sequence dialog: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -123,8 +132,6 @@ namespace ASID.Edge.Views.PUBody
             _isListening = false;
         }
 
-
-
         private void LoginPortal_ScanCompleted(object? sender, string barcode)
         {
             if (_workflowManager.CurrentWorkflow == null)
@@ -136,7 +143,7 @@ namespace ASID.Edge.Views.PUBody
                 _workflowManager.CurrentWorkflow.CurrentMessage);
 
             RefreshUI();
-
+            CheckAndShowLaneSequenceDialog();
         }
 
         private void Scanner_BarcodeReceived(object? sender, string barcode)
@@ -151,6 +158,8 @@ namespace ASID.Edge.Views.PUBody
                 
                 LoginPortal.UpdateFromContext(
                     ((StorageWorkflow)_workflowManager.CurrentWorkflow).Context);
+
+                CheckAndShowLaneSequenceDialog();
             });
 
             //RefreshUI();
