@@ -41,6 +41,7 @@ namespace ASID.Edge.Models
         public bool IsSuspectedNC { get; set; }
         public bool IsNCConfirmed { get; set; }
         public bool IsNCRejected { get; set; }
+        public int NCQuantity { get; set; }
 
     }
 }

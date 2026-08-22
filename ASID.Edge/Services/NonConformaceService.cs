@@ -36,6 +36,23 @@ namespace ASID.Edge.Services
             _repository.Update(transaction);
         }
 
+        public void RegisterNCItem(string dataMatrix, int ncQuantity)
+        {
+            var transaction = _repository.GetByDataMatrix(dataMatrix);
+
+            if (transaction == null)
+            {
+                throw new Exception("Material not found.");
+            }
+
+            transaction.IsSuspectedNC = false;
+            transaction.IsNCConfirmed = true;
+            transaction.IsNCRejected = false;
+            transaction.NCQuantity = ncQuantity > 0 ? ncQuantity : 1;
+
+            _repository.Update(transaction);
+        }
+
         public void ConfirmNC(string dataMatrix)
         {
             var transaction = _repository.GetByDataMatrix(dataMatrix);

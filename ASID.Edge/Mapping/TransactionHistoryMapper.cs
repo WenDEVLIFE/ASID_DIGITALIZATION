@@ -20,7 +20,8 @@ namespace ASID.Edge.Mapping
                 Status = t.Status,
                 IsSuspectedNC = t.IsSuspectedNC,
                 IsNCConfirmed = t.IsNCConfirmed,
-                IsNCRejected = t.IsNCRejected
+                IsNCRejected = t.IsNCRejected,
+                NCQuantity = t.NCQuantity
             };
         }
     }

@@ -86,14 +86,13 @@ namespace ASID.Edge.Views.Controls
             {
                 ServiceProvider
                     .NonConformance
-                    .FlagAsSuspected(
-                        dialog.DataMatrix);
+                    .RegisterNCItem(
+                        dialog.DataMatrix,
+                        dialog.NCQuantity);
 
                 AutoCloseMessageBox.Show(
                     "Success",
-                    "Material flagged as Suspected NC.");
-
-                //DashboardController.Refresh();
+                    $"Material flagged as NC (Quantity: {dialog.NCQuantity}).");
             }
             catch (Exception ex)
             {

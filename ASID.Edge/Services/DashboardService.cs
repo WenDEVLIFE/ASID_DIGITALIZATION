@@ -58,17 +58,22 @@ namespace ASID.Edge.Services
                     x.PartNo,
                     x.ProductionDate
                 })
-                .Select(g => new PUBodyDailyDemandItem
+                .Select(g =>
                 {
-                    Date = g.Key.ProductionDate.ToString("yyyy-MM-dd"),
-                    Model = g.Key.Model,
-                    PartNo = g.Key.PartNo,
-                    Demand = g.Sum(x => x.Quantity),
+                    var matchingTx = Transactions.Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo).ToList();
+                    int totalDelivered = matchingTx.Where(t => t.Status == MaterialStatus.Withdrawn || t.Status == MaterialStatus.Received || t.Status == MaterialStatus.Consumed).Sum(t => t.SNP);
+                    int totalNC = matchingTx.Where(t => t.IsNCConfirmed || t.NCQuantity > 0).Sum(t => t.NCQuantity > 0 ? t.NCQuantity : t.SNP);
+                    int delivered = Math.Max(0, totalDelivered - totalNC);
 
-                    P2Inventory = 0,
-
-                    // We'll calculate this later
-                    DeliveredToP1 = 0
+                    return new PUBodyDailyDemandItem
+                    {
+                        Date = g.Key.ProductionDate.ToString("yyyy-MM-dd"),
+                        Model = g.Key.Model,
+                        PartNo = g.Key.PartNo,
+                        Demand = g.Sum(x => x.Quantity),
+                        P2Inventory = matchingTx.Where(t => t.Status == MaterialStatus.Stored).Sum(t => t.SNP),
+                        DeliveredToP1 = delivered
+                    };
                 })
                 .OrderBy(x => x.Model)
                 .ToList();
