@@ -1,4 +1,4 @@
-﻿
+
 //#define OFFLINE
 using ASID.Edge.Models;
 using ASID.Edge.Repositories;
@@ -45,6 +45,7 @@ namespace ASID.Edge.Views.PUBody
             LoginPortal.ApplyRequested += LoginPortal_ApplyRequested;
             LoginPortal.PrintRequested += LoginPortal_PrintRequested;
             LoginPortal.CancelRequested += LoginPortal_CancelRequested;
+            LaneSequence.LaneSelected += LaneSequence_LaneSelected;
             //Loaded += WorkStationView_Loaded;
             _scanner = scanner;
 
@@ -68,10 +69,26 @@ namespace ASID.Edge.Views.PUBody
                     Inventory,
                     Withdrawal,
                     DailyDemand);
-
-
-
         }
+
+        private void LaneSequence_LaneSelected(object? sender, string laneCode)
+        {
+            var dlg = new LaneBarcodeDialog(laneCode)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                if (_workflowManager.CurrentWorkflow is StorageWorkflow workflow)
+                {
+                    workflow.ProcessScan(dlg.LaneCode);
+                    WorkflowStatus.UpdateMessage(workflow.CurrentMessage);
+                    LoginPortal.UpdateFromContext(workflow.Context);
+                }
+            }
+        }
+
         private void WorkStationView_Loaded(object sender, RoutedEventArgs e)
         {
             RefreshUI();

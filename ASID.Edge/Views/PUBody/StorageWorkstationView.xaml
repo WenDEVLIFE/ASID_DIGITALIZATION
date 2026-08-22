@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ASID.Edge.Views.PUBody.StorageWorkStationView"
+<UserControl x:Class="ASID.Edge.Views.PUBody.StorageWorkStationView"
         xmlns:controls="clr-namespace:ASID.Edge.Views.Controls"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,6 +8,7 @@
         mc:Ignorable="d">
     <!--Title="PU Body Supermarket Inventory" Height="500" Width="900"-->
 
+    <!-- ================= MAIN GRID ================= -->
     <Grid Margin="10">
 
         <Grid.ColumnDefinitions>
@@ -28,7 +29,7 @@
                     <!-- Login Portal -->
 
                     <RowDefinition Height="*"/>
-                    <!-- Spacer -->
+                    <!-- Spacer / Lane Sequence -->
 
                     <RowDefinition Height="Auto"/>
                     <!-- Workflow Status -->
@@ -39,8 +40,10 @@
                     Grid.Row="0"
                     x:Name ="LoginPortal"/>
 
-                <!-- Spacer -->
-                <Grid Grid.Row="1"/>
+                <!-- Lane Sequence Structure docked under portal -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,10,0,10">
+                    <controls:LaneSequenceControl x:Name="LaneSequence" Visibility="Visible"/>
+                </ScrollViewer>
 
                 <!-- Workflow Status -->
                 <controls:WorkflowStatusControl
@@ -98,7 +101,8 @@
 
         </Border>
 
+        <!-- Modal Popup for Lane Barcode when requested -->
     </Grid>
+</UserControl>
 
-    </UserControl>
 
