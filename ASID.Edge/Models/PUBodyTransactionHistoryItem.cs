@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -28,8 +28,14 @@ namespace ASID.Edge.Models
         public string Time { get; set; } = "";
 
         public bool IsSuspectedNC { get; set; }
+        public bool IsNCConfirmed { get; set; }
+        public bool IsNCRejected { get; set; }
 
         public string NCIndicator =>
-    IsSuspectedNC ? "⚠" : "";
+            IsNCConfirmed ? "NC" :
+            IsNCRejected ? "Rejected NC" :
+            IsSuspectedNC ? "Suspected NC" : "";
+
+        public string NCRemarks => NCIndicator;
     }
 }

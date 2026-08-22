@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Repositories.Interfaces;
+using ASID.Edge.Repositories.Interfaces;
 
 namespace ASID.Edge.Services
 {
@@ -30,6 +30,40 @@ namespace ASID.Edge.Services
             }
 
             transaction.IsSuspectedNC = true;
+            transaction.IsNCConfirmed = false;
+            transaction.IsNCRejected = false;
+
+            _repository.Update(transaction);
+        }
+
+        public void ConfirmNC(string dataMatrix)
+        {
+            var transaction = _repository.GetByDataMatrix(dataMatrix);
+
+            if (transaction == null)
+            {
+                throw new Exception("Material not found.");
+            }
+
+            transaction.IsSuspectedNC = false;
+            transaction.IsNCConfirmed = true;
+            transaction.IsNCRejected = false;
+
+            _repository.Update(transaction);
+        }
+
+        public void RejectNC(string dataMatrix)
+        {
+            var transaction = _repository.GetByDataMatrix(dataMatrix);
+
+            if (transaction == null)
+            {
+                throw new Exception("Material not found.");
+            }
+
+            transaction.IsSuspectedNC = false;
+            transaction.IsNCConfirmed = false;
+            transaction.IsNCRejected = true;
 
             _repository.Update(transaction);
         }

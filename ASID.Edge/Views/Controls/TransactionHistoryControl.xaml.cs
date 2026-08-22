@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Models;
+using ASID.Edge.Models;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Controllers;
 using ASID.Edge.Views.Dialogs;
@@ -100,6 +100,22 @@ namespace ASID.Edge.Views.Controls
                 AutoCloseMessageBox.Show(
                     "Error",
                     ex.Message);
+            }
+        }
+
+        private void QAReview_Click(object sender, RoutedEventArgs e)
+        {
+            string prefillDataMatrix = "";
+            if (TransactionGrid.SelectedItem is PUBodyTransactionHistoryItem selectedItem)
+            {
+                prefillDataMatrix = selectedItem.SerialNo;
+            }
+
+            var dialog = new QANonConformanceDialog(prefillDataMatrix);
+            if (dialog.ShowDialog() == true)
+            {
+                string statusMsg = dialog.IsConfirmed ? "Material confirmed as NC." : "Material marked as Rejected NC.";
+                AutoCloseMessageBox.Show("QA Action Recorded", statusMsg);
             }
         }
     }

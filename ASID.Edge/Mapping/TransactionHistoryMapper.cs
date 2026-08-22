@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Models;
+using ASID.Edge.Models;
 
 namespace ASID.Edge.Mapping
 {
@@ -18,9 +18,9 @@ namespace ASID.Edge.Mapping
                 LaneNo = t.LaneNo,
                 TrolleyNo = t.TrolleyNo,
                 Status = t.Status,
-                IsSuspectedNC = t.IsSuspectedNC
-
-
+                IsSuspectedNC = t.IsSuspectedNC,
+                IsNCConfirmed = t.IsNCConfirmed,
+                IsNCRejected = t.IsNCRejected
             };
         }
     }
