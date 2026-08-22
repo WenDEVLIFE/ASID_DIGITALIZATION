@@ -65,6 +65,8 @@ namespace ASID.Edge.Services
                     PartNo = g.Key.PartNo,
                     Demand = g.Sum(x => x.Quantity),
 
+                    P2Inventory = 0,
+
                     // We'll calculate this later
                     DeliveredToP1 = 0
                 })

@@ -103,6 +103,7 @@ namespace ASID.Edge.Views.Controls
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
                         Demand = g.Sum(x => x.Quantity),
+                        P2Inventory = 0,
                         DeliveredToP1 = 0
                     })
                     .OrderBy(x => x.Model)

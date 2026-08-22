@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ASID.Edge.Views.Controls.DailyDemandControl"
+<UserControl x:Class="ASID.Edge.Views.Controls.DailyDemandControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -115,6 +115,7 @@
                 <DataGridTextColumn Header="Model Name" Binding="{Binding Model}" Width="*"/>
                 <DataGridTextColumn Header="Part No" Binding="{Binding PartNo}" Width="*"/>
                 <DataGridTextColumn Header="Demand" Binding="{Binding Demand}" Width="*"/>
+                <DataGridTextColumn Header="P2 Inventory" Binding="{Binding P2Inventory}" Width="*"/>
                 <DataGridTextColumn Header="Delivered to P1" Binding="{Binding DeliveredToP1}" Width="*"/>
                 <DataGridTextColumn Header="Variance" Binding="{Binding Variance}" Width="*"/>
             </DataGrid.Columns>
