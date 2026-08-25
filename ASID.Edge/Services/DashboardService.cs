@@ -75,10 +75,10 @@ namespace ASID.Edge.Services
                         .Where(t => t.Status == MaterialStatus.Received || t.Status == MaterialStatus.Consumed)
                         .Sum(t => t.SNP);
 
-                    // Scrapped = NC confirmed quantity
+                    // Scrapped = NC confirmed quantity + Scrapped status items
                     int scrapped = matchingTx
-                        .Where(t => t.IsNCConfirmed && t.NCQuantity > 0)
-                        .Sum(t => t.NCQuantity);
+                        .Where(t => (t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped)
+                        .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
 
                     return new PUBodyDailyDemandItem
                     {

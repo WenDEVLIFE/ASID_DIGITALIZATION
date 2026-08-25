@@ -7,8 +7,13 @@ namespace ASID.Edge.Views.Dialogs
     public partial class QANonConformanceDialog : Window
     {
         public string SelectedDataMatrix => txtDataMatrix.Text.Trim();
-        public bool IsConfirmed { get; private set; }
-        public bool IsRejected { get; private set; }
+        public bool IsUnflagged { get; private set; }
+        public bool IsScrapped { get; private set; }
+        public int ScrapQuantity { get; private set; }
+
+        // Legacy properties for backward compatibility
+        public bool IsConfirmed => IsScrapped;
+        public bool IsRejected => IsUnflagged;
 
         public QANonConformanceDialog(string initialDataMatrix = "")
         {
@@ -20,7 +25,7 @@ namespace ASID.Edge.Views.Dialogs
             Loaded += (_, _) => txtDataMatrix.Focus();
         }
 
-        private void ConfirmNC_Click(object sender, RoutedEventArgs e)
+        private void Unflag_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(SelectedDataMatrix))
             {
@@ -28,10 +33,19 @@ namespace ASID.Edge.Views.Dialogs
                 return;
             }
 
+            var result = MessageBox.Show(
+                "Mark this material as OK?\nThis will remove the warning flag.",
+                "Confirm Unflag",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
             try
             {
-                ServiceProvider.NonConformance.ConfirmNC(SelectedDataMatrix);
-                IsConfirmed = true;
+                ServiceProvider.NonConformance.Unflag(SelectedDataMatrix);
+                IsUnflagged = true;
                 DialogResult = true;
                 Close();
             }
@@ -41,7 +55,7 @@ namespace ASID.Edge.Views.Dialogs
             }
         }
 
-        private void RejectNC_Click(object sender, RoutedEventArgs e)
+        private void Scrap_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(SelectedDataMatrix))
             {
@@ -49,10 +63,26 @@ namespace ASID.Edge.Views.Dialogs
                 return;
             }
 
+            if (!int.TryParse(txtScrapQuantity.Text, out int qty) || qty <= 0)
+            {
+                MessageBox.Show("Please enter a valid scrap quantity.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Scrap {qty} unit(s)?\nThis will deduct from inventory and adjust variance.",
+                "Confirm Scrap",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
             try
             {
-                ServiceProvider.NonConformance.RejectNC(SelectedDataMatrix);
-                IsRejected = true;
+                ServiceProvider.NonConformance.Scrap(SelectedDataMatrix, qty);
+                IsScrapped = true;
+                ScrapQuantity = qty;
                 DialogResult = true;
                 Close();
             }

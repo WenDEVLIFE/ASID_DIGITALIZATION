@@ -92,9 +92,12 @@ namespace ASID.Edge.Views.Controls
                 return;
             }
 
-            var dialog =
-                new NonConformanceScanDialog();
+            // Password prompt before flagging NC.
+            var passwordDialog = new PasswordDialog();
+            if (passwordDialog.ShowDialog() != true)
+                return;
 
+            var dialog = new NonConformanceScanDialog();
             if (dialog.ShowDialog() != true)
                 return;
 
@@ -102,25 +105,23 @@ namespace ASID.Edge.Views.Controls
             {
                 ServiceProvider
                     .NonConformance
-                    .RegisterNCItem(
+                    .FlagAsSuspected(
                         dialog.DataMatrix,
                         dialog.NCQuantity);
 
                 AutoCloseMessageBox.Show(
-                    "Success",
-                    $"Material flagged as NC (Quantity: {dialog.NCQuantity}).");
+                    "Suspected NC",
+                    $"Material flagged as Suspected NC (Qty: {dialog.NCQuantity}).\nWarning symbol added.");
             }
             catch (Exception ex)
             {
-                AutoCloseMessageBox.Show(
-                    "Error",
-                    ex.Message);
+                AutoCloseMessageBox.Show("Error", ex.Message);
             }
         }
 
         private void QAReview_Click(object sender, RoutedEventArgs e)
         {
-            // Defensive re-check: supervisor-only capability.
+            // Defensive re-check: QA or Supervisor capability.
             if (!ServiceProvider.Auth.CanReviewNC)
             {
                 AutoCloseMessageBox.Show(
@@ -138,8 +139,18 @@ namespace ASID.Edge.Views.Controls
             var dialog = new QANonConformanceDialog(prefillDataMatrix);
             if (dialog.ShowDialog() == true)
             {
-                string statusMsg = dialog.IsConfirmed ? "Material confirmed as NC." : "Material marked as Rejected NC.";
-                AutoCloseMessageBox.Show("QA Action Recorded", statusMsg);
+                if (dialog.IsUnflagged)
+                {
+                    AutoCloseMessageBox.Show(
+                        "Unflagged",
+                        "Material marked as OK. Warning symbol removed.");
+                }
+                else if (dialog.IsScrapped)
+                {
+                    AutoCloseMessageBox.Show(
+                        "Scrapped",
+                        $"Material scrapped (Qty: {dialog.ScrapQuantity}).\nDeducted from inventory.");
+                }
             }
         }
     }
