@@ -63,11 +63,11 @@ namespace ASID.Edge.Views.Controls
 
         public void UpdateFromContext(StorageContext context)
         {
-            txtOperator.Text = context.OperatorId;
             txtKanban.Text = context.KanbanNo;
-            txtLine.Text = context.LineNo;
-            txtTrolley.Text = context.TrolleyNo;
             txtLane.Text = context.LaneNo;
+            txtTrolley.Text = context.TrolleyNo;
+            txtLine.Text = context.CellNo;
+            txtOperator.Text = context.OperatorId;
 
             btnApply.IsEnabled =
                 context.State == WorkflowState.ReadyForValidation;
@@ -87,24 +87,24 @@ namespace ASID.Edge.Views.Controls
 
             switch (context.State)
             {
-                case WorkflowState.WaitingForOperator:
-                    EnableOnly(txtOperator);
-                    break;
-
                 case WorkflowState.WaitingForKanban:
                     EnableOnly(txtKanban);
                     break;
 
-                case WorkflowState.WaitingForLine:
-                    EnableOnly(txtLine);
+                case WorkflowState.WaitingForLane:
+                    EnableOnly(txtLane);
                     break;
 
                 case WorkflowState.WaitingForTrolley:
                     EnableOnly(txtTrolley);
                     break;
 
-                case WorkflowState.WaitingForLane:
-                    EnableOnly(txtLane);
+                case WorkflowState.WaitingForLine:
+                    EnableOnly(txtLine);
+                    break;
+
+                case WorkflowState.WaitingForOperator:
+                    EnableOnly(txtOperator);
                     break;
 
                 case WorkflowState.WaitingForVerification:

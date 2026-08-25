@@ -18,7 +18,7 @@ namespace ASID.Edge.Mapping
                 // Workflow data
                 DataMatrix = context.DataMatrix,
                 OperatorId = context.OperatorId,
-                LineNo = context.LineNo,
+                LineNo = context.CellNo,
                 LaneNo = context.LaneNo,
                 TrolleyNo = context.TrolleyNo,
 

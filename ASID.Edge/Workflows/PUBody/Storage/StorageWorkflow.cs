@@ -39,43 +39,43 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             {
                 return _context.State switch
                 {
-                    WorkflowState.WaitingForOperator =>
-                        new WorkflowMessage
-                        {
-                            Title = "READY",
-                            Message = "Please Scan Operator ID",
-                            Type = WorkflowMessageType.Information
-                        },
-
                     WorkflowState.WaitingForKanban =>
                         new WorkflowMessage
                         {
-                            Title = "READY",
-                            Message = "Please Scan Kanban",
-                            Type = WorkflowMessageType.Information
-                        },
-
-                    WorkflowState.WaitingForLine =>
-                        new WorkflowMessage
-                        {
-                            Title = "READY",
-                            Message = "Please Scan Line Number",
-                            Type = WorkflowMessageType.Information
-                        },
-
-                    WorkflowState.WaitingForTrolley =>
-                        new WorkflowMessage
-                        {
-                            Title = "READY",
-                            Message = "Please Scan Trolley Number",
+                            Title = "STEP 1",
+                            Message = "Scan the Kanban QR code\n(attached on the trolley green card)",
                             Type = WorkflowMessageType.Information
                         },
 
                     WorkflowState.WaitingForLane =>
                         new WorkflowMessage
                         {
-                            Title = "READY",
-                            Message = "Please Scan Lane Number",
+                            Title = "STEP 2",
+                            Message = "Select a vacant lane",
+                            Type = WorkflowMessageType.Information
+                        },
+
+                    WorkflowState.WaitingForTrolley =>
+                        new WorkflowMessage
+                        {
+                            Title = "STEP 3",
+                            Message = "Scan the Trolley Number\n(white index card)",
+                            Type = WorkflowMessageType.Information
+                        },
+
+                    WorkflowState.WaitingForLine =>
+                        new WorkflowMessage
+                        {
+                            Title = "STEP 4",
+                            Message = "Scan or input Cell Number\n(e.g. Cell 25)",
+                            Type = WorkflowMessageType.Information
+                        },
+
+                    WorkflowState.WaitingForOperator =>
+                        new WorkflowMessage
+                        {
+                            Title = "STEP 5",
+                            Message = "Scan or input Operator\n(e.g. name of Cushman)",
                             Type = WorkflowMessageType.Information
                         },
 
@@ -83,7 +83,7 @@ namespace ASID.Edge.Workflows.PUBody.Storage
                         new WorkflowMessage
                         {
                             Title = "REVIEW",
-                            Message = "Press APPLY CHANGES to Validate",
+                            Message = "Check information.\nPress APPLY CHANGES if correct.",
                             Type = WorkflowMessageType.Information
                         },
 
@@ -98,8 +98,8 @@ namespace ASID.Edge.Workflows.PUBody.Storage
                     WorkflowState.ReadyToPrint =>
                         new WorkflowMessage
                         {
-                            Title = "READY",
-                            Message = "Press PRINT to Generate Data Matrix",
+                            Title = "PRINT",
+                            Message = "Press PRINT to generate Data Matrix",
                             Type = WorkflowMessageType.Success
                         },
 
@@ -138,21 +138,18 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 
         public void Start()
         {
-            _context.State = WorkflowState.WaitingForOperator;
+            _context.State = WorkflowState.WaitingForKanban;
             NotifyChanged();
         }
 
         public void ProcessScan(string barcode)
         {
-
             if (_context.State == WorkflowState.WaitingForVerification)
-
             {
                 if (barcode == _context.DataMatrix)
                 {
                     _context.State = WorkflowState.Completed;
                     NotifyChanged();
-
                     NotifyCompleted();
                 }
                 else
@@ -160,64 +157,69 @@ namespace ASID.Edge.Workflows.PUBody.Storage
                     _context.State = WorkflowState.Error;
                     NotifyChanged();
                 }
-
                 return;
             }
 
             switch (_context.State)
             {
-                case WorkflowState.WaitingForOperator:
-                    HandleOperator(barcode);
-                    break;
-
                 case WorkflowState.WaitingForKanban:
                     HandleKanban(barcode);
-                    break;
-
-                case WorkflowState.WaitingForLine:
-                    HandleLine(barcode);
-                    break;
-
-                case WorkflowState.WaitingForTrolley:
-                    HandleTrolley(barcode);
                     break;
 
                 case WorkflowState.WaitingForLane:
                     HandleLane(barcode);
                     break;
 
+                case WorkflowState.WaitingForTrolley:
+                    HandleTrolley(barcode);
+                    break;
 
+                case WorkflowState.WaitingForLine:
+                    HandleLine(barcode);
+                    break;
+
+                case WorkflowState.WaitingForOperator:
+                    HandleOperator(barcode);
+                    break;
             }
         }
 
-        private void HandleOperator(string barcode)
-        {
-            _context.OperatorId = barcode;
-            _context.State = WorkflowState.WaitingForKanban;
-            NotifyChanged();
-        }
+        // Step 1: Scan Kanban QR code (green card on trolley)
         private void HandleKanban(string barcode)
         {
             _context.KanbanNo = barcode;
-            _context.State = WorkflowState.WaitingForLine;
-            NotifyChanged();
-        }
-        private void HandleLine(string barcode)
-        {
-            _context.LineNo = barcode;
-            _context.State = WorkflowState.WaitingForTrolley;
-            NotifyChanged();
-        }
-        private void HandleTrolley(string barcode)
-        {
-            _context.TrolleyNo = barcode;
             _context.State = WorkflowState.WaitingForLane;
             NotifyChanged();
         }
+
+        // Step 2: Select vacant lane (handled by LaneSequenceDialog)
         private void HandleLane(string barcode)
         {
             _context.LaneNo = barcode;
+            _context.State = WorkflowState.WaitingForTrolley;
+            NotifyChanged();
+        }
 
+        // Step 3: Scan trolley number (white index card)
+        private void HandleTrolley(string barcode)
+        {
+            _context.TrolleyNo = barcode;
+            _context.State = WorkflowState.WaitingForLine;
+            NotifyChanged();
+        }
+
+        // Step 4: Scan or input cell number
+        private void HandleLine(string barcode)
+        {
+            _context.CellNo = barcode;
+            _context.State = WorkflowState.WaitingForOperator;
+            NotifyChanged();
+        }
+
+        // Step 5: Scan or input operator
+        private void HandleOperator(string barcode)
+        {
+            _context.OperatorId = barcode;
             _context.State = WorkflowState.ReadyForValidation;
             NotifyChanged();
         }
@@ -301,11 +303,11 @@ namespace ASID.Edge.Workflows.PUBody.Storage
         }
         public void Reset()
         {
-            _context.OperatorId = "";
             _context.KanbanNo = "";
-            _context.LineNo = "";
-            _context.TrolleyNo = "";
             _context.LaneNo = "";
+            _context.TrolleyNo = "";
+            _context.CellNo = "";
+            _context.OperatorId = "";
             _context.DataMatrix = "";
 
             Start();

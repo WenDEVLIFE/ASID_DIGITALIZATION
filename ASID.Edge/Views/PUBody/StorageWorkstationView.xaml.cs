@@ -194,7 +194,7 @@ namespace ASID.Edge.Views.PUBody
                 ["MODEL"] = kanban.Model,
                 ["KANBAN"] = kanban.KanbanNo,
                 ["QTY"] = kanban.Quantity.ToString(),
-                ["LINENO"] = workflow.Context.LineNo,
+                ["LINENO"] = workflow.Context.CellNo,
                 ["LANENO"] = workflow.Context.LaneNo,
                 ["TROLLEYNO"] = workflow.Context.TrolleyNo
             };
