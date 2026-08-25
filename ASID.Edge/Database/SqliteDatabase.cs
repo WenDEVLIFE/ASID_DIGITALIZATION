@@ -1,0 +1,83 @@
+using Dapper;
+using Microsoft.Data.Sqlite;
+using System;
+using System.IO;
+
+namespace ASID.Edge.Database;
+
+/// <summary>
+/// Manages the local SQLite database used for offline-first transaction
+/// storage.  The file lives in %LOCALAPPDATA%\ASID\asid_local.db.
+/// </summary>
+public static class SqliteDatabase
+{
+    private static readonly string DbDir =
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "ASID");
+
+    private static readonly string DbPath =
+        Path.Combine(DbDir, "asid_local.db");
+
+    private static readonly string ConnectionString =
+        $"Data Source={DbPath}";
+
+    /// <summary>
+    /// Create (or open) the local SQLite database and ensure the schema
+    /// exists.  Called once at application startup.
+    /// </summary>
+    public static void Initialize()
+    {
+        Directory.CreateDirectory(DbDir);
+
+        using var connection = CreateConnection();
+        connection.Open();
+
+        // Transactions table – mirrors the PostgreSQL transactions schema
+        // but adds a `synced` flag so the background sync service knows
+        // which rows still need to be pushed to the server.
+        connection.Execute(@"
+CREATE TABLE IF NOT EXISTS transactions
+(
+    id              TEXT    PRIMARY KEY,
+    data_matrix     TEXT    NOT NULL UNIQUE,
+    serial_no       TEXT    NOT NULL,
+    model           TEXT    NOT NULL,
+    part_no         TEXT    NOT NULL,
+    quantity        INTEGER NOT NULL,
+    kanban_no       TEXT    NOT NULL,
+    operator_id     TEXT,
+    line_no         TEXT,
+    lane_no         TEXT,
+    trolley_no      TEXT,
+    station         TEXT    NOT NULL,
+    status          TEXT    NOT NULL,
+    created_at      TEXT,
+    updated_at      TEXT,
+    withdrawn_at    TEXT,
+    forpickup_at    TEXT,
+    received_at     TEXT,
+    consumed_at     TEXT,
+    is_suspected_nc INTEGER NOT NULL DEFAULT 0,
+    is_nc_confirmed INTEGER NOT NULL DEFAULT 0,
+    is_nc_rejected  INTEGER NOT NULL DEFAULT 0,
+    nc_quantity     INTEGER NOT NULL DEFAULT 0,
+    synced          INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_sqlite_tx_datamatrix
+    ON transactions(data_matrix);
+
+CREATE INDEX IF NOT EXISTS idx_sqlite_tx_synced
+    ON transactions(synced);
+");
+    }
+
+    /// <summary>
+    /// Create a new SQLite connection (caller disposes).
+    /// </summary>
+    public static SqliteConnection CreateConnection()
+    {
+        return new SqliteConnection(ConnectionString);
+    }
+}

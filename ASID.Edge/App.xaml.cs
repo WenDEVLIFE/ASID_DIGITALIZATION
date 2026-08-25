@@ -1,4 +1,7 @@
 ﻿using ASID.Edge;
+using ASID.Edge.Database;
+using ASID.Edge.Repositories;
+using ASID.Edge.Repositories.SQLite;
 using ASID.Edge.Services;
 using ASID.Edge.Views;
 using ASID.Edge.Views.Dialogs;
@@ -16,12 +19,22 @@ namespace Edge
     /// </summary>
     public partial class App : Application
     {
+        private SyncService? _syncService;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
+            // Initialize local SQLite database for offline-first transactions.
+            SqliteDatabase.Initialize();
+
             // Non-blocking check so the login window still opens immediately.
             _ = CheckServerConnectionAsync();
+
+            // Start background sync: SQLite → PostgreSQL.
+            _syncService = new SyncService(RepositoryProvider.SqliteTransactions);
+            ServiceProvider.Sync = _syncService;
+            _syncService.Start();
 
             RunLoginGate();
         }

@@ -1,6 +1,7 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
 using ASID.Edge.Repositories.PostgreSql;
+using ASID.Edge.Repositories.SQLite;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,9 +12,12 @@ namespace ASID.Edge.Repositories
 
     public static class RepositoryProvider
     {
-        // Storage Transactions (used by workflows)
+        // Storage Transactions — local SQLite (offline-first)
+        public static readonly SqliteTransactionRepository SqliteTransactions
+            = new();
+
         public static ITransactionRepository Transactions
-            = new PostgreSqlTransactionRepository();
+            = SqliteTransactions;
         public static IDailyDemandRepository DailyDemands { get; } =
     new PostgreSqlDailyDemandRepository();
 

@@ -1,9 +1,13 @@
 ﻿using ASID.Edge.Repositories;
+using ASID.Edge.Repositories.SQLite;
 
 namespace ASID.Edge.Services
 {
     public static class ServiceProvider
     {
+        // Background sync: SQLite → PostgreSQL
+        public static SyncService? Sync { get; set; }
+
         public static DashboardService Dashboard { get; } =
             new DashboardService(
                 RepositoryProvider.Transactions,

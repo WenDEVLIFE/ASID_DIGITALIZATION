@@ -23,6 +23,20 @@
                         FontWeight="SemiBold"
                         Cursor="Hand"/>
 
+                <!-- Sync status indicator -->
+                <Border x:Name="SyncBorder"
+                        DockPanel.Dock="Right"
+                        Margin="10,0"
+                        Padding="8,2"
+                        CornerRadius="4"
+                        Background="#2E7D32">
+                    <TextBlock x:Name="TxtSyncStatus"
+                               Foreground="White"
+                               FontWeight="SemiBold"
+                               FontSize="11"
+                               Text="✓ Synced"/>
+                </Border>
+
                 <TextBlock x:Name="TxtSession"
                            Foreground="White"
                            FontWeight="SemiBold"

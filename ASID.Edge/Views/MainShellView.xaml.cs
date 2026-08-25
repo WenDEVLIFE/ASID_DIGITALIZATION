@@ -1,4 +1,5 @@
-﻿using ASID.Edge.Services;
+﻿using ASID.Edge.Repositories;
+using ASID.Edge.Services;
 using ASID.Edge.Views.PUBody;
 using System;
 using System.Collections.Generic;
@@ -46,6 +47,41 @@ namespace ASID.Edge.Views
             TxtSession.Text =
                 $"{auth.CurrentUser?.Username ?? "—"} — {auth.CurrentRole}";
 
+            // Subscribe to sync status changes.
+            if (ServiceProvider.Sync is SyncService sync)
+            {
+                sync.SyncCompleted += SyncCompleted;
+                sync.NetworkStatusChanged += NetworkStatusChanged;
+            }
+        }
+
+        private void SyncCompleted(int rows)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                SyncBorder.Background = new SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(0x2E, 0x7D, 0x32));
+                TxtSyncStatus.Text = $"✓ Synced ({rows})";
+            });
+        }
+
+        private void NetworkStatusChanged(bool isOnline)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (isOnline)
+                {
+                    SyncBorder.Background = new SolidColorBrush(
+                        System.Windows.Media.Color.FromRgb(0x2E, 0x7D, 0x32));
+                    TxtSyncStatus.Text = "✓ Online";
+                }
+                else
+                {
+                    SyncBorder.Background = new SolidColorBrush(
+                        System.Windows.Media.Color.FromRgb(0xD3, 0x2F, 0x2F));
+                    TxtSyncStatus.Text = "✗ Offline — data saved locally";
+                }
+            });
         }
 
         private void btnLogout_Click(object sender, RoutedEventArgs e)
