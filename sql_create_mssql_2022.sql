@@ -92,3 +92,40 @@ CREATE TABLE dbo.daily_demand
     quantity        INT        NOT NULL
 );
 GO
+
+-- ===========================================================================
+-- users
+-- ===========================================================================
+IF OBJECT_ID(N'dbo.users', N'U') IS NOT NULL
+    DROP TABLE dbo.users;
+GO
+
+CREATE TABLE dbo.users
+(
+    id            UNIQUEIDENTIFIER NOT NULL
+                        CONSTRAINT PK_users PRIMARY KEY
+                        DEFAULT NEWID(),
+    username      NVARCHAR(MAX)    NOT NULL,
+    password_hash NVARCHAR(MAX)    NOT NULL,
+    role          NVARCHAR(MAX)    NOT NULL,
+    created_at    DATETIME2        NULL
+                        CONSTRAINT DF_users_created_at DEFAULT SYSUTCDATETIME(),
+    updated_at    DATETIME2        NULL
+                        CONSTRAINT DF_users_updated_at DEFAULT SYSUTCDATETIME()
+);
+GO
+
+CREATE UNIQUE INDEX UQ_users_username
+    ON dbo.users(username);
+GO
+
+CREATE INDEX idx_users_username
+    ON dbo.users(username);
+GO
+
+-- Seed users (dev-only) — mirrors the PostgreSQL seed.
+INSERT INTO dbo.users (username, password_hash, role) VALUES
+ ('rpingkian','100000.cnBpbmdraWFuLnNlZWQuMQ==.puzn8+C7JXIRWavL9JoOI69hM2MCqKX5s4pT2Gnp+h0=','operator'),
+ ('vsendrijas','100000.dnNlbmRyaWphcy5zZWVkMg==.EFGM8CjsmzidgpiLRV4tBOy1lR9DWp6k7iZuouNklRo=','qa'),
+ ('cordonez','100000.Y29yZG9uZXouc2VlZC4wMw==.aFngONRDfMiKH7HQnepsFBr+btK6oMo5m8x5xZQ6Syc=','supervisor');
+GO

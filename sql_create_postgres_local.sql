@@ -66,3 +66,29 @@ CREATE TABLE daily_demand
     part_no         VARCHAR(100) NOT NULL,
     quantity        INTEGER     NOT NULL
 );
+
+-- ===========================================================================
+-- users
+-- ===========================================================================
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users
+(
+    id            UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
+    username      TEXT      NOT NULL UNIQUE,
+    password_hash TEXT      NOT NULL,
+    role          TEXT      NOT NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_username
+    ON users(username);
+
+-- Seed users (dev-only). Plaintext: rpingkian/1234, vsendrijas/5678,
+-- cordonez/4567. Passwords are stored as PBKDF2 (SHA-256, 100,000 iterations)
+-- in the format {iterations}.{saltBase64}.{hashBase64}.
+INSERT INTO users (username, password_hash, role) VALUES
+ ('rpingkian','100000.cnBpbmdraWFuLnNlZWQuMQ==.puzn8+C7JXIRWavL9JoOI69hM2MCqKX5s4pT2Gnp+h0=','operator'),
+ ('vsendrijas','100000.dnNlbmRyaWphcy5zZWVkMg==.EFGM8CjsmzidgpiLRV4tBOy1lR9DWp6k7iZuouNklRo=','qa'),
+ ('cordonez','100000.Y29yZG9uZXouc2VlZC4wMw==.aFngONRDfMiKH7HQnepsFBr+btK6oMo5m8x5xZQ6Syc=','supervisor');
