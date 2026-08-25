@@ -89,7 +89,10 @@ CREATE TABLE dbo.daily_demand
     shift           SMALLINT   NOT NULL,
     model           NVARCHAR(100) NULL,
     part_no         NVARCHAR(100) NOT NULL,
-    quantity        INT        NOT NULL
+    quantity        INT        NOT NULL,
+    scrapped        INT        NOT NULL DEFAULT 0,
+    imported_at     DATETIME2  NULL
+                        CONSTRAINT DF_daily_demand_imported_at DEFAULT SYSUTCDATETIME()
 );
 GO
 

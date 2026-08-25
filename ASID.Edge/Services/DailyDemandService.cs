@@ -1,5 +1,6 @@
 ﻿using ASID.Edge.Helpers;
 using ASID.Edge.Repositories.Interfaces;
+using System;
 
 namespace ASID.Edge.Services;
 
@@ -12,12 +13,44 @@ public class DailyDemandService
         _repository = repository;
     }
 
-    public void ImportExcel(string filePath)
+    /// <summary>
+    /// Import a production-plan Excel file.
+    /// Deletes existing demand for the same workweek, then inserts the new records.
+    /// Returns the parse result so the caller can display the workweek label.
+    /// </summary>
+    public ExcelImporter.ParseResult ImportExcel(string filePath)
     {
-        var demands = ExcelImporter.Parse(filePath);
+        var result = ExcelImporter.Parse(filePath);
 
-        _repository.DeleteAll();
+        // Delete existing records for this workweek (mid-week update support)
+        _repository.DeleteByWorkweek(result.WeekStart);
 
-        _repository.Insert(demands);
+        _repository.Insert(result.Demands);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Check if the demand data has been updated since the given timestamp.
+    /// Used for change detection (e.g., polling or timer-based refresh).
+    /// </summary>
+    public bool HasDataChanged(DateTime? lastKnownImport)    {
+        var lastImportedAt = _repository.GetLastImportedAt();
+
+        if (lastImportedAt == null)
+            return false;
+
+        if (lastKnownImport == null)
+            return true;
+
+        return lastImportedAt.Value > lastKnownImport.Value;
+    }
+
+    /// <summary>
+    /// Get the timestamp of the most recent import.
+    /// </summary>
+    public DateTime? GetLastImportTimestamp()
+    {
+        return _repository.GetLastImportedAt();
     }
 }

@@ -18,6 +18,8 @@ namespace ASID.Edge.Models
 
         public int DeliveredToP1 { get; set; }
 
-        public int Variance => Demand - DeliveredToP1;
+        public int Scrapped { get; set; }
+
+        public int Variance => Demand - P2Inventory - Scrapped;
     }
 }

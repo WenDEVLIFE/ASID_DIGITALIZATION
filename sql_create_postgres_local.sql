@@ -64,7 +64,9 @@ CREATE TABLE daily_demand
     shift           SMALLINT    NOT NULL,
     model           VARCHAR(100),
     part_no         VARCHAR(100) NOT NULL,
-    quantity        INTEGER     NOT NULL
+    quantity        INTEGER     NOT NULL,
+    scrapped        INTEGER     NOT NULL DEFAULT 0,
+    imported_at     TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ===========================================================================

@@ -51,6 +51,9 @@ namespace ASID.Edge.Services
         {
             var demands = _dailyDemandRepository.GetAll();
 
+            // Get latest import timestamp for change detection
+            DateTime? lastImportedAt = _dailyDemandRepository.GetLastImportedAt();
+
             return demands
                 .GroupBy(x => new
                 {
@@ -61,9 +64,21 @@ namespace ASID.Edge.Services
                 .Select(g =>
                 {
                     var matchingTx = Transactions.Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo).ToList();
-                    int totalDelivered = matchingTx.Where(t => t.Status == MaterialStatus.Withdrawn || t.Status == MaterialStatus.Received || t.Status == MaterialStatus.Consumed).Sum(t => t.SNP);
-                    int totalNC = matchingTx.Where(t => t.IsNCConfirmed || t.NCQuantity > 0).Sum(t => t.NCQuantity > 0 ? t.NCQuantity : t.SNP);
-                    int delivered = Math.Max(0, totalDelivered - totalNC);
+
+                    // P2 Inventory = total quantity in Supermarket Storage
+                    int p2Inventory = matchingTx
+                        .Where(t => t.Status == MaterialStatus.Stored)
+                        .Sum(t => t.SNP);
+
+                    // Delivered to P1 = P1 Loading Bay (Received) + P1 Production (Consumed)
+                    int deliveredToP1 = matchingTx
+                        .Where(t => t.Status == MaterialStatus.Received || t.Status == MaterialStatus.Consumed)
+                        .Sum(t => t.SNP);
+
+                    // Scrapped = NC confirmed quantity
+                    int scrapped = matchingTx
+                        .Where(t => t.IsNCConfirmed && t.NCQuantity > 0)
+                        .Sum(t => t.NCQuantity);
 
                     return new PUBodyDailyDemandItem
                     {
@@ -71,8 +86,9 @@ namespace ASID.Edge.Services
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
                         Demand = g.Sum(x => x.Quantity),
-                        P2Inventory = matchingTx.Where(t => t.Status == MaterialStatus.Stored).Sum(t => t.SNP),
-                        DeliveredToP1 = delivered
+                        P2Inventory = p2Inventory,
+                        DeliveredToP1 = deliveredToP1,
+                        Scrapped = scrapped
                     };
                 })
                 .OrderBy(x => x.Model)

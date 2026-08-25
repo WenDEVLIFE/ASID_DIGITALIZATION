@@ -15,6 +15,8 @@
             <RowDefinition Height="Auto"/>
             <!-- Header -->
             <RowDefinition Height="Auto"/>
+            <!-- Workweek label + Change banner -->
+            <RowDefinition Height="Auto"/>
             <!-- Sort buttons -->
             <RowDefinition Height="*"/>
             <!-- DataGrid -->
@@ -29,8 +31,34 @@
                    Padding="8"
                    TextAlignment="Center"/>
 
+        <!-- ================= WORKWEEK LABEL ================= -->
+        <Border Grid.Row="1"
+                x:Name="WorkweekBanner"
+                Background="#1565C0"
+                Padding="8,4"
+                Visibility="Collapsed">
+            <TextBlock x:Name="WorkweekText"
+                       Foreground="White"
+                       FontWeight="SemiBold"
+                       FontSize="13"
+                       TextAlignment="Center"/>
+        </Border>
+
+        <!-- ================= CHANGE DETECTION BANNER ================= -->
+        <Border Grid.Row="2"
+                x:Name="ChangeBanner"
+                Background="#FF9800"
+                Padding="8,4"
+                Visibility="Collapsed">
+            <TextBlock x:Name="ChangeText"
+                       Foreground="White"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       TextAlignment="Center"/>
+        </Border>
+
         <!-- ================= TOOLBAR ================= -->
-        <Grid Grid.Row="1" Margin="5">
+        <Grid Grid.Row="3" Margin="5">
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -98,7 +126,7 @@
 
         <!-- ================= DATA GRID ================= -->
         <DataGrid x:Name="DailyDemandGrid"
-                  Grid.Row="2"
+                  Grid.Row="4"
                   Margin="5"
                   AutoGenerateColumns="False"
                   HorizontalAlignment="Stretch"
@@ -117,6 +145,7 @@
                 <DataGridTextColumn Header="Demand" Binding="{Binding Demand}" Width="*"/>
                 <DataGridTextColumn Header="P2 Inventory" Binding="{Binding P2Inventory}" Width="*"/>
                 <DataGridTextColumn Header="Delivered to P1" Binding="{Binding DeliveredToP1}" Width="*"/>
+                <DataGridTextColumn Header="Scrapped" Binding="{Binding Scrapped}" Width="*"/>
                 <DataGridTextColumn Header="Variance" Binding="{Binding Variance}" Width="*"/>
             </DataGrid.Columns>
 

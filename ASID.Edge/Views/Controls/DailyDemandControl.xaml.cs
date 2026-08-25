@@ -7,16 +7,10 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace ASID.Edge.Views.Controls
 {
@@ -25,13 +19,59 @@ namespace ASID.Edge.Views.Controls
     /// </summary>
     public partial class DailyDemandControl : UserControl
     {
-        public DailyDemandControl()
-        {
-            InitializeComponent();
-        }
+        private readonly DailyDemandService _dailyDemandService = new(
+            new PostgreSqlDailyDemandRepository());
+
         private bool modelAsc = true;
         private bool dateAsc = true;
 
+        // Change detection: tracks last known import timestamp
+        private DateTime? _lastKnownImport;
+        private readonly DispatcherTimer _changeDetectionTimer = new();
+
+        public DailyDemandControl()
+        {
+            InitializeComponent();
+
+            // Poll for demand changes every 30 seconds
+            _changeDetectionTimer.Interval = TimeSpan.FromSeconds(30);
+            _changeDetectionTimer.Tick += ChangeDetectionTimer_Tick;
+        }
+
+        /// <summary>Start change detection polling.</summary>
+        public void StartChangeDetection()
+        {
+            _lastKnownImport = _dailyDemandService.GetLastImportTimestamp();
+            _changeDetectionTimer.Start();
+        }
+
+        /// <summary>Stop change detection polling.</summary>
+        public void StopChangeDetection()
+        {
+            _changeDetectionTimer.Stop();
+        }
+
+        private void ChangeDetectionTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_dailyDemandService.HasDataChanged(_lastKnownImport))
+            {
+                _lastKnownImport = _dailyDemandService.GetLastImportTimestamp();
+                ShowChangeBanner();
+            }
+        }
+
+        private void ShowChangeBanner()
+        {
+            ChangeBanner.Visibility = Visibility.Visible;
+            ChangeText.Text = "\u26a0\ufe0f  Demand data has been updated by the planner. Click \"Import Production Plan\" to refresh.";
+        }
+
+        private void HideChangeBanner()
+        {
+            ChangeBanner.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>Load display items and show workweek label.</summary>
         public void Load(IEnumerable<PUBodyDailyDemandItem> items)
         {
             DailyDemandGrid.ItemsSource = null;
@@ -40,6 +80,28 @@ namespace ASID.Edge.Views.Controls
             // RBAC gate (UI layer) — handler re-checks defensively.
             ImportPlannerButton.IsEnabled =
                 ServiceProvider.Auth.CanImportDemand;
+
+            // Update change detection baseline
+            _lastKnownImport = _dailyDemandService.GetLastImportTimestamp();
+            HideChangeBanner();
+        }
+
+        /// <summary>Load items with a workweek label header.</summary>
+        public void LoadWithWorkweek(
+            IEnumerable<PUBodyDailyDemandItem> items,
+            string workweekLabel)
+        {
+            if (!string.IsNullOrWhiteSpace(workweekLabel))
+            {
+                WorkweekBanner.Visibility = Visibility.Visible;
+                WorkweekText.Text = $"Production Workweek: {workweekLabel}";
+            }
+            else
+            {
+                WorkweekBanner.Visibility = Visibility.Collapsed;
+            }
+
+            Load(items);
         }
 
         private void SortByModel(object sender, RoutedEventArgs e)
@@ -70,9 +132,6 @@ namespace ASID.Edge.Views.Controls
             dateAsc = !dateAsc;
         }
 
-        private readonly DailyDemandService _dailyDemandService = new(
-            new PostgreSqlDailyDemandRepository());
-
         private void ImportPlanner_Click(object sender, RoutedEventArgs e)
         {
             // Defensive re-check: supervisor-only capability; must run before
@@ -96,15 +155,11 @@ namespace ASID.Edge.Views.Controls
 
             try
             {
-                var repository = new PostgreSqlDailyDemandRepository();
+                // Parse the Excel file (new production plan format)
+                var result = _dailyDemandService.ImportExcel(dialog.FileName);
 
-                var demands = ExcelImporter.Parse(dialog.FileName);
-
-                repository.DeleteAll();
-
-                repository.Insert(demands);
-
-                var displayItems = demands
+                // Display with workweek label
+                var displayItems = result.Demands
                     .GroupBy(x => new
                     {
                         x.Model,
@@ -113,21 +168,23 @@ namespace ASID.Edge.Views.Controls
                     })
                     .Select(g => new PUBodyDailyDemandItem
                     {
-                        Date = g.Key.ProductionDate.ToString("yyyy-MM-dd"),
+                        Date = result.WorkweekLabel,
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
                         Demand = g.Sum(x => x.Quantity),
                         P2Inventory = 0,
-                        DeliveredToP1 = 0
+                        DeliveredToP1 = 0,
+                        Scrapped = g.Sum(x => x.Scrapped)
                     })
                     .OrderBy(x => x.Model)
                     .ToList();
 
-                Load(displayItems);
+                LoadWithWorkweek(displayItems, result.WorkweekLabel);
 
                 AutoCloseMessageBox.Show(
                     "Import Successful",
-                    $"{demands.Count} records imported successfully.");
+                    $"{result.Demands.Count} records imported for {result.WorkweekLabel}.\n"
+                    + $"Week: {result.WeekStart:MM/dd/yy} - {result.WeekEnd:MM/dd/yy}");
             }
             catch (Exception ex)
             {
