@@ -33,12 +33,19 @@ namespace Edge
         /// </summary>
         private void RunLoginGate()
         {
-            var login = new LoginWindow();
+            // Try to restore a previous session first.
+            bool sessionRestored = ServiceProvider.Auth.RestoreSession();
 
-            if (login.ShowDialog() != true)
+            if (!sessionRestored)
             {
-                Shutdown();
-                return;
+                // No valid session — show the login window.
+                var login = new LoginWindow();
+
+                if (login.ShowDialog() != true)
+                {
+                    Shutdown();
+                    return;
+                }
             }
 
             var main = new MainWindow();

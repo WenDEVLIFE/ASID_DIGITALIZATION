@@ -46,6 +46,30 @@ namespace ASID.Edge.Services
             CurrentUser = user;
             CurrentRole = ToRole(user.Role);
 
+            // Persist session so the user skips login next time.
+            SessionManager.Save(normalized, user.Role);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Restore a previously saved session (username + role).
+        /// Returns true if a valid session was restored.
+        /// </summary>
+        public bool RestoreSession()
+        {
+            var (username, role) = SessionManager.Restore();
+
+            if (string.IsNullOrEmpty(username))
+                return false;
+
+            User? user = _users.GetByUsername(username);
+            if (user == null)
+                return false;
+
+            CurrentUser = user;
+            CurrentRole = ToRole(role ?? user.Role);
+
             return true;
         }
 
@@ -53,6 +77,9 @@ namespace ASID.Edge.Services
         {
             CurrentUser = null;
             CurrentRole = Role.Operator;
+
+            // Clear persisted session.
+            SessionManager.Clear();
         }
 
         public static Role ToRole(string role)
