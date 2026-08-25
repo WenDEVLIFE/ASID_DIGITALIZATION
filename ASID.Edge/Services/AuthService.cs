@@ -23,7 +23,7 @@ namespace ASID.Edge.Services
             CurrentRole is Role.QA or Role.Supervisor;
 
         public bool CanReviewNC =>
-            CurrentRole == Role.Supervisor;
+            CurrentRole is Role.QA or Role.Supervisor;
 
         public bool CanImportDemand =>
             CurrentRole == Role.Supervisor;
