@@ -4,79 +4,110 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:pubody="clr-namespace:ASID.Edge.Views.PUBody">
-   <Grid>
+    <DockPanel>
 
-    <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="220"/>
-        <ColumnDefinition Width="*"/>
-    </Grid.ColumnDefinitions>
+        <!-- ================= BOTTOM SESSION BAR ================= -->
+        <Border DockPanel.Dock="Bottom"
+                Background="#0B3A66"
+                Padding="10,6">
 
-    <!-- ================= LEFT NAVIGATION ================= -->
+            <DockPanel>
+                <Button x:Name="btnLogout"
+                        Content="Logout"
+                        DockPanel.Dock="Right"
+                        Click="btnLogout_Click"
+                        Margin="5"
+                        Padding="16,4"
+                        Background="#D32F2F"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        Cursor="Hand"/>
 
-    <Border Grid.Column="0"
-                Background="#0B3A66">
-
-        <DockPanel>
-
-            <TextBlock DockPanel.Dock="Top"
-                           Text="ASID EDGE"
+                <TextBlock x:Name="TxtSession"
                            Foreground="White"
-                           FontWeight="Bold"
-                           FontSize="20"
-                           Margin="15"/>
+                           FontWeight="SemiBold"
+                           FontSize="13"
+                           VerticalAlignment="Center"
+                           Text=""/>
+            </DockPanel>
 
-            <StackPanel Margin="10">
+        </Border>
 
-                <TextBlock Text="PU BODY"
+        <Grid>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ================= LEFT NAVIGATION ================= -->
+
+            <Border Grid.Column="0"
+                    Background="#0B3A66">
+
+                <DockPanel>
+
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="ASID EDGE"
                                Foreground="White"
                                FontWeight="Bold"
-                               Margin="5"/>
+                               FontSize="20"
+                               Margin="15"/>
 
-                <Button x:Name="btnStorage"
-                            Content="ST001 - Storage"
-                            Click="btnStorage_Click"
-                            Margin="5"
-                            Height="35"/>
-                
+                    <StackPanel Margin="10">
 
-                <Button x:Name="btnWithdrawal"
-                            Content="ST002 - Withdrawal"
-                            Click="btnWithdrawal_Click"
-                            Margin="5"
-                            Height="35"/>
+                        <TextBlock Text="PU BODY"
+                                   Foreground="White"
+                                   FontWeight="Bold"
+                                   Margin="5"/>
 
-                    <Button x:Name="btnP2LoadingBay"
-                            Content="ST003 - P2 Loading Bay"
-                            Click="btnP2LoadingBay_Click"
-                            Margin="5"
-                            Height="35"/>
+                        <Button x:Name="btnStorage"
+                                Content="ST001 - Storage"
+                                Click="btnStorage_Click"
+                                Margin="5"
+                                Height="35"/>
+                        
 
-                    <Button x:Name="btnP1LoadingBay"
-                            Content="ST004 - P1 Loading Bay"
-                            Click="btnP1LoadingBay_Click"
-                            Margin="5"
-                            Height="35"/>
+                        <Button x:Name="btnWithdrawal"
+                                Content="ST002 - Withdrawal"
+                                Click="btnWithdrawal_Click"
+                                Margin="5"
+                                Height="35"/>
 
-                    <Button x:Name="btnP1Production"
-                            Content="ST005 - P1 Production"
-                            Click="btnP1Production_Click"
-                            Margin="5"
-                            Height="35"/>
+                            <Button x:Name="btnP2LoadingBay"
+                                    Content="ST003 - P2 Loading Bay"
+                                    Click="btnP2LoadingBay_Click"
+                                    Margin="5"
+                                    Height="35"/>
 
-                </StackPanel>
+                            <Button x:Name="btnP1LoadingBay"
+                                    Content="ST004 - P1 Loading Bay"
+                                    Click="btnP1LoadingBay_Click"
+                                    Margin="5"
+                                    Height="35"/>
 
-        </DockPanel>
+                            <Button x:Name="btnP1Production"
+                                    Content="ST005 - P1 Production"
+                                    Click="btnP1Production_Click"
+                                    Margin="5"
+                                    Height="35"/>
 
-    </Border>
+                        </StackPanel>
 
-    <!-- ================= ACTIVE WORKSTATION ================= -->
+                </DockPanel>
 
-    <Border Grid.Column="1"
-                Background="#F2F2F2">
+            </Border>
 
-        <ContentControl x:Name="StationHost"/>
+            <!-- ================= ACTIVE WORKSTATION ================= -->
 
-    </Border>
+            <Border Grid.Column="1"
+                    Background="#F2F2F2">
 
-    </Grid>
+                <ContentControl x:Name="StationHost"/>
+
+            </Border>
+
+        </Grid>
+
+    </DockPanel>
 </UserControl>

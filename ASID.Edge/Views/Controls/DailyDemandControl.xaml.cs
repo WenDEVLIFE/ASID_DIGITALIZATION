@@ -36,6 +36,10 @@ namespace ASID.Edge.Views.Controls
         {
             DailyDemandGrid.ItemsSource = null;
             DailyDemandGrid.ItemsSource = items.ToList();
+
+            // RBAC gate (UI layer) — handler re-checks defensively.
+            ImportPlannerButton.IsEnabled =
+                ServiceProvider.Auth.CanImportDemand;
         }
 
         private void SortByModel(object sender, RoutedEventArgs e)
@@ -71,6 +75,16 @@ namespace ASID.Edge.Views.Controls
 
         private void ImportPlanner_Click(object sender, RoutedEventArgs e)
         {
+            // Defensive re-check: supervisor-only capability; must run before
+            // any DeleteAll() so a bypassed UI cannot wipe demand data.
+            if (!ServiceProvider.Auth.CanImportDemand)
+            {
+                AutoCloseMessageBox.Show(
+                    "Access Denied",
+                    "You do not have permission to import production plans.");
+                return;
+            }
+
             var dialog = new OpenFileDialog
             {
                 Title = "Import Production Plan",

@@ -17,6 +17,10 @@ namespace ASID.Edge.Repositories
         public static IDailyDemandRepository DailyDemands { get; } =
     new PostgreSqlDailyDemandRepository();
 
+        // Users (authentication)
+        public static IUserRepository Users { get; } =
+            new PostgreSqlUserRepository();
+
 
         // Shared UI Data
         public static List<PUBodyTransactionHistoryItem> TransactionHistory { get; }

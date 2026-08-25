@@ -1,16 +1,5 @@
-﻿using ASID.Edge.Models;
-using ASID.Edge.Repositories.Interfaces;
-using ASID.Edge.Repositories.PostgreSql;
-using System.Text;
+﻿using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace ASID.Edge
 {
@@ -19,9 +8,18 @@ namespace ASID.Edge
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Raised when the user requests logout; forwarded to <see cref="App"/>
+        /// which returns to the login gate.
+        /// </summary>
+        public event EventHandler? LogoutRequested;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            MainShell.LogoutRequested += (_, _) =>
+                LogoutRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 }

@@ -23,6 +23,9 @@ namespace ASID.Edge.Views
         private readonly P1LoadingBayWorkStationView _p1LoadingBay;
         private readonly P1ProductionWorkStationView _p1Production;
 
+        /// <summary>Raised when the user clicks Logout; consumed by MainWindow/App.</summary>
+        public event EventHandler? LogoutRequested;
+
         public MainShellView()
         {
             InitializeComponent();
@@ -39,6 +42,15 @@ namespace ASID.Edge.Views
 
             StationHost.Content = _storage;
 
+            var auth = ServiceProvider.Auth;
+            TxtSession.Text =
+                $"{auth.CurrentUser?.Username ?? "—"} — {auth.CurrentRole}";
+
+        }
+
+        private void btnLogout_Click(object sender, RoutedEventArgs e)
+        {
+            LogoutRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void btnStorage_Click(object sender, RoutedEventArgs e)

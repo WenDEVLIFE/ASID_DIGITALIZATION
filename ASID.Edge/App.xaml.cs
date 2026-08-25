@@ -1,4 +1,8 @@
-﻿using ASID.Edge.Views.Dialogs;
+﻿using ASID.Edge;
+using ASID.Edge.Services;
+using ASID.Edge.Views;
+using ASID.Edge.Views.Dialogs;
+using System;
 using System.Configuration;
 using System.Data;
 using System.Threading.Tasks;
@@ -16,8 +20,51 @@ namespace Edge
         {
             base.OnStartup(e);
 
-            // Non-blocking check so the main window still opens immediately.
+            // Non-blocking check so the login window still opens immediately.
             _ = CheckServerConnectionAsync();
+
+            RunLoginGate();
+        }
+
+        /// <summary>
+        /// Shows the modal login window. On success opens MainWindow; on cancel
+        /// (or window close) shuts the application down. Logout re-enters the
+        /// gate so a new session can begin.
+        /// </summary>
+        private void RunLoginGate()
+        {
+            var login = new LoginWindow();
+
+            if (login.ShowDialog() != true)
+            {
+                Shutdown();
+                return;
+            }
+
+            var main = new MainWindow();
+
+            bool loggingOut = false;
+
+            main.LogoutRequested += (_, _) =>
+            {
+                loggingOut = true;
+                ServiceProvider.Auth.Logout();
+                main.Close();
+            };
+
+            main.Closed += (_, _) =>
+            {
+                if (loggingOut)
+                {
+                    RunLoginGate();
+                }
+                else
+                {
+                    Shutdown();
+                }
+            };
+
+            main.Show();
         }
 
         private async Task CheckServerConnectionAsync()

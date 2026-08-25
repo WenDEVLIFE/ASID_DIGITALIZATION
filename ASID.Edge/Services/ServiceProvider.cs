@@ -33,5 +33,9 @@ RepositoryProvider.Transactions);
         public static NonConformanceService NonConformance { get; } =
         new NonConformanceService(
             RepositoryProvider.Transactions);
+
+        public static AuthService Auth { get; } =
+            new AuthService(
+                RepositoryProvider.Users);
     }
 }

@@ -42,6 +42,13 @@ namespace ASID.Edge.Views.Controls
 
             TxtLastRefresh.Text =
                 DateTime.Now.ToString("HH:mm:ss");
+
+            // RBAC gate (UI layer) — handlers re-check defensively.
+            NonConformance.IsEnabled =
+                ServiceProvider.Auth.CanFlagNC;
+
+            QAReview.IsEnabled =
+                ServiceProvider.Auth.CanReviewNC;
         }
 
         private void OnSortByModelClick(object sender, RoutedEventArgs e)
@@ -76,6 +83,15 @@ namespace ASID.Edge.Views.Controls
             object sender,
             RoutedEventArgs e)
         {
+            // Defensive re-check: guards against programmatic enable/stale state.
+            if (!ServiceProvider.Auth.CanFlagNC)
+            {
+                AutoCloseMessageBox.Show(
+                    "Access Denied",
+                    "You do not have permission to flag non-conformance items.");
+                return;
+            }
+
             var dialog =
                 new NonConformanceScanDialog();
 
@@ -104,6 +120,15 @@ namespace ASID.Edge.Views.Controls
 
         private void QAReview_Click(object sender, RoutedEventArgs e)
         {
+            // Defensive re-check: supervisor-only capability.
+            if (!ServiceProvider.Auth.CanReviewNC)
+            {
+                AutoCloseMessageBox.Show(
+                    "Access Denied",
+                    "You do not have permission to review non-conformance items.");
+                return;
+            }
+
             string prefillDataMatrix = "";
             if (TransactionGrid.SelectedItem is PUBodyTransactionHistoryItem selectedItem)
             {
