@@ -85,6 +85,12 @@ namespace ASID.Edge.Views.PUBody
             _isListening = false;
         }
 
+        /// <summary>Called by MainShellView when USB scanner detects a barcode.</summary>
+        public void AcceptBarcode(string barcode)
+        {
+            Scanner_BarcodeReceived(this, barcode);
+        }
+
         private void P1LoadingBayPortal_ScanCompleted(
                 object? sender,
                 string barcode)

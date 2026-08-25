@@ -84,6 +84,33 @@ namespace ASID.Edge.Views
             });
         }
 
+        /// <summary>
+        /// Called by MainWindow when the USB scanner detects a barcode.
+        /// Forwards it to whatever workstation is currently active.
+        /// </summary>
+        public void OnUsbBarcodeReceived(string barcode)
+        {
+            // Route to whichever workstation is in StationHost
+            switch (StationHost.Content)
+            {
+                case StorageWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+                case WithdrawalWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+                case P2LoadingBayWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+                case P1LoadingBayWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+                case P1ProductionWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+            }
+        }
+
         private void btnLogout_Click(object sender, RoutedEventArgs e)
         {
             LogoutRequested?.Invoke(this, EventArgs.Empty);

@@ -7,7 +7,9 @@
         xmlns:pu="clr-namespace:ASID.Edge.Views.PUBody"
         xmlns:views="clr-namespace:ASID.Edge.Views"
         mc:Ignorable="d"
-        Title="AZP Supermarket Inventory Digitalization" Height="450" Width="800">
+        Title="AZP Supermarket Inventory Digitalization" Height="450" Width="800"
+        PreviewTextInput="Window_PreviewTextInput"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <Grid>
         <views:MainShellView x:Name="MainShell"/>
     </Grid>

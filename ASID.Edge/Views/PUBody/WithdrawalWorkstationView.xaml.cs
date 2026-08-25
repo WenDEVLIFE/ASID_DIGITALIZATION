@@ -80,11 +80,15 @@ namespace ASID.Edge.Views.PUBody
             _scanner.BarcodeReceived -= Scanner_BarcodeReceived;
 
             _isListening = false;
+        }        /// <summary>Called by MainShellView when USB scanner detects a barcode.</summary>
+        public void AcceptBarcode(string barcode)
+        {
+            Scanner_BarcodeReceived(this, barcode);
         }
 
         private void WithdrawalPortal_ScanCompleted(
-            object? sender,
-            string barcode)
+                object? sender,
+                string barcode)
         {
             if (_workflowManager.CurrentWorkflow == null)
                 return;
