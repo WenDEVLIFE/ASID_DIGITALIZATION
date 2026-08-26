@@ -32,7 +32,17 @@ namespace ASID.Edge.Services
         {
             string normalized = username.Trim().ToLowerInvariant();
 
-            User? user = _users.GetByUsername(normalized);
+            User? user;
+            try
+            {
+                user = _users.GetByUsername(normalized);
+            }
+            catch
+            {
+                // Server unreachable — cannot authenticate
+                return false;
+            }
+
             if (user == null)
             {
                 return false;
@@ -63,7 +73,23 @@ namespace ASID.Edge.Services
             if (string.IsNullOrEmpty(username))
                 return false;
 
-            User? user = _users.GetByUsername(username);
+            User? user;
+            try
+            {
+                user = _users.GetByUsername(username);
+            }
+            catch
+            {
+                // Server unreachable — use cached session data
+                if (role != null)
+                {
+                    CurrentUser = new User { Username = username, Role = role };
+                    CurrentRole = ToRole(role);
+                    return true;
+                }
+                return false;
+            }
+
             if (user == null)
                 return false;
 

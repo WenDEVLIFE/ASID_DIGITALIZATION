@@ -48,17 +48,35 @@ namespace ASID.Edge.Views.Controllers
 
         public void Refresh()
         {
-            _transactionHistory.Load(
-                _dashboard.GetTransactionHistory());
+            try
+            {
+                _transactionHistory.Load(
+                    _dashboard.GetTransactionHistory());
 
-            _inventory.Load(
-                _dashboard.GetInventory());
+                _inventory.Load(
+                    _dashboard.GetInventory());
 
-            _withdrawal.Load(
-                _dashboard.GetWithdrawalHistory());
+                _withdrawal.Load(
+                    _dashboard.GetWithdrawalHistory());
+            }
+            catch
+            {
+                // SQLite/transaction queries failed — show empty grids
+                _transactionHistory.Load(new List<Models.PUBodyTransactionHistoryItem>());
+                _inventory.Load(new List<Models.PUBodyInventoryItem>());
+                _withdrawal.Load(new List<Models.PUBodyWithdrawalItem>());
+            }
 
-            _dailyDemand.Load(
-                _dashboard.GetDailyDemand());
+            try
+            {
+                // Daily demand requires PostgreSQL — graceful fallback if offline
+                _dailyDemand.Load(
+                    _dashboard.GetDailyDemand());
+            }
+            catch
+            {
+                _dailyDemand.Load(new List<Models.PUBodyDailyDemandItem>());
+            }
         }
     }
 }

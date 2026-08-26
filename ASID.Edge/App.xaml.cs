@@ -89,9 +89,6 @@ namespace Edge
 
         private async Task CheckServerConnectionAsync()
         {
-            bool connected;
-            string error = string.Empty;
-
             try
             {
                 await Task.Run(() =>
@@ -99,31 +96,12 @@ namespace Edge
                     using var connection = Db.CreateConnection();
                     connection.Open();
                 });
-                connected = true;
             }
-            catch (Exception ex)
+            catch
             {
-                connected = false;
-                error = ex.Message;
+                // Server unreachable — app works fully offline via SQLite.
+                // No blocking dialog needed; sync service handles retries.
             }
-
-            await Dispatcher.InvokeAsync(() =>
-            {
-                if (connected)
-                {
-                    AutoCloseMessageBox.Show(
-                        "Connection Status",
-                        "Successfully connected to the server.",
-                        seconds: 3);
-                }
-                else
-                {
-                    AutoCloseMessageBox.Show(
-                        "Connection Error",
-                        $"Failed to connect to the server: {error}",
-                        seconds: 6);
-                }
-            });
         }
     }
 
