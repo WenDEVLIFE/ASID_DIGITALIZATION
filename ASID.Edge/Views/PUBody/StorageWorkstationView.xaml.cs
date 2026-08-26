@@ -103,7 +103,7 @@ namespace ASID.Edge.Views.PUBody
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Unable to display lane sequence dialog: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Toast?.Error($"Lane dialog error: {ex.Message}");
                 }
             }
         }
@@ -231,6 +231,14 @@ namespace ASID.Edge.Views.PUBody
 
             RefreshUI();
         }
+        private ToastNotification? _toast;
+        private ToastNotification Toast => _toast ??= FindToast();
+        private ToastNotification FindToast()
+        {
+            var w = Window.GetWindow(this) as MainWindow;
+            return w?.MainShell?.Toasts ?? new ToastNotification();
+        }
+
         private void LoginPortal_CancelRequested(object? sender, EventArgs e)
         {
             if (MessageBox.Show(
@@ -245,9 +253,8 @@ namespace ASID.Edge.Views.PUBody
             if (_workflowManager.CurrentWorkflow is StorageWorkflow workflow)
             {
                 LoginPortal.ClearFields();
-
                 workflow.Cancel();
-
+                Toast.Warning("Transaction cancelled.");
                 RefreshUI();
             }
         }
@@ -257,15 +264,20 @@ namespace ASID.Edge.Views.PUBody
         {
             var workflow = (StorageWorkflow)_workflowManager.CurrentWorkflow!;
 
-            _storageService.Commit(workflow.Context);
+            try
+            {
+                _storageService.Commit(workflow.Context);
+                Toast.Success("Storage Transaction Completed");
+            }
+            catch (Exception ex)
+            {
+                Toast.Error($"Storage failed: {ex.Message}");
+            }
 
-            AutoCloseMessageBox.Show("Success", "Storage Transaction Completed");
-
-            await Task.Delay(3000);
+            await Task.Delay(2000);
             LoginPortal.ClearFields();
             workflow.Reset();
             RefreshUI();
-
         }
 
         private void RefreshUI()

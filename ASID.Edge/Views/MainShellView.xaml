@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:pubody="clr-namespace:ASID.Edge.Views.PUBody">
+        xmlns:pubody="clr-namespace:ASID.Edge.Views.PUBody"
+        xmlns:controls="clr-namespace:ASID.Edge.Views.Controls">
     <DockPanel>
 
         <!-- ================= BOTTOM SESSION BAR ================= -->
@@ -117,7 +118,12 @@
             <Border Grid.Column="1"
                     Background="#F2F2F2">
 
-                <ContentControl x:Name="StationHost"/>
+                <Grid>
+                    <ContentControl x:Name="StationHost"/>
+
+                    <!-- Toast notifications overlay (bottom-right) -->
+                    <controls:ToastNotification x:Name="ToastsControl"/>
+                </Grid>
 
             </Border>
 

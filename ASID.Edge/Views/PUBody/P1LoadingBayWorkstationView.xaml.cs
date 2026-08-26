@@ -123,22 +123,31 @@ namespace ASID.Edge.Views.PUBody
 						  
         }
 
+        private ToastNotification? _toast;
+        private ToastNotification Toast => _toast ??= FindToast();
+        private ToastNotification FindToast()
+        {
+            var w = Window.GetWindow(this) as MainWindow;
+            return w?.MainShell?.Toasts ?? new ToastNotification();
+        }
+
         private async void Workflow_Completed(object? sender, EventArgs e)
         {
-												  
-
             var workflow =
                 (P1LoadingBayWorkflow)_workflowManager.CurrentWorkflow!;
 
-            _p1LoadingBayService.Commit(workflow.Context);
+            try
+            {
+                _p1LoadingBayService.Commit(workflow.Context);
+                Toast.Success("P1 Loading Bay Transaction Completed");
+            }
+            catch (Exception ex)
+            {
+                Toast.Error($"P1 Loading Bay failed: {ex.Message}");
+            }
 
-            AutoCloseMessageBox.Show("Success", "P1 Loading Bay Transaction Completed");
-
-            await Task.Delay(3000);
-
+            await Task.Delay(2000);
             workflow.Reset();
-										
-
             RefreshUI();
         }
 

@@ -3,6 +3,7 @@ using ASID.Edge.Models;
 using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Dialogs;
+using ASID.Edge.Views.Controls;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -132,15 +133,19 @@ namespace ASID.Edge.Views.Controls
             dateAsc = !dateAsc;
         }
 
+        private ToastNotification? _toast;
+        private ToastNotification Toast => _toast ??= FindToast();
+        private ToastNotification FindToast()
+        {
+            var w = Window.GetWindow(this) as MainWindow;
+            return w?.MainShell?.Toasts ?? new ToastNotification();
+        }
+
         private void ImportPlanner_Click(object sender, RoutedEventArgs e)
         {
-            // Defensive re-check: supervisor-only capability; must run before
-            // any DeleteAll() so a bypassed UI cannot wipe demand data.
             if (!ServiceProvider.Auth.CanImportDemand)
             {
-                AutoCloseMessageBox.Show(
-                    "Access Denied",
-                    "You do not have permission to import production plans.");
+                Toast.Warning("You do not have permission to import production plans.");
                 return;
             }
 
@@ -155,10 +160,8 @@ namespace ASID.Edge.Views.Controls
 
             try
             {
-                // Parse the Excel file (new production plan format)
                 var result = _dailyDemandService.ImportExcel(dialog.FileName);
 
-                // Display with workweek label
                 var displayItems = result.Demands
                     .GroupBy(x => new
                     {
@@ -181,18 +184,11 @@ namespace ASID.Edge.Views.Controls
 
                 LoadWithWorkweek(displayItems, result.WorkweekLabel);
 
-                AutoCloseMessageBox.Show(
-                    "Import Successful",
-                    $"{result.Demands.Count} records imported for {result.WorkweekLabel}.\n"
-                    + $"Week: {result.WeekStart:MM/dd/yy} - {result.WeekEnd:MM/dd/yy}");
+                Toast.Success($"{result.Demands.Count} records imported for {result.WorkweekLabel}. Week: {result.WeekStart:MM/dd/yy} - {result.WeekEnd:MM/dd/yy}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    ex.ToString(),
-                    "Import Failed",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                Toast.Error($"Import failed: {ex.Message}");
             }
         }
     }

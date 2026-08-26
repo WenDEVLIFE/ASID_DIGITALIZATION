@@ -115,19 +115,31 @@ namespace ASID.Edge.Views.PUBody
             });
         }
 
+        private ToastNotification? _toast;
+        private ToastNotification Toast => _toast ??= FindToast();
+        private ToastNotification FindToast()
+        {
+            var w = Window.GetWindow(this) as MainWindow;
+            return w?.MainShell?.Toasts ?? new ToastNotification();
+        }
+
         private async void Workflow_Completed(object? sender, EventArgs e)
         {
             var workflow =
                 (WithdrawalWorkflow)_workflowManager.CurrentWorkflow!;
 
-            _withdrawalService.Commit(workflow.Context);
+            try
+            {
+                _withdrawalService.Commit(workflow.Context);
+                Toast.Success("Withdrawal Transaction Completed");
+            }
+            catch (Exception ex)
+            {
+                Toast.Error($"Withdrawal failed: {ex.Message}");
+            }
 
-            AutoCloseMessageBox.Show("Success", "Withdrawal Transaction Completed");
-
-            await Task.Delay(3000);
-
+            await Task.Delay(2000);
             workflow.Reset();
-
             RefreshUI();
         }
 

@@ -1,5 +1,6 @@
 ﻿using ASID.Edge.Repositories;
 using ASID.Edge.Services;
+using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.PUBody;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,9 @@ namespace ASID.Edge.Views
     public partial class MainShellView : UserControl
     {
         private readonly TcpScannerService _scanner = new();
+
+        /// <summary>Global toast notification panel accessible by all views.</summary>
+        public ToastNotification Toasts => ToastsControl;
 
         private readonly StorageWorkStationView _storage;
         private readonly WithdrawalWorkStationView _withdrawal;
@@ -53,6 +57,14 @@ namespace ASID.Edge.Views
                 sync.SyncCompleted += SyncCompleted;
                 sync.NetworkStatusChanged += NetworkStatusChanged;
             }
+
+            // Welcome toast
+            Loaded += (_, _) =>
+            {
+                var user = auth.CurrentUser?.Username ?? "User";
+                var role = auth.CurrentRole;
+                Toasts.Success($"Welcome, {user}! Logged in as {role}.", 2500);
+            };
         }
 
         private void SyncCompleted(int rows)

@@ -2,6 +2,7 @@ using ASID.Edge.Models;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Controllers;
 using ASID.Edge.Views.Dialogs;
+using ASID.Edge.Views.Controls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -79,20 +80,24 @@ namespace ASID.Edge.Views.Controls
             dateAsc = !dateAsc;
         }
 
+        private ToastNotification? _toast;
+        private ToastNotification Toast => _toast ??= FindToast();
+        private ToastNotification FindToast()
+        {
+            var w = Window.GetWindow(this) as MainWindow;
+            return w?.MainShell?.Toasts ?? new ToastNotification();
+        }
+
         private void NonConformance_Click(
             object sender,
             RoutedEventArgs e)
         {
-            // Defensive re-check: guards against programmatic enable/stale state.
             if (!ServiceProvider.Auth.CanFlagNC)
             {
-                AutoCloseMessageBox.Show(
-                    "Access Denied",
-                    "You do not have permission to flag non-conformance items.");
+                Toast.Warning("You do not have permission to flag NC items.");
                 return;
             }
 
-            // Password prompt before flagging NC.
             var passwordDialog = new PasswordDialog();
             if (passwordDialog.ShowDialog() != true)
                 return;
@@ -109,24 +114,19 @@ namespace ASID.Edge.Views.Controls
                         dialog.DataMatrix,
                         dialog.NCQuantity);
 
-                AutoCloseMessageBox.Show(
-                    "Suspected NC",
-                    $"Material flagged as Suspected NC (Qty: {dialog.NCQuantity}).\nWarning symbol added.");
+                Toast.Success($"Material flagged as Suspected NC (Qty: {dialog.NCQuantity}). Warning symbol added.");
             }
             catch (Exception ex)
             {
-                AutoCloseMessageBox.Show("Error", ex.Message);
+                Toast.Error(ex.Message);
             }
         }
 
         private void QAReview_Click(object sender, RoutedEventArgs e)
         {
-            // Defensive re-check: QA or Supervisor capability.
             if (!ServiceProvider.Auth.CanReviewNC)
             {
-                AutoCloseMessageBox.Show(
-                    "Access Denied",
-                    "You do not have permission to review non-conformance items.");
+                Toast.Warning("You do not have permission to review NC items.");
                 return;
             }
 
@@ -141,15 +141,11 @@ namespace ASID.Edge.Views.Controls
             {
                 if (dialog.IsUnflagged)
                 {
-                    AutoCloseMessageBox.Show(
-                        "Unflagged",
-                        "Material marked as OK. Warning symbol removed.");
+                    Toast.Success("Material marked as OK. Warning symbol removed.");
                 }
                 else if (dialog.IsScrapped)
                 {
-                    AutoCloseMessageBox.Show(
-                        "Scrapped",
-                        $"Material scrapped (Qty: {dialog.ScrapQuantity}).\nDeducted from inventory.");
+                    Toast.Success($"Material scrapped (Qty: {dialog.ScrapQuantity}). Deducted from inventory.");
                 }
             }
         }
