@@ -37,6 +37,7 @@ public class StorageService
 
             SerialNo = serial,
 
+            OperatorId = context.OperatorId,
             LineNo = context.CellNo,
             TrolleyNo = context.TrolleyNo,
             LaneNo = context.LaneNo,

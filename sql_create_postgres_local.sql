@@ -42,7 +42,10 @@ CREATE TABLE transactions
     received_at     TIMESTAMP,
     consumed_at     TIMESTAMP,
 
-    is_suspected_nc BOOLEAN     NOT NULL DEFAULT FALSE
+    is_suspected_nc BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_nc_confirmed BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_nc_rejected  BOOLEAN     NOT NULL DEFAULT FALSE,
+    nc_quantity     INTEGER     NOT NULL DEFAULT 0
 );
 
 -- Performance indexes

@@ -27,6 +27,8 @@ namespace ASID.Edge.Models
 
         public string Time { get; set; } = "";
 
+        public string OperatorId { get; set; } = "";
+
         public bool IsSuspectedNC { get; set; }
         public bool IsNCConfirmed { get; set; }
         public bool IsNCRejected { get; set; }

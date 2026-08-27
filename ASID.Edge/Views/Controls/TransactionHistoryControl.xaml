@@ -11,16 +11,9 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Header -->
-
             <RowDefinition Height="Auto"/>
-            <!-- Sort & Action Buttons -->
-
             <RowDefinition Height="Auto"/>
-            <!-- Status Bar -->
-
             <RowDefinition Height="*"/>
-            <!-- Data Grid -->
         </Grid.RowDefinitions>
 
         <!-- ================= HEADER ================= -->
@@ -37,73 +30,86 @@
         <!-- ================= TOOLBAR ================= -->
         <Grid Grid.Row="1" Margin="5">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <!-- LEFT : Sort Buttons -->
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Click="OnSortByModelClick"
-                        Margin="5"
-                        Padding="10,5"
-                        Background="#E0E0E0">
+                        Margin="5" Padding="10,5" Background="#E0E0E0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Model"/>
-                        <TextBlock Text=" ▲▼"/>
+                        <TextBlock Text=" &#x25B2;&#x25BC;"/>
                     </StackPanel>
                 </Button>
 
                 <Button Click="OnSortByDateClick"
-                        Margin="5"
-                        Padding="10,5"
-                        Background="#E0E0E0">
+                        Margin="5" Padding="10,5" Background="#E0E0E0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Date"/>
-                        <TextBlock Text=" ▲▼"/>
+                        <TextBlock Text=" &#x25B2;&#x25BC;"/>
                     </StackPanel>
                 </Button>
             </StackPanel>
 
-            <!-- RIGHT : Suspected NC & QA Review Buttons -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <!-- CENTER : Search Bar -->
+            <Grid Grid.Column="1" Margin="10,0">
+                <Border Background="White"
+                        BorderBrush="#CCCCCC"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="2">
+                    <DockPanel>
+                        <TextBlock Text="&#x1F50D;"
+                                   DockPanel.Dock="Left"
+                                   VerticalAlignment="Center"
+                                   Margin="6,0,4,0"
+                                   FontSize="13"
+                                   Foreground="#888"/>
+                        <TextBox x:Name="TxtSearch"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 VerticalContentAlignment="Center"
+                                 Padding="2"
+                                 FontSize="13"
+                                 TextChanged="TxtSearch_TextChanged"/>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- RIGHT : Action Buttons -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
                 <Button x:Name="NonConformance"
                         Click="NonConformance_Click"
-                        Margin="5"
-                        Padding="12,5"
-                        Background="#D32F2F"
-                        Foreground="White"
-                        FontWeight="SemiBold"
-                        Cursor="Hand">
+                        Margin="5" Padding="12,5"
+                        Background="#D32F2F" Foreground="White"
+                        FontWeight="SemiBold" Cursor="Hand">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚠ " FontSize="14"/>
+                        <TextBlock Text="&#x26A0; " FontSize="14"/>
                         <TextBlock Text="Suspected NC"/>
                     </StackPanel>
                 </Button>
 
                 <Button x:Name="QAReview"
                         Click="QAReview_Click"
-                        Margin="5"
-                        Padding="12,5"
-                        Background="#0B3A66"
-                        Foreground="White"
-                        FontWeight="SemiBold"
-                        Cursor="Hand">
+                        Margin="5" Padding="12,5"
+                        Background="#0B3A66" Foreground="White"
+                        FontWeight="SemiBold" Cursor="Hand">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🔍 " FontSize="14"/>
+                        <TextBlock Text="&#x1F50D; " FontSize="14"/>
                         <TextBlock Text="QA Review NC"/>
                     </StackPanel>
                 </Button>
 
                 <Button x:Name="BtnOverride"
                         Click="Override_Click"
-                        Margin="5"
-                        Padding="12,5"
-                        Background="#6A1B9A"
-                        Foreground="White"
-                        FontWeight="SemiBold"
-                        Cursor="Hand">
+                        Margin="5" Padding="12,5"
+                        Background="#6A1B9A" Foreground="White"
+                        FontWeight="SemiBold" Cursor="Hand">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🗑 " FontSize="14"/>
+                        <TextBlock Text="&#x1F5D1; " FontSize="14"/>
                         <TextBlock Text="Override"/>
                     </StackPanel>
                 </Button>
@@ -111,16 +117,12 @@
         </Grid>
 
         <!-- ================= STATUS BAR ================= -->
-        <Border Grid.Row="2"
-                Margin="5"
-                Padding="6"
-                BorderBrush="#CFCFCF"
-                BorderThickness="1"
+        <Border Grid.Row="2" Margin="5" Padding="6"
+                BorderBrush="#CFCFCF" BorderThickness="1"
                 Background="#F5F5F5">
             <DockPanel>
                 <TextBlock Text="Records : " FontWeight="Bold"/>
                 <TextBlock x:Name="TxtRecordCount" Text="0"/>
-
                 <TextBlock Margin="25,0,0,0" Text="Last Refresh : " FontWeight="Bold"/>
                 <TextBlock x:Name="TxtLastRefresh" Text="--"/>
             </DockPanel>
@@ -141,20 +143,16 @@
                   RowBackground="White"
                   AlternatingRowBackground="#EAEAEA"
                   HorizontalAlignment="Stretch"
-                  VerticalAlignment="Stretch"
-                  d:ItemsSource="{d:SampleData ItemCount=10}">
+                  VerticalAlignment="Stretch">
 
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <Style.Triggers>
-                        <!-- Confirmed NC Highlight in Red -->
                         <DataTrigger Binding="{Binding IsNCConfirmed}" Value="True">
                             <Setter Property="Background" Value="#FFCDD2"/>
                             <Setter Property="Foreground" Value="#B71C1C"/>
                             <Setter Property="FontWeight" Value="Bold"/>
                         </DataTrigger>
-
-                        <!-- Suspected NC Highlight in Yellow/Orange -->
                         <DataTrigger Binding="{Binding IsSuspectedNC}" Value="True">
                             <Setter Property="Background" Value="#FFF9C4"/>
                             <Setter Property="Foreground" Value="#E65100"/>
@@ -165,17 +163,18 @@
             </DataGrid.RowStyle>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="120"/>
+                <DataGridTextColumn Header="Part No" Binding="{Binding PartNo}" Width="120"/>
+                <DataGridTextColumn Header="Serial No" Binding="{Binding SerialNo}" Width="130"/>
+                <DataGridTextColumn Header="SNP" Binding="{Binding SNP}" Width="50"/>
+                <DataGridTextColumn Header="Operator" Binding="{Binding OperatorId}" Width="100"/>
+                <DataGridTextColumn Header="Line No" Binding="{Binding LineNo}" Width="70"/>
+                <DataGridTextColumn Header="Trolley No" Binding="{Binding TrolleyNo}" Width="80"/>
+                <DataGridTextColumn Header="Lane No" Binding="{Binding LaneNo}" Width="70"/>
                 <DataGridTextColumn Header="Remarks / NC" Binding="{Binding NCRemarks}" Width="120"/>
-                <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="*"/>
-                <DataGridTextColumn Header="Part No" Binding="{Binding PartNo}" Width="*"/>
-                <DataGridTextColumn Header="Serial No" Binding="{Binding SerialNo}" Width="*"/>
-                <DataGridTextColumn Header="SNP" Binding="{Binding SNP}" Width="*"/>
-                <DataGridTextColumn Header="Line No" Binding="{Binding LineNo}" Width="*"/>
-                <DataGridTextColumn Header="Trolley No" Binding="{Binding TrolleyNo}" Width="*"/>
-                <DataGridTextColumn Header="Lane No" Binding="{Binding LaneNo}" Width="*"/>
-                <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="*"/>
-                <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="*"/>
+                <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="90"/>
+                <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="80"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

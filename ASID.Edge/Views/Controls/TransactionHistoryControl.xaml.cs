@@ -34,18 +34,13 @@ namespace ASID.Edge.Views.Controls
 
         private bool modelAsc = true;
         private bool dateAsc = true;
+        private List<PUBodyTransactionHistoryItem> _allItems = new();
 
         public void Load(IEnumerable<PUBodyTransactionHistoryItem> items)
         {
-            var list = items.ToList();
+            _allItems = items.ToList();
 
-            TransactionGrid.ItemsSource = null;
-            TransactionGrid.ItemsSource = list;
-
-            TxtRecordCount.Text = list.Count.ToString();
-
-            TxtLastRefresh.Text =
-                DateTime.Now.ToString("HH:mm:ss");
+            ApplyFilter();
 
             // RBAC gate (UI layer) — handlers re-check defensively.
             NonConformance.IsEnabled =
@@ -59,6 +54,36 @@ namespace ASID.Edge.Views.Controls
                 ServiceProvider.Auth.CanOverride;
             BtnOverride.Visibility =
                 ServiceProvider.Auth.CanOverride ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void TxtSearch_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            string query = TxtSearch?.Text?.Trim().ToLowerInvariant() ?? "";
+
+            var filtered = string.IsNullOrEmpty(query)
+                ? _allItems
+                : _allItems.Where(item =>
+                    (item.Status.ToString().ToLowerInvariant().Contains(query)) ||
+                    (item.Model?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.PartNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.SerialNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.OperatorId?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.LineNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.TrolleyNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.LaneNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.Date?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.NCRemarks?.ToLowerInvariant().Contains(query) ?? false)
+                ).ToList();
+
+            TransactionGrid.ItemsSource = null;
+            TransactionGrid.ItemsSource = filtered;
+            TxtRecordCount.Text = filtered.Count.ToString();
+            TxtLastRefresh.Text = DateTime.Now.ToString("HH:mm:ss");
         }
 
         private void OnSortByModelClick(object sender, RoutedEventArgs e)
@@ -198,6 +223,7 @@ namespace ASID.Edge.Views.Controls
                     PartNo = t.PartNo,
                     SerialNo = t.DataMatrix,
                     SNP = t.SNP,
+                    OperatorId = t.OperatorId,
                     LineNo = t.LineNo,
                     TrolleyNo = t.TrolleyNo,
                     LaneNo = t.LaneNo,

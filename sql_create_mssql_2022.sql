@@ -56,7 +56,13 @@ CREATE TABLE dbo.transactions
     consumed_at     DATETIME2        NULL,
 
     is_suspected_nc BIT              NOT NULL
-                        CONSTRAINT DF_transactions_is_suspected_nc DEFAULT 0
+                        CONSTRAINT DF_transactions_is_suspected_nc DEFAULT 0,
+    is_nc_confirmed BIT              NOT NULL
+                        CONSTRAINT DF_transactions_is_nc_confirmed DEFAULT 0,
+    is_nc_rejected  BIT              NOT NULL
+                        CONSTRAINT DF_transactions_is_nc_rejected  DEFAULT 0,
+    nc_quantity     INT              NOT NULL
+                        CONSTRAINT DF_transactions_nc_quantity     DEFAULT 0
 );
 GO
 

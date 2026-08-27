@@ -17,6 +17,7 @@ namespace ASID.Edge.Mapping
                 LineNo = t.LineNo,
                 LaneNo = t.LaneNo,
                 TrolleyNo = t.TrolleyNo,
+                OperatorId = t.OperatorId,
                 Status = t.Status,
                 IsSuspectedNC = t.IsSuspectedNC,
                 IsNCConfirmed = t.IsNCConfirmed,
