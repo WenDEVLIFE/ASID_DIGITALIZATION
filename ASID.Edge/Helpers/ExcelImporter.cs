@@ -91,11 +91,12 @@ namespace ASID.Edge.Helpers
 
                 string demandText = worksheet.Cells[row, demandCol].Text.Trim();
                 if (string.IsNullOrWhiteSpace(demandText) || demandText == "-")
-                    continue;
+                    demandText = "0";
 
                 if (!int.TryParse(demandText, out int demand))
-                    continue;
+                    demand = 0;
 
+                // Include row even if demand is 0 (planner may update later)
                 demands.Add(new DailyDemand
                 {
                     ProductionDate = DateTime.Today,
