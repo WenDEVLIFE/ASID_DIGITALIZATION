@@ -9,15 +9,19 @@
              d:DesignWidth="900"
              d:Background="LightGray">
 
-    <Grid>
-
-        <Grid.RowDefinitions>
+    <Grid>        <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <!-- Header -->
+
             <RowDefinition Height="Auto"/>
-            <!-- Workweek label + Change banner -->
+            <!-- Workweek label -->
+
             <RowDefinition Height="Auto"/>
-            <!-- Sort buttons -->
+            <!-- Change detection banner -->
+
+            <RowDefinition Height="Auto"/>
+            <!-- Toolbar: Sort + Import button -->
+
             <RowDefinition Height="*"/>
             <!-- DataGrid -->
         </Grid.RowDefinitions>

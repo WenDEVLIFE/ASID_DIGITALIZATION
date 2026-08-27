@@ -1,5 +1,6 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories;
+using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.PUBody;
@@ -83,6 +84,18 @@ namespace ASID.Edge.Views
                 var user = auth.CurrentUser?.Username ?? "User";
                 var role = auth.CurrentRole;
                 Toasts.Success($"Welcome, {user}! Logged in as {role}.", 2500);
+
+                // For Planner, load the dashboard with existing demand data
+                switch (auth.CurrentRole)
+                {
+                    case Role.Planner:
+                        LoadDashboard();
+                        break;
+                    default:
+                        // Load the Storage station by default
+                        StationHost.Content = _storage;
+                        break;
+                }
             };
         }
 
@@ -145,6 +158,38 @@ namespace ASID.Edge.Views
         private void btnLogout_Click(object sender, RoutedEventArgs e)
         {
             LogoutRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void LoadDashboard()
+        {
+            try
+            {
+                var repo = new PostgreSqlDailyDemandRepository();
+                var allDemands = repo.GetAll();
+
+                var displayItems = allDemands
+                    .GroupBy(d => new { d.Model, d.PartNo })
+                    .Select(g => new PUBodyDailyDemandItem
+                    {
+                        Date = "",
+                        Model = g.Key.Model,
+                        PartNo = g.Key.PartNo,
+                        Demand = g.Sum(x => x.Quantity),
+                        P2Inventory = 0,
+                        DeliveredToP1 = 0,
+                        Scrapped = g.Sum(x => x.Scrapped)
+                    })
+                    .OrderBy(x => x.Model)
+                    .ToList();
+
+                _dashboard.Load(displayItems);
+            }
+            catch (Exception ex)
+            {
+                // DB unreachable — show empty dashboard
+                _dashboard.Load(Array.Empty<PUBodyDailyDemandItem>());
+                System.Diagnostics.Debug.WriteLine($"LoadDashboard failed: {ex.Message}");
+            }
         }
 
         private void btnDashboard_Click(object sender, RoutedEventArgs e)

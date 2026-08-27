@@ -145,7 +145,8 @@ namespace ASID.Edge.Views.Controls
         {
             if (!ServiceProvider.Auth.CanImportDemand)
             {
-                Toast.Warning("You do not have permission to import production plans.");
+                MessageBox.Show("You do not have permission to import production plans.",
+                    "Permission Denied", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -161,6 +162,18 @@ namespace ASID.Edge.Views.Controls
             try
             {
                 var result = _dailyDemandService.ImportExcel(dialog.FileName);
+
+                if (result.Demands.Count == 0)
+                {
+                    MessageBox.Show(
+                        "No demand records found in the Excel file.\n\n" +
+                        "The importer looks for a sheet with 'Work Week' or 'Serial Production' headers.\n" +
+                        "Data rows must have a non-empty Model (Col B) and a numeric Demand (Col E).",
+                        "Import Warning",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
 
                 var displayItems = result.Demands
                     .GroupBy(x => new
@@ -184,11 +197,20 @@ namespace ASID.Edge.Views.Controls
 
                 LoadWithWorkweek(displayItems, result.WorkweekLabel);
 
-                Toast.Success($"{result.Demands.Count} records imported for {result.WorkweekLabel}.");
+                MessageBox.Show(
+                    $"Successfully imported {result.Demands.Count} records for {result.WorkweekLabel}.\n\n" +
+                    $"Displaying {displayItems.Count} grouped items.",
+                    "Import Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                Toast.Error($"Import failed: {ex.Message}");
+                MessageBox.Show(
+                    $"Import failed: {ex.Message}\n\n{ex.StackTrace}",
+                    "Import Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
     }
