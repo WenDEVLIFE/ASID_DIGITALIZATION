@@ -2,7 +2,6 @@ using ASID.Edge.Models;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 
 namespace ASID.Edge.Helpers
@@ -11,32 +10,26 @@ namespace ASID.Edge.Helpers
     /// Parses the planner's production-plan Excel workbook.
     ///
     /// Expected layout (first worksheet):
-    ///   Row  2, Col G  -> week start date
-    ///   Row  2, Col Y  -> week end date
     ///   Rows 5-100:
-    ///     Col B -> Serial Production  (Model)
+    ///     Col A -> Work Week number (e.g. 33)
+    ///     Col B -> Serial Production  (Model Name)
     ///     Col D -> PU Body PN         (Part Number)
     ///     Col E -> Rev 0              (Demand quantity)
     /// </summary>
     public static class ExcelImporter
     {
-        private const int WeekStartCol = 7;   // G
-        private const int WeekEndCol = 25;    // Y
-        private const int DateRow = 2;
-
         private const int FirstDataRow = 5;
         private const int LastDataRow = 100;
 
-        private const int ModelCol = 2;   // B
-        private const int PartNoCol = 4;  // D
-        private const int DemandCol = 5;  // E
+        private const int WorkWeekCol = 1;  // A
+        private const int ModelCol = 2;     // B
+        private const int PartNoCol = 4;    // D
+        private const int DemandCol = 5;    // E
 
         public class ParseResult
         {
             public List<DailyDemand> Demands { get; set; } = new();
             public string WorkweekLabel { get; set; } = "";
-            public DateTime WeekStart { get; set; }
-            public DateTime WeekEnd { get; set; }
         }
 
         public static ParseResult Parse(string filePath)
@@ -51,9 +44,17 @@ namespace ASID.Edge.Helpers
                 return new ParseResult();
             }
 
-            DateTime weekStart = ParseDateCell(worksheet.Cells[DateRow, WeekStartCol]);
-            DateTime weekEnd = ParseDateCell(worksheet.Cells[DateRow, WeekEndCol]);
-            string workweekLabel = ComputeWorkweekLabel(weekStart, weekEnd);
+            // Read workweek from Column A (first non-empty value)
+            string workweekLabel = "";
+            for (int row = FirstDataRow; row <= LastDataRow; row++)
+            {
+                string ww = worksheet.Cells[row, WorkWeekCol].Text.Trim();
+                if (!string.IsNullOrWhiteSpace(ww))
+                {
+                    workweekLabel = $"WW {ww}";
+                    break;
+                }
+            }
 
             var demands = new List<DailyDemand>();
 
@@ -76,7 +77,7 @@ namespace ASID.Edge.Helpers
 
                 demands.Add(new DailyDemand
                 {
-                    ProductionDate = weekStart,
+                    ProductionDate = DateTime.Today,
                     Shift = 0,
                     Model = model,
                     PartNo = partNo,
@@ -89,33 +90,8 @@ namespace ASID.Edge.Helpers
             return new ParseResult
             {
                 Demands = demands,
-                WorkweekLabel = workweekLabel,
-                WeekStart = weekStart,
-                WeekEnd = weekEnd
+                WorkweekLabel = workweekLabel
             };
-        }
-
-        private static DateTime ParseDateCell(ExcelRange cell)
-        {
-            if (cell?.Value == null)
-                return DateTime.Today;
-
-            if (cell.Value is double dVal)
-                return DateTime.FromOADate(dVal);
-
-            if (cell.Value is DateTime dtVal)
-                return dtVal;
-
-            if (DateTime.TryParse(cell.Text, out DateTime parsed))
-                return parsed;
-
-            return DateTime.Today;
-        }
-
-        public static string ComputeWorkweekLabel(DateTime weekStart, DateTime weekEnd)
-        {
-            int weekNumber = ISOWeek.GetWeekOfYear(weekStart);
-            return $"WW{weekNumber}";
         }
     }
 }

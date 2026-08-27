@@ -22,8 +22,8 @@ public class DailyDemandService
     {
         var result = ExcelImporter.Parse(filePath);
 
-        // Delete existing records for this workweek (mid-week update support)
-        _repository.DeleteByWorkweek(result.WeekStart);
+        // Delete all existing demand before importing (full workweek replacement)
+        _repository.DeleteAll();
 
         _repository.Insert(result.Demands);
 

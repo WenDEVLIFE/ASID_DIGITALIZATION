@@ -184,7 +184,7 @@ namespace ASID.Edge.Views.Controls
 
                 LoadWithWorkweek(displayItems, result.WorkweekLabel);
 
-                Toast.Success($"{result.Demands.Count} records imported for {result.WorkweekLabel}. Week: {result.WeekStart:MM/dd/yy} - {result.WeekEnd:MM/dd/yy}");
+                Toast.Success($"{result.Demands.Count} records imported for {result.WorkweekLabel}.");
             }
             catch (Exception ex)
             {
