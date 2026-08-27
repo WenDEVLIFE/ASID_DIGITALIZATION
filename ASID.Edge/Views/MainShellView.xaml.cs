@@ -71,6 +71,11 @@ namespace ASID.Edge.Views
             btnP1LoadingBay.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
             btnP1Production.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
 
+            // Supervisor → System section visible
+            bool isSupervisor = role == Role.Supervisor;
+            LblSystem.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
+            btnUserManagement.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
+
             // Subscribe to sync status changes.
             if (ServiceProvider.Sync is SyncService sync)
             {
@@ -260,6 +265,17 @@ namespace ASID.Edge.Views
             _p1Production.Activate();
 
             StationHost.Content = _p1Production;
+        }
+
+        private void btnUserManagement_Click(object sender, RoutedEventArgs e)
+        {
+            _storage.Deactivate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Deactivate();
+
+            StationHost.Content = new UserManagementControl();
         }
 
     }

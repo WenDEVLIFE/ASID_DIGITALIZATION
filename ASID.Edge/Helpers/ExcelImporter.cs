@@ -67,12 +67,14 @@ namespace ASID.Edge.Helpers
                 }
             }
 
-            // Find the column indices by scanning header rows (rows 2-4)
+            // Find model and part number columns (first match in header rows)
             int modelCol = FindColumn(worksheet, 2, 4, "Serial Production");
             int partNoCol = FindColumn(worksheet, 2, 4, "PU Body PN");
-            int demandCol = FindColumn(worksheet, 2, 4, "Rev");
 
-            // If we couldn't find by header name, fall back to known positions
+            // For demand column: find ALL "Rev" columns and pick the one with actual data
+            int demandCol = FindDemandColumn(worksheet, firstDataRow);
+
+            // Fallbacks
             if (modelCol <= 0) modelCol = 2;  // B
             if (partNoCol <= 0) partNoCol = 4; // D
             if (demandCol <= 0) demandCol = 5;  // E
@@ -114,6 +116,60 @@ namespace ASID.Edge.Helpers
                 Demands = demands,
                 WorkweekLabel = workweekLabel
             };
+        }
+
+        /// <summary>
+        /// Find the demand column by checking ALL columns that contain "Rev" in headers,
+        /// then picking the one that actually has numeric data in the data rows.
+        /// This handles the case where multiple "Rev. 0" columns exist but only one has data.
+        /// </summary>
+        private static int FindDemandColumn(ExcelWorksheet ws, int firstDataRow)
+        {
+            if (ws.Dimension == null) return -1;
+
+            // Find all columns with "Rev" in header rows (2-4)
+            var revColumns = new List<int>();
+            int maxCol = Math.Min(ws.Dimension.Columns, 40);
+            for (int row = 2; row <= 4; row++)
+            {
+                for (int col = 1; col <= maxCol; col++)
+                {
+                    if (ws.Cells[row, col].Text.Trim()
+                        .Contains("Rev", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!revColumns.Contains(col))
+                            revColumns.Add(col);
+                    }
+                }
+            }
+
+            if (revColumns.Count == 0) return -1;
+            if (revColumns.Count == 1) return revColumns[0];
+
+            // Multiple "Rev" columns found — pick the one with actual numeric data
+            int bestCol = revColumns[0];
+            int bestScore = 0;
+
+            foreach (var col in revColumns)
+            {
+                int score = 0;
+                for (int row = firstDataRow; row <= Math.Min(ws.Dimension.Rows, firstDataRow + 20); row++)
+                {
+                    string val = ws.Cells[row, col].Text.Trim();
+                    if (!string.IsNullOrWhiteSpace(val) && val != "-" &&
+                        int.TryParse(val, out int num) && num > 0)
+                    {
+                        score++;
+                    }
+                }
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestCol = col;
+                }
+            }
+
+            return bestCol;
         }
 
         /// <summary>

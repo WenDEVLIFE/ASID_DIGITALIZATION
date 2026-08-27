@@ -8,5 +8,11 @@ namespace ASID.Edge.Repositories.Interfaces
         User? GetByUsername(string username);
 
         IReadOnlyList<User> GetAll();
+
+        void Add(User user);
+
+        void Update(User user);
+
+        void Delete(Guid userId);
     }
 }

@@ -121,6 +121,21 @@
                                     Margin="5"
                                     Height="35"/>
 
+                        <!-- System (Supervisor only) -->
+                        <TextBlock x:Name="LblSystem"
+                                   Text="SYSTEM"
+                                   Foreground="White"
+                                   FontWeight="Bold"
+                                   Margin="5,15,5,5"
+                                   Visibility="Collapsed"/>
+
+                        <Button x:Name="btnUserManagement"
+                                Content="👤 User Management"
+                                Click="btnUserManagement_Click"
+                                Margin="5"
+                                Height="35"
+                                Visibility="Collapsed"/>
+
                         </StackPanel>
 
                 </DockPanel>
