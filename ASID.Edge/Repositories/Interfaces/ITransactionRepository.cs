@@ -14,5 +14,7 @@ namespace ASID.Edge.Repositories.Interfaces
         IReadOnlyList<StorageTransaction> GetAll();
 
         void Update(StorageTransaction transaction);
+
+        bool DeleteByDataMatrix(string dataMatrix);
     }
 }

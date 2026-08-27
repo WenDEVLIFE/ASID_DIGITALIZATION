@@ -87,10 +87,15 @@ CREATE TABLE users
 CREATE INDEX idx_users_username
     ON users(username);
 
--- Seed users (dev-only). Plaintext: rpingkian/1234, vsendrijas/5678,
--- cordonez/4567. Passwords are stored as PBKDF2 (SHA-256, 100,000 iterations)
+-- Seed users (dev-only). Passwords are stored as PBKDF2 (SHA-256, 100,000 iterations)
 -- in the format {iterations}.{saltBase64}.{hashBase64}.
+--
+-- rpingkian / 1234  → Operator  (stations only)
+-- vsendrijas / 5678 → QA        (stations + NC)
+-- cordonez / 4567   → Supervisor (stations + NC + override)
+-- vsendrijas.p / 7845 → Planner  (dashboard + import production plan)
 INSERT INTO users (username, password_hash, role) VALUES
- ('rpingkian','100000.cnBpbmdraWFuLnNlZWQuMQ==.puzn8+C7JXIRWavL9JoOI69hM2MCqKX5s4pT2Gnp+h0=','operator'),
- ('vsendrijas','100000.dnNlbmRyaWphcy5zZWVkMg==.EFGM8CjsmzidgpiLRV4tBOy1lR9DWp6k7iZuouNklRo=','qa'),
- ('cordonez','100000.Y29yZG9uZXouc2VlZC4wMw==.aFngONRDfMiKH7HQnepsFBr+btK6oMo5m8x5xZQ6Syc=','supervisor');
+ ('rpingkian',   '100000./PzwRW3iWSQO6ocYyOAmqg==.Qi5DSaA2N6KsFkFHBTRv4qLqr0LmgFPezE3XEZHPFks=', 'operator'),
+ ('vsendrijas',  '100000.7gP6pxaWtEshcZDqHig5eQ==.qi4uZgj6uPjiLL/DJBKuVd89i5HDhjLlgRlN5Da4M3s=', 'qa'),
+ ('cordonez',    '100000.BPGX/TrkXhsabeg3clB4WA==.+iRnOiyGJT52s0zPSWpxTCBd1PgisUgp7DwJp5Rx6H0=', 'supervisor'),
+ ('vsendrijas.p','100000.0swiOwjI3eKKwLGNP5dmXQ==.I4hbwy+svxcKjTXKWwma1PFHwfwaiPE/516bAv2jWWE=', 'planner');

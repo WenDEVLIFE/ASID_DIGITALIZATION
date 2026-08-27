@@ -236,6 +236,20 @@ WHERE
         TransactionChanged?.Invoke();
     }
 
+    public bool DeleteByDataMatrix(string dataMatrix)
+    {
+        using var connection = SqliteDatabase.CreateConnection();
+        connection.Open();
+
+        const string sql = "DELETE FROM transactions WHERE data_matrix = @dm;";
+        int rows = connection.Execute(sql, new { dm = dataMatrix });
+
+        if (rows > 0)
+            TransactionChanged?.Invoke();
+
+        return rows > 0;
+    }
+
     // ── Helpers ──
 
     private static DateTime ParseDateTime(object? value)

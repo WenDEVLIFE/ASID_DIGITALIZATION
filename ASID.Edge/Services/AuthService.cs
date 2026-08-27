@@ -26,7 +26,10 @@ namespace ASID.Edge.Services
             CurrentRole is Role.QA or Role.Supervisor;
 
         public bool CanImportDemand =>
-            CurrentRole == Role.Supervisor;
+            CurrentRole is Role.Supervisor or Role.Planner;
+
+        public bool CanOverride =>
+            CurrentRole is Role.Supervisor;
 
         public bool Login(string username, string password)
         {
@@ -114,6 +117,7 @@ namespace ASID.Edge.Services
             {
                 "qa" => Role.QA,
                 "supervisor" => Role.Supervisor,
+                "planner" => Role.Planner,
                 _ => Role.Operator
             };
         }

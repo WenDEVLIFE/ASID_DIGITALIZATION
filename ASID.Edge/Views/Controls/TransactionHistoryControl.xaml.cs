@@ -1,5 +1,8 @@
 using ASID.Edge.Models;
 using ASID.Edge.Services;
+using Dapper;
+using ASID.Edge.Repositories;
+using System.Linq;
 using ASID.Edge.Views.Controllers;
 using ASID.Edge.Views.Dialogs;
 using ASID.Edge.Views.Controls;
@@ -50,6 +53,12 @@ namespace ASID.Edge.Views.Controls
 
             QAReview.IsEnabled =
                 ServiceProvider.Auth.CanReviewNC;
+
+            // Override (delete) button — Supervisor only
+            BtnOverride.IsEnabled =
+                ServiceProvider.Auth.CanOverride;
+            BtnOverride.Visibility =
+                ServiceProvider.Auth.CanOverride ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void OnSortByModelClick(object sender, RoutedEventArgs e)
@@ -147,6 +156,64 @@ namespace ASID.Edge.Views.Controls
                 {
                     Toast.Success($"Material scrapped (Qty: {dialog.ScrapQuantity}). Deducted from inventory.");
                 }
+            }
+        }
+
+        private void Override_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ServiceProvider.Auth.CanOverride)
+            {
+                Toast.Warning("Only Supervisor can override (delete) stored data.");
+                return;
+            }
+
+            if (TransactionGrid.SelectedItem is not PUBodyTransactionHistoryItem selected)
+            {
+                Toast.Warning("Select a transaction row to override.");
+                return;
+            }
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"Delete transaction '{selected.SerialNo}' (Part: {selected.PartNo}, Status: {selected.Status})?\n\nThis action cannot be undone.",
+                "Confirm Override",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                // Delete from both SQLite and PostgreSQL
+                RepositoryProvider.Transactions.DeleteByDataMatrix(selected.SerialNo);
+
+                Toast.Success($"Transaction '{selected.SerialNo}' deleted.");
+
+                // Refresh the grid from local data
+                var all = RepositoryProvider.Transactions.GetAll();
+                var historyItems = all.Select(t => new PUBodyTransactionHistoryItem
+                {
+                    Status = t.Status,
+                    Model = t.Model,
+                    PartNo = t.PartNo,
+                    SerialNo = t.DataMatrix,
+                    SNP = t.SNP,
+                    LineNo = t.LineNo,
+                    TrolleyNo = t.TrolleyNo,
+                    LaneNo = t.LaneNo,
+                    Date = t.CreatedAt.ToString("yyyy-MM-dd"),
+                    Time = t.CreatedAt.ToString("HH:mm:ss"),
+                    IsSuspectedNC = t.IsSuspectedNC,
+                    IsNCConfirmed = t.IsNCConfirmed,
+                }).ToList();
+
+                TransactionGrid.ItemsSource = historyItems;
+                TxtRecordCount.Text = historyItems.Count.ToString();
+                TxtLastRefresh.Text = DateTime.Now.ToString("HH:mm:ss");
+            }
+            catch (Exception ex)
+            {
+                Toast.Error($"Override failed: {ex.Message}");
             }
         }
     }

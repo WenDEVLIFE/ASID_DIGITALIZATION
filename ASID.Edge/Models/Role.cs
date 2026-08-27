@@ -4,6 +4,7 @@ namespace ASID.Edge.Models
     {
         Operator,
         QA,
-        Supervisor
+        Supervisor,
+        Planner
     }
 }

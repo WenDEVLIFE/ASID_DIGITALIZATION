@@ -93,6 +93,20 @@
                         <TextBlock Text="QA Review NC"/>
                     </StackPanel>
                 </Button>
+
+                <Button x:Name="BtnOverride"
+                        Click="Override_Click"
+                        Margin="5"
+                        Padding="12,5"
+                        Background="#6A1B9A"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        Cursor="Hand">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🗑 " FontSize="14"/>
+                        <TextBlock Text="Override"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Grid>
 

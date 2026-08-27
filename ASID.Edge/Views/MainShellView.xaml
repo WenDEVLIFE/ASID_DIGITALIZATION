@@ -67,11 +67,26 @@
                                Foreground="White"
                                FontWeight="Bold"
                                FontSize="20"
-                               Margin="15"/>
+                               Margin="15"/>                    <StackPanel Margin="10">
 
-                    <StackPanel Margin="10">
+                        <!-- Dashboard (Planner only) -->
+                        <TextBlock x:Name="LblDashboard"
+                                   Text="DASHBOARD"
+                                   Foreground="White"
+                                   FontWeight="Bold"
+                                   Margin="5"/>
 
-                        <TextBlock Text="PU BODY"
+                        <Button x:Name="btnDashboard"
+                                Content="📊 Dashboard"
+                                Click="btnDashboard_Click"
+                                Margin="5"
+                                Height="35"/>
+
+                        <Separator x:Name="SepDashboard" Background="#2a5a8a" Margin="5,10"/>
+
+                        <!-- PU Body stations (hidden for Planner) -->
+                        <TextBlock x:Name="LblPuBody"
+                                   Text="PU BODY"
                                    Foreground="White"
                                    FontWeight="Bold"
                                    Margin="5"/>
@@ -82,7 +97,6 @@
                                 Margin="5"
                                 Height="35"/>
                         
-
                         <Button x:Name="btnWithdrawal"
                                 Content="ST002 - Withdrawal"
                                 Click="btnWithdrawal_Click"

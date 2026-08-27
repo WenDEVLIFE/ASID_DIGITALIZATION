@@ -1,4 +1,5 @@
-﻿using ASID.Edge.Repositories;
+﻿using ASID.Edge.Models;
+using ASID.Edge.Repositories;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.PUBody;
@@ -27,6 +28,7 @@ namespace ASID.Edge.Views
         private readonly P2LoadingBayWorkStationView _p2LoadingBay;
         private readonly P1LoadingBayWorkStationView _p1LoadingBay;
         private readonly P1ProductionWorkStationView _p1Production;
+        private readonly DailyDemandControl _dashboard = new();
 
         /// <summary>Raised when the user clicks Logout; consumed by MainWindow/App.</summary>
         public event EventHandler? LogoutRequested;
@@ -45,11 +47,28 @@ namespace ASID.Edge.Views
 
             _storage.Activate();
 
-            StationHost.Content = _storage;
+            StationHost.Content = _dashboard;
 
             var auth = ServiceProvider.Auth;
             TxtSession.Text =
                 $"{auth.CurrentUser?.Username ?? "—"} — {auth.CurrentRole}";
+
+            // Role-based navigation
+            var role = auth.CurrentRole;
+            bool isPlanner = role == Role.Planner;
+
+            // Planner → Dashboard only, hide all stations
+            // Operator/QA/Supervisor → Stations only, hide Dashboard
+            LblDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
+            btnDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
+            SepDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
+
+            LblPuBody.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnStorage.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnWithdrawal.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnP2LoadingBay.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnP1LoadingBay.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnP1Production.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
 
             // Subscribe to sync status changes.
             if (ServiceProvider.Sync is SyncService sync)
@@ -126,6 +145,17 @@ namespace ASID.Edge.Views
         private void btnLogout_Click(object sender, RoutedEventArgs e)
         {
             LogoutRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void btnDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            _storage.Deactivate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Deactivate();
+
+            StationHost.Content = _dashboard;
         }
 
         private void btnStorage_Click(object sender, RoutedEventArgs e)
