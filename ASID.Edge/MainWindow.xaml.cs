@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Services;
+using ASID.Edge.Services;
 using System;
 using System.Windows;
 using System.Windows.Input;
@@ -33,19 +33,19 @@ namespace ASID.Edge
         }
 
         /// <summary>
-        /// Intercepts keyboard input globally — detects USB barcode scanners
-        /// (rapid keystroke pattern) vs manual typing.
+        /// Tracks keyboard timing for USB scanner detection.
+        /// NEVER sets e.Handled = true — all input always reaches textboxes.
         /// </summary>
         private void Window_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (_usbScanner.ProcessTextInput(e))
-                e.Handled = true; // scanner consumed it — don't pass to focused textbox
+            _usbScanner.ProcessTextInput(e);
+            // Never consume — textboxes always get input
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (_usbScanner.ProcessKeyDown(e.Key))
-                e.Handled = true;
+            _usbScanner.ProcessKeyDown(e.Key);
+            // Never consume — textboxes always get input
         }
     }
 }
