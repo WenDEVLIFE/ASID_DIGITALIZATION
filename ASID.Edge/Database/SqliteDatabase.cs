@@ -71,6 +71,35 @@ CREATE INDEX IF NOT EXISTS idx_sqlite_tx_datamatrix
 CREATE INDEX IF NOT EXISTS idx_sqlite_tx_synced
     ON transactions(synced);
 ");
+
+        // Migrations: add columns that may be missing from older databases
+        var columns = connection.Query<(
+            int cid, string name, string type, int notnull,
+            string? dflt_value, int pk)>(
+            "PRAGMA table_info(transactions)")
+            .Select(c => c.name.ToLowerInvariant())
+            .ToList();
+
+        void AddColumnIfMissing(string col, string ddl)
+        {
+            if (!columns.Contains(col.ToLowerInvariant()))
+            {
+                connection.Execute(ddl);
+            }
+        }
+
+        AddColumnIfMissing("operator_id",
+            "ALTER TABLE transactions ADD COLUMN operator_id TEXT");
+        AddColumnIfMissing("is_suspected_nc",
+            "ALTER TABLE transactions ADD COLUMN is_suspected_nc INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("is_nc_confirmed",
+            "ALTER TABLE transactions ADD COLUMN is_nc_confirmed INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("is_nc_rejected",
+            "ALTER TABLE transactions ADD COLUMN is_nc_rejected INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("nc_quantity",
+            "ALTER TABLE transactions ADD COLUMN nc_quantity INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("synced",
+            "ALTER TABLE transactions ADD COLUMN synced INTEGER NOT NULL DEFAULT 0");
     }
 
     /// <summary>
