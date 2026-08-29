@@ -236,6 +236,24 @@ WHERE
         TransactionChanged?.Invoke();
     }
 
+    public IReadOnlyList<LaneOccupancy> GetLaneOccupancy()
+    {
+        using var connection = SqliteDatabase.CreateConnection();
+        connection.Open();
+
+        const string sql = @"
+SELECT
+    lane_no AS LaneNo,
+    COUNT(*) AS OpenCount
+FROM transactions
+WHERE lane_no IS NOT NULL AND lane_no != ''
+  AND (consumed_at IS NULL OR consumed_at = '')
+GROUP BY lane_no
+ORDER BY lane_no;";
+
+        return connection.Query<LaneOccupancy>(sql).ToList();
+    }
+
     public bool DeleteByDataMatrix(string dataMatrix)
     {
         using var connection = SqliteDatabase.CreateConnection();

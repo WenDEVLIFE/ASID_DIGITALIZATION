@@ -20,6 +20,8 @@ namespace ASID.Edge.Views.Controls
     /// </summary>
     public partial class DailyDemandControl : UserControl
     {
+        public event EventHandler? ImportCompleted;
+
         private readonly DailyDemandService _dailyDemandService = new(
             new PostgreSqlDailyDemandRepository());
 
