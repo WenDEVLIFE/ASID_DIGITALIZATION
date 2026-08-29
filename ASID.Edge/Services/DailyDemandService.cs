@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Helpers;
+using ASID.Edge.Helpers;
 using ASID.Edge.Repositories.Interfaces;
 using System;
 
@@ -34,7 +34,8 @@ public class DailyDemandService
     /// Check if the demand data has been updated since the given timestamp.
     /// Used for change detection (e.g., polling or timer-based refresh).
     /// </summary>
-    public bool HasDataChanged(DateTime? lastKnownImport)    {
+    public bool HasDataChanged(DateTime? lastKnownImport)
+    {
         var lastImportedAt = _repository.GetLastImportedAt();
 
         if (lastImportedAt == null)
