@@ -120,6 +120,25 @@ FROM transactions;
             .ToList();
         }
 
+        public IReadOnlyList<LaneOccupancy> GetLaneOccupancy()
+        {
+            using var connection =
+                Database.Database.CreateConnection();
+
+            connection.Open();
+
+            const string sql = @"
+SELECT
+    lane_no AS LaneNo,
+    COUNT(*) FILTER (WHERE consumed_at IS NULL) AS OpenCount
+FROM transactions
+WHERE lane_no IS NOT NULL AND lane_no <> ''
+GROUP BY lane_no
+ORDER BY lane_no;";
+
+            return connection.Query<LaneOccupancy>(sql).ToList();
+        }
+
         public void Update(StorageTransaction transaction)
         {
             using var connection =

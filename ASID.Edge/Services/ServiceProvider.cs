@@ -18,6 +18,10 @@ namespace ASID.Edge.Services
             new StorageService(
                 RepositoryProvider.Transactions);
 
+        public static StorageValidationService StorageValidation { get; } =
+            new StorageValidationService(
+                RepositoryProvider.Transactions);
+
         public static WithdrawalService Withdrawal { get; } =
             new WithdrawalService(
                 RepositoryProvider.Transactions);

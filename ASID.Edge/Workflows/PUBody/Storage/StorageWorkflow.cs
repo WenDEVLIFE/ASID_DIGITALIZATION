@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Models;
+using ASID.Edge.Models;
 using ASID.Edge.Services;
 using System;
 using System.Collections.Generic;
