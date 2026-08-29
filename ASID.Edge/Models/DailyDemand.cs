@@ -17,4 +17,8 @@ public class DailyDemand
     public string PartNo { get; set; } = "";
 
     public int Quantity { get; set; }
+
+    public int Scrapped { get; set; }
+
+    public DateTime ImportedAt { get; set; } = DateTime.UtcNow;
 }

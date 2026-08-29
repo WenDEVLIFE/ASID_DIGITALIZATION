@@ -1,24 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace ASID.Edge.Views.Dialogs
 {
-    /// <summary>
-    /// Interaction logic for NonConformanceScanDialog.xaml
-    /// </summary>
     public partial class NonConformanceScanDialog : Window
     {
-
         public string DataMatrix { get; private set; } = "";
+        public int NCQuantity { get; private set; } = 1;
+
         public NonConformanceScanDialog()
         {
             InitializeComponent();
@@ -33,8 +23,26 @@ namespace ASID.Edge.Views.Dialogs
             if (e.Key != Key.Enter)
                 return;
 
-            DataMatrix = DataMatrixTextBox.Text.Trim();
+            txtNCQuantity.Focus();
+            txtNCQuantity.SelectAll();
+        }
 
+        private void Submit_Click(object sender, RoutedEventArgs e)
+        {
+            DataMatrix = DataMatrixTextBox.Text.Trim();
+            if (string.IsNullOrEmpty(DataMatrix))
+            {
+                MessageBox.Show("Please scan or enter a Data Matrix.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!int.TryParse(txtNCQuantity.Text, out int qty) || qty <= 0)
+            {
+                MessageBox.Show("Please enter a valid positive number for NC quantity.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            NCQuantity = qty;
             DialogResult = true;
             Close();
         }

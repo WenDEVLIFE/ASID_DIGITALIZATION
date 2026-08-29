@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Models;
+using ASID.Edge.Models;
 using ASID.Edge.Services;
 using System;
 using System.Collections.Generic;
@@ -13,11 +13,9 @@ namespace ASID.Edge.Workflows.PUBody.Storage
         public StorageContext Context => _context;
         public WorkflowState CurrentState => _context.State;
 
-        private readonly StorageValidationService _validation =
-            ServiceProvider.StorageValidation;
+        private readonly StorageValidationService _validation = new();
         public event EventHandler? WorkflowChanged;
         public event EventHandler? Completed;
-        public event EventHandler? LaneSelectionRequested;
 
         private readonly DataMatrixService _dmService = new();
 
@@ -41,43 +39,43 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             {
                 return _context.State switch
                 {
-                    WorkflowState.WaitingForOperator =>
-                        new WorkflowMessage
-                        {
-                            Title = "READY",
-                            Message = "Please Scan Operator ID",
-                            Type = WorkflowMessageType.Information
-                        },
-
                     WorkflowState.WaitingForKanban =>
                         new WorkflowMessage
                         {
-                            Title = "READY",
-                            Message = "Please Scan Kanban",
-                            Type = WorkflowMessageType.Information
-                        },
-
-                    WorkflowState.WaitingForLine =>
-                        new WorkflowMessage
-                        {
-                            Title = "READY",
-                            Message = "Please Scan Line Number",
-                            Type = WorkflowMessageType.Information
-                        },
-
-                    WorkflowState.WaitingForTrolley =>
-                        new WorkflowMessage
-                        {
-                            Title = "READY",
-                            Message = "Please Scan Trolley Number",
+                            Title = "STEP 1",
+                            Message = "Scan the Kanban QR code\n(attached on the trolley green card)",
                             Type = WorkflowMessageType.Information
                         },
 
                     WorkflowState.WaitingForLane =>
                         new WorkflowMessage
                         {
-                            Title = "READY",
-                            Message = "Please Scan Lane Number",
+                            Title = "STEP 2",
+                            Message = "Select a vacant lane",
+                            Type = WorkflowMessageType.Information
+                        },
+
+                    WorkflowState.WaitingForTrolley =>
+                        new WorkflowMessage
+                        {
+                            Title = "STEP 3",
+                            Message = "Scan the Trolley Number\n(white index card)",
+                            Type = WorkflowMessageType.Information
+                        },
+
+                    WorkflowState.WaitingForLine =>
+                        new WorkflowMessage
+                        {
+                            Title = "STEP 4",
+                            Message = "Scan or input Cell Number\n(e.g. Cell 25)",
+                            Type = WorkflowMessageType.Information
+                        },
+
+                    WorkflowState.WaitingForOperator =>
+                        new WorkflowMessage
+                        {
+                            Title = "STEP 5",
+                            Message = "Scan or input Operator\n(e.g. name of Cushman)",
                             Type = WorkflowMessageType.Information
                         },
 
@@ -85,7 +83,7 @@ namespace ASID.Edge.Workflows.PUBody.Storage
                         new WorkflowMessage
                         {
                             Title = "REVIEW",
-                            Message = "Press APPLY CHANGES to Validate",
+                            Message = "Check information.\nPress APPLY CHANGES if correct.",
                             Type = WorkflowMessageType.Information
                         },
 
@@ -100,8 +98,8 @@ namespace ASID.Edge.Workflows.PUBody.Storage
                     WorkflowState.ReadyToPrint =>
                         new WorkflowMessage
                         {
-                            Title = "READY",
-                            Message = "Press PRINT to Generate Data Matrix",
+                            Title = "PRINT",
+                            Message = "Press PRINT to generate Data Matrix",
                             Type = WorkflowMessageType.Success
                         },
 
@@ -140,21 +138,18 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 
         public void Start()
         {
-            _context.State = WorkflowState.WaitingForOperator;
+            _context.State = WorkflowState.WaitingForKanban;
             NotifyChanged();
         }
 
         public void ProcessScan(string barcode)
         {
-
             if (_context.State == WorkflowState.WaitingForVerification)
-
             {
                 if (barcode == _context.DataMatrix)
                 {
                     _context.State = WorkflowState.Completed;
                     NotifyChanged();
-
                     NotifyCompleted();
                 }
                 else
@@ -162,83 +157,69 @@ namespace ASID.Edge.Workflows.PUBody.Storage
                     _context.State = WorkflowState.Error;
                     NotifyChanged();
                 }
-
                 return;
             }
 
             switch (_context.State)
             {
-                case WorkflowState.WaitingForOperator:
-                    HandleOperator(barcode);
-                    break;
-
                 case WorkflowState.WaitingForKanban:
                     HandleKanban(barcode);
-                    break;
-
-                case WorkflowState.WaitingForLine:
-                    HandleLine(barcode);
-                    break;
-
-                case WorkflowState.WaitingForTrolley:
-                    HandleTrolley(barcode);
                     break;
 
                 case WorkflowState.WaitingForLane:
                     HandleLane(barcode);
                     break;
 
+                case WorkflowState.WaitingForTrolley:
+                    HandleTrolley(barcode);
+                    break;
 
+                case WorkflowState.WaitingForLine:
+                    HandleLine(barcode);
+                    break;
+
+                case WorkflowState.WaitingForOperator:
+                    HandleOperator(barcode);
+                    break;
             }
         }
 
-        private void HandleOperator(string barcode)
-        {
-            _context.OperatorId = barcode;
-            _context.State = WorkflowState.WaitingForKanban;
-            NotifyChanged();
-        }
+        // Step 1: Scan Kanban QR code (green card on trolley)
         private void HandleKanban(string barcode)
         {
             _context.KanbanNo = barcode;
-            _context.State = WorkflowState.WaitingForLine;
+            _context.State = WorkflowState.WaitingForLane;
             NotifyChanged();
         }
-        private void HandleLine(string barcode)
+
+        // Step 2: Select vacant lane (handled by LaneSequenceDialog)
+        private void HandleLane(string barcode)
         {
-            _context.LineNo = barcode;
+            _context.LaneNo = barcode;
             _context.State = WorkflowState.WaitingForTrolley;
             NotifyChanged();
         }
+
+        // Step 3: Scan trolley number (white index card)
         private void HandleTrolley(string barcode)
         {
             _context.TrolleyNo = barcode;
-            _context.State = WorkflowState.WaitingForLane;
+            _context.State = WorkflowState.WaitingForLine;
             NotifyChanged();
-
-            // The view owns the vacancy UI: it queries vacant lanes,
-            // shows the selection popup and calls ConfirmLane with the result.
-            LaneSelectionRequested?.Invoke(this, EventArgs.Empty);
-        }
-        private void HandleLane(string barcode)
-        {
-            // While waiting for the lane, any scan re-triggers the vacancy
-            // popup (fresh vacancy query). The lane is only confirmed through
-            // ConfirmLane, which is called by the view after the operator
-            // selects a vacant lane in the popup.
-            LaneSelectionRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        /// <summary>
-        /// Confirms the selected lane and moves the workflow to validation.
-        /// Only valid while waiting for the lane scan.
-        /// </summary>
-        public void ConfirmLane(string laneNo)
+        // Step 4: Scan or input cell number
+        private void HandleLine(string barcode)
         {
-            if (_context.State != WorkflowState.WaitingForLane)
-                return;
+            _context.CellNo = barcode;
+            _context.State = WorkflowState.WaitingForOperator;
+            NotifyChanged();
+        }
 
-            _context.LaneNo = laneNo;
+        // Step 5: Scan or input operator
+        private void HandleOperator(string barcode)
+        {
+            _context.OperatorId = barcode;
             _context.State = WorkflowState.ReadyForValidation;
             NotifyChanged();
         }
@@ -251,8 +232,6 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             var threshold =
                 _validation.CheckInventoryThreshold(_context.KanbanNo);
 
-            _context.ThresholdValidated = threshold.Success;
-
             if (!threshold.Success)
             {
                 _context.State = WorkflowState.Error;
@@ -264,8 +243,6 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 
             var lane =
                 _validation.CheckAssignedLane(_context.LaneNo);
-
-            _context.LaneValidated = lane.Success;
 
             if (!lane.Success)
             {
@@ -326,14 +303,12 @@ namespace ASID.Edge.Workflows.PUBody.Storage
         }
         public void Reset()
         {
-            _context.OperatorId = "";
             _context.KanbanNo = "";
-            _context.LineNo = "";
-            _context.TrolleyNo = "";
             _context.LaneNo = "";
+            _context.TrolleyNo = "";
+            _context.CellNo = "";
+            _context.OperatorId = "";
             _context.DataMatrix = "";
-            _context.ThresholdValidated = false;
-            _context.LaneValidated = false;
 
             Start();
 

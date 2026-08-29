@@ -36,25 +36,10 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Operator -->
-                <Button x:Name="btnOperatorLabel"
-                        Content="Operator"
-                       Grid.Row="0"
-                       Grid.Column="0"
-                       Margin="5"
-                       Background="#0B3A66"
-                       Foreground="White"/>
-
-                <TextBox x:Name="txtOperator"
-                         KeyDown="Scan_KeyDown"
-                         Grid.Row="0"
-                        Grid.Column="1"
-                        Margin="5"/>
-
-                <!-- Kanban -->
+                <!-- Step 1: Kanban -->
                 <Button x:Name="btnKanbanLabel"
-                    Content="Kanban"
-                       Grid.Row="1"
+                        Content="1. Kanban"
+                       Grid.Row="0"
                        Grid.Column="0"
                        Margin="5"
                        Background="#0B3A66"
@@ -62,29 +47,31 @@
 
                 <TextBox x:Name="txtKanban"
                          KeyDown="Scan_KeyDown"
-                         Grid.Row="1"
+                         Grid.Row="0"
                         Grid.Column="1"
-                        Margin="5"/>
+                        Margin="5"
+                        IsReadOnly="True"/>
 
-                <!-- Line -->
-                <Button x:Name="btnLineLabel"
-                        Content="Cell No."
-                       Grid.Row="2"
+                <!-- Step 2: Lane -->
+                <Button x:Name="btnLaneLabel"
+                        Content="2. Lane No."
+                       Grid.Row="1"
                        Grid.Column="0"
                        Margin="5"
                        Background="#0B3A66"
                        Foreground="White"/>
 
-                <TextBox x:Name="txtLine"
+                <TextBox x:Name="txtLane"
                          KeyDown="Scan_KeyDown"
-                         Grid.Row="2"
+                         Grid.Row="1"
                         Grid.Column="1"
-                        Margin="5"/>
+                        Margin="5"
+                        IsReadOnly="True"/>
 
-                <!-- Trolley -->
+                <!-- Step 3: Trolley -->
                 <Button x:Name="btnTrolleyLabel"
-                        Content="Trolley No."
-                       Grid.Row="3"
+                        Content="3. Trolley No."
+                       Grid.Row="2"
                        Grid.Column="0"
                        Margin="5"
                        Background="#0B3A66"
@@ -92,20 +79,35 @@
 
                 <TextBox x:Name="txtTrolley"
                          KeyDown="Scan_KeyDown"
+                         Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="5"/>
+
+                <!-- Step 4: Cell -->
+                <Button x:Name="btnLineLabel"
+                        Content="4. Cell No."
+                       Grid.Row="3"
+                       Grid.Column="0"
+                       Margin="5"
+                       Background="#0B3A66"
+                       Foreground="White"/>
+
+                <TextBox x:Name="txtLine"
+                         KeyDown="Scan_KeyDown"
                          Grid.Row="3"
                         Grid.Column="1"
                         Margin="5"/>
 
-                <!-- Lane -->
-                <Button x:Name="btnLaneLabel"
-                        Content="Lane No."
+                <!-- Step 5: Operator -->
+                <Button x:Name="btnOperatorLabel"
+                        Content="5. Operator"
                        Grid.Row="4"
                        Grid.Column="0"
                        Margin="5"
                        Background="#0B3A66"
                        Foreground="White"/>
 
-                <TextBox x:Name="txtLane"
+                <TextBox x:Name="txtOperator"
                          KeyDown="Scan_KeyDown"
                          Grid.Row="4"
                         Grid.Column="1"

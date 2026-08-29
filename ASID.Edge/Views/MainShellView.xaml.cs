@@ -1,4 +1,8 @@
-﻿using ASID.Edge.Services;
+﻿using ASID.Edge.Models;
+using ASID.Edge.Repositories;
+using ASID.Edge.Repositories.PostgreSql;
+using ASID.Edge.Services;
+using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.PUBody;
 using System;
 using System.Collections.Generic;
@@ -17,11 +21,18 @@ namespace ASID.Edge.Views
     {
         private readonly TcpScannerService _scanner = new();
 
+        /// <summary>Global toast notification panel accessible by all views.</summary>
+        public ToastNotification Toasts => ToastsControl;
+
         private readonly StorageWorkStationView _storage;
         private readonly WithdrawalWorkStationView _withdrawal;
         private readonly P2LoadingBayWorkStationView _p2LoadingBay;
         private readonly P1LoadingBayWorkStationView _p1LoadingBay;
         private readonly P1ProductionWorkStationView _p1Production;
+        private readonly DailyDemandControl _dashboard = new();
+
+        /// <summary>Raised when the user clicks Logout; consumed by MainWindow/App.</summary>
+        public event EventHandler? LogoutRequested;
 
         public MainShellView()
         {
@@ -37,8 +48,164 @@ namespace ASID.Edge.Views
 
             _storage.Activate();
 
-            StationHost.Content = _storage;
+            StationHost.Content = _dashboard;
 
+            var auth = ServiceProvider.Auth;
+            TxtSession.Text =
+                $"{auth.CurrentUser?.Username ?? "—"} — {auth.CurrentRole}";
+
+            // Role-based navigation
+            var role = auth.CurrentRole;
+            bool isPlanner = role == Role.Planner;
+
+            // Planner → Dashboard only, hide all stations
+            // Operator/QA/Supervisor → Stations only, hide Dashboard
+            LblDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
+            btnDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
+            SepDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
+
+            LblPuBody.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnStorage.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnWithdrawal.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnP2LoadingBay.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnP1LoadingBay.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            btnP1Production.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+
+            // Supervisor → System section visible
+            bool isSupervisor = role == Role.Supervisor;
+            LblSystem.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
+            btnUserManagement.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
+
+            // Subscribe to sync status changes.
+            if (ServiceProvider.Sync is SyncService sync)
+            {
+                sync.SyncCompleted += SyncCompleted;
+                sync.NetworkStatusChanged += NetworkStatusChanged;
+            }
+
+            // Welcome toast
+            Loaded += (_, _) =>
+            {
+                var user = auth.CurrentUser?.Username ?? "User";
+                var role = auth.CurrentRole;
+                Toasts.Success($"Welcome, {user}! Logged in as {role}.", 2500);
+
+                // For Planner, load the dashboard with existing demand data
+                switch (auth.CurrentRole)
+                {
+                    case Role.Planner:
+                        LoadDashboard();
+                        break;
+                    default:
+                        // Load the Storage station by default
+                        StationHost.Content = _storage;
+                        break;
+                }
+            };
+        }
+
+        private void SyncCompleted(int rows)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                SyncBorder.Background = new SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(0x2E, 0x7D, 0x32));
+                TxtSyncStatus.Text = $"✓ Synced ({rows})";
+            });
+        }
+
+        private void NetworkStatusChanged(bool isOnline)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (isOnline)
+                {
+                    SyncBorder.Background = new SolidColorBrush(
+                        System.Windows.Media.Color.FromRgb(0x2E, 0x7D, 0x32));
+                    TxtSyncStatus.Text = "✓ Online";
+                }
+                else
+                {
+                    SyncBorder.Background = new SolidColorBrush(
+                        System.Windows.Media.Color.FromRgb(0xD3, 0x2F, 0x2F));
+                    TxtSyncStatus.Text = "✗ Offline — data saved locally";
+                }
+            });
+        }
+
+        /// <summary>
+        /// Called by MainWindow when the USB scanner detects a barcode.
+        /// Forwards it to whatever workstation is currently active.
+        /// </summary>
+        public void OnUsbBarcodeReceived(string barcode)
+        {
+            // Route to whichever workstation is in StationHost
+            switch (StationHost.Content)
+            {
+                case StorageWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+                case WithdrawalWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+                case P2LoadingBayWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+                case P1LoadingBayWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+                case P1ProductionWorkStationView ws:
+                    ws.AcceptBarcode(barcode);
+                    break;
+            }
+        }
+
+        private void btnLogout_Click(object sender, RoutedEventArgs e)
+        {
+            LogoutRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void LoadDashboard()
+        {
+            try
+            {
+                var repo = new PostgreSqlDailyDemandRepository();
+                var allDemands = repo.GetAll();
+
+                var displayItems = allDemands
+                    .GroupBy(d => new { d.Model, d.PartNo })
+                    .Select(g => new PUBodyDailyDemandItem
+                    {
+                        Date = "",
+                        Model = g.Key.Model,
+                        PartNo = g.Key.PartNo,
+                        Demand = g.Sum(x => x.Quantity),
+                        P2Inventory = 0,
+                        DeliveredToP1 = 0,
+                        Scrapped = g.Sum(x => x.Scrapped)
+                    })
+                    .OrderBy(x => x.Model)
+                    .ToList();
+
+                _dashboard.Load(displayItems);
+            }
+            catch (Exception ex)
+            {
+                // DB unreachable — show empty dashboard
+                _dashboard.Load(Array.Empty<PUBodyDailyDemandItem>());
+                System.Diagnostics.Debug.WriteLine($"LoadDashboard failed: {ex.Message}");
+            }
+        }
+
+        private void btnDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            _storage.Deactivate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Deactivate();
+
+            StationHost.Content = _dashboard;
         }
 
         private void btnStorage_Click(object sender, RoutedEventArgs e)
@@ -98,6 +265,17 @@ namespace ASID.Edge.Views
             _p1Production.Activate();
 
             StationHost.Content = _p1Production;
+        }
+
+        private void btnUserManagement_Click(object sender, RoutedEventArgs e)
+        {
+            _storage.Deactivate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Deactivate();
+
+            StationHost.Content = new UserManagementControl();
         }
 
     }

@@ -56,7 +56,13 @@ CREATE TABLE dbo.transactions
     consumed_at     DATETIME2        NULL,
 
     is_suspected_nc BIT              NOT NULL
-                        CONSTRAINT DF_transactions_is_suspected_nc DEFAULT 0
+                        CONSTRAINT DF_transactions_is_suspected_nc DEFAULT 0,
+    is_nc_confirmed BIT              NOT NULL
+                        CONSTRAINT DF_transactions_is_nc_confirmed DEFAULT 0,
+    is_nc_rejected  BIT              NOT NULL
+                        CONSTRAINT DF_transactions_is_nc_rejected  DEFAULT 0,
+    nc_quantity     INT              NOT NULL
+                        CONSTRAINT DF_transactions_nc_quantity     DEFAULT 0
 );
 GO
 
@@ -89,6 +95,52 @@ CREATE TABLE dbo.daily_demand
     shift           SMALLINT   NOT NULL,
     model           NVARCHAR(100) NULL,
     part_no         NVARCHAR(100) NOT NULL,
-    quantity        INT        NOT NULL
+    quantity        INT        NOT NULL,
+    scrapped        INT        NOT NULL DEFAULT 0,
+    imported_at     DATETIME2  NULL
+                        CONSTRAINT DF_daily_demand_imported_at DEFAULT SYSUTCDATETIME()
 );
+GO
+
+-- ===========================================================================
+-- users
+-- ===========================================================================
+IF OBJECT_ID(N'dbo.users', N'U') IS NOT NULL
+    DROP TABLE dbo.users;
+GO
+
+CREATE TABLE dbo.users
+(
+    id            UNIQUEIDENTIFIER NOT NULL
+                        CONSTRAINT PK_users PRIMARY KEY
+                        DEFAULT NEWID(),
+    username      NVARCHAR(MAX)    NOT NULL,
+    password_hash NVARCHAR(MAX)    NOT NULL,
+    role          NVARCHAR(MAX)    NOT NULL,
+    created_at    DATETIME2        NULL
+                        CONSTRAINT DF_users_created_at DEFAULT SYSUTCDATETIME(),
+    updated_at    DATETIME2        NULL
+                        CONSTRAINT DF_users_updated_at DEFAULT SYSUTCDATETIME()
+);
+GO
+
+CREATE UNIQUE INDEX UQ_users_username
+    ON dbo.users(username);
+GO
+
+CREATE INDEX idx_users_username
+    ON dbo.users(username);
+GO
+
+-- Seed users (dev-only) — mirrors the PostgreSQL seed.
+--
+-- rpingkian / 1234  → Operator  (stations only)
+-- vsendrijas / 5678 → QA        (stations + NC)
+-- cordonez / 4567   → Supervisor (stations + NC + override)
+-- vsendrijas.p / 7845 → Planner  (dashboard + import production plan)
+INSERT INTO dbo.users (username, password_hash, role) VALUES
+ ('rpingkian',   '100000./PzwRW3iWSQO6ocYyOAmqg==.Qi5DSaA2N6KsFkFHBTRv4qLqr0LmgFPezE3XEZHPFks=', 'operator'),
+ ('vsendrijas',  '100000.7gP6pxaWtEshcZDqHig5eQ==.qi4uZgj6uPjiLL/DJBKuVd89i5HDhjLlgRlN5Da4M3s=', 'qa'),
+ ('cordonez',    '100000.BPGX/TrkXhsabeg3clB4WA==.+iRnOiyGJT52s0zPSWpxTCBd1PgisUgp7DwJp5Rx6H0=', 'supervisor'),
+ ('vsendrijas.p','100000.0swiOwjI3eKKwLGNP5dmXQ==.I4hbwy+svxcKjTXKWwma1PFHwfwaiPE/516bAv2jWWE=', 'planner');
 GO

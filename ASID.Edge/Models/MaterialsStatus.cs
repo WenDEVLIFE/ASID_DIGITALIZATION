@@ -10,6 +10,7 @@ namespace ASID.Edge.Models
         Withdrawn,
         ForPickup,
         Received,
-        Consumed
+        Consumed,
+        Scrapped
     }
 }

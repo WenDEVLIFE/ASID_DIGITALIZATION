@@ -3,80 +3,160 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:pubody="clr-namespace:ASID.Edge.Views.PUBody">
-   <Grid>
+        xmlns:pubody="clr-namespace:ASID.Edge.Views.PUBody"
+        xmlns:controls="clr-namespace:ASID.Edge.Views.Controls">
+    <DockPanel>
 
-    <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="220"/>
-        <ColumnDefinition Width="*"/>
-    </Grid.ColumnDefinitions>
+        <!-- ================= BOTTOM SESSION BAR ================= -->
+        <Border DockPanel.Dock="Bottom"
+                Background="#0B3A66"
+                Padding="10,6">
 
-    <!-- ================= LEFT NAVIGATION ================= -->
+            <DockPanel>
+                <Button x:Name="btnLogout"
+                        Content="Logout"
+                        DockPanel.Dock="Right"
+                        Click="btnLogout_Click"
+                        Margin="5"
+                        Padding="16,4"
+                        Background="#D32F2F"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        Cursor="Hand"/>
 
-    <Border Grid.Column="0"
-                Background="#0B3A66">
+                <!-- Sync status indicator -->
+                <Border x:Name="SyncBorder"
+                        DockPanel.Dock="Right"
+                        Margin="10,0"
+                        Padding="8,2"
+                        CornerRadius="4"
+                        Background="#2E7D32">
+                    <TextBlock x:Name="TxtSyncStatus"
+                               Foreground="White"
+                               FontWeight="SemiBold"
+                               FontSize="11"
+                               Text="✓ Synced"/>
+                </Border>
 
-        <DockPanel>
-
-            <TextBlock DockPanel.Dock="Top"
-                           Text="ASID EDGE"
+                <TextBlock x:Name="TxtSession"
                            Foreground="White"
-                           FontWeight="Bold"
-                           FontSize="20"
-                           Margin="15"/>
+                           FontWeight="SemiBold"
+                           FontSize="13"
+                           VerticalAlignment="Center"
+                           Text=""/>
+            </DockPanel>
 
-            <StackPanel Margin="10">
+        </Border>
 
-                <TextBlock Text="PU BODY"
+        <Grid>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ================= LEFT NAVIGATION ================= -->
+
+            <Border Grid.Column="0"
+                    Background="#0B3A66">
+
+                <DockPanel>
+
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="ASID EDGE"
                                Foreground="White"
                                FontWeight="Bold"
-                               Margin="5"/>
+                               FontSize="20"
+                               Margin="15"/>                    <StackPanel Margin="10">
 
-                <Button x:Name="btnStorage"
-                            Content="ST001 - Storage"
-                            Click="btnStorage_Click"
-                            Margin="5"
-                            Height="35"/>
-                
+                        <!-- Dashboard (Planner only) -->
+                        <TextBlock x:Name="LblDashboard"
+                                   Text="DASHBOARD"
+                                   Foreground="White"
+                                   FontWeight="Bold"
+                                   Margin="5"/>
 
-                <Button x:Name="btnWithdrawal"
-                            Content="ST002 - Withdrawal"
-                            Click="btnWithdrawal_Click"
-                            Margin="5"
-                            Height="35"/>
+                        <Button x:Name="btnDashboard"
+                                Content="📊 Dashboard"
+                                Click="btnDashboard_Click"
+                                Margin="5"
+                                Height="35"/>
 
-                    <Button x:Name="btnP2LoadingBay"
-                            Content="ST003 - P2 Loading Bay"
-                            Click="btnP2LoadingBay_Click"
-                            Margin="5"
-                            Height="35"/>
+                        <Separator x:Name="SepDashboard" Background="#2a5a8a" Margin="5,10"/>
 
-                    <Button x:Name="btnP1LoadingBay"
-                            Content="ST004 - P1 Loading Bay"
-                            Click="btnP1LoadingBay_Click"
-                            Margin="5"
-                            Height="35"/>
+                        <!-- PU Body stations (hidden for Planner) -->
+                        <TextBlock x:Name="LblPuBody"
+                                   Text="PU BODY"
+                                   Foreground="White"
+                                   FontWeight="Bold"
+                                   Margin="5"/>
 
-                    <Button x:Name="btnP1Production"
-                            Content="ST005 - P1 Production"
-                            Click="btnP1Production_Click"
-                            Margin="5"
-                            Height="35"/>
+                        <Button x:Name="btnStorage"
+                                Content="ST001 - Storage"
+                                Click="btnStorage_Click"
+                                Margin="5"
+                                Height="35"/>
+                        
+                        <Button x:Name="btnWithdrawal"
+                                Content="ST002 - Withdrawal"
+                                Click="btnWithdrawal_Click"
+                                Margin="5"
+                                Height="35"/>
 
-                </StackPanel>
+                            <Button x:Name="btnP2LoadingBay"
+                                    Content="ST003 - P2 Loading Bay"
+                                    Click="btnP2LoadingBay_Click"
+                                    Margin="5"
+                                    Height="35"/>
 
-        </DockPanel>
+                            <Button x:Name="btnP1LoadingBay"
+                                    Content="ST004 - P1 Loading Bay"
+                                    Click="btnP1LoadingBay_Click"
+                                    Margin="5"
+                                    Height="35"/>
 
-    </Border>
+                            <Button x:Name="btnP1Production"
+                                    Content="ST005 - P1 Production"
+                                    Click="btnP1Production_Click"
+                                    Margin="5"
+                                    Height="35"/>
 
-    <!-- ================= ACTIVE WORKSTATION ================= -->
+                        <!-- System (Supervisor only) -->
+                        <TextBlock x:Name="LblSystem"
+                                   Text="SYSTEM"
+                                   Foreground="White"
+                                   FontWeight="Bold"
+                                   Margin="5,15,5,5"
+                                   Visibility="Collapsed"/>
 
-    <Border Grid.Column="1"
-                Background="#F2F2F2">
+                        <Button x:Name="btnUserManagement"
+                                Content="👤 User Management"
+                                Click="btnUserManagement_Click"
+                                Margin="5"
+                                Height="35"
+                                Visibility="Collapsed"/>
 
-        <ContentControl x:Name="StationHost"/>
+                        </StackPanel>
 
-    </Border>
+                </DockPanel>
 
-    </Grid>
+            </Border>
+
+            <!-- ================= ACTIVE WORKSTATION ================= -->
+
+            <Border Grid.Column="1"
+                    Background="#F2F2F2">
+
+                <Grid>
+                    <ContentControl x:Name="StationHost"/>
+
+                    <!-- Toast notifications overlay (bottom-right) -->
+                    <controls:ToastNotification x:Name="ToastsControl"/>
+                </Grid>
+
+            </Border>
+
+        </Grid>
+
+    </DockPanel>
 </UserControl>

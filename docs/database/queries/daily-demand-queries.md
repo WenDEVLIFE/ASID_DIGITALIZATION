@@ -18,7 +18,9 @@ INSERT INTO daily_demand
     shift,
     model,
     part_no,
-    quantity
+    quantity,
+    scrapped,
+    imported_at
 )
 VALUES
 (
@@ -26,7 +28,9 @@ VALUES
     @Shift,
     @Model,
     @PartNo,
-    @Quantity
+    @Quantity,
+    @Scrapped,
+    @ImportedAt
 );";
 
 connection.Execute(sql, demands);
@@ -48,7 +52,9 @@ SELECT
     shift AS Shift,
     model AS Model,
     part_no AS PartNo,
-    quantity AS Quantity
+    quantity AS Quantity,
+    scrapped AS Scrapped,
+    imported_at AS ImportedAt
 FROM daily_demand
 WHERE production_date = @date
 ORDER BY
@@ -75,5 +81,43 @@ public void DeleteAll()
     using var connection = Database.Database.CreateConnection();
     connection.Open();
     connection.Execute("DELETE FROM daily_demand;");
+}
+```
+
+---
+
+## 4. Delete Daily Demand by Workweek
+
+Removes demand records for a specific production week (used for mid-week updates).
+
+### C# Implementation
+
+```csharp
+public void DeleteByWorkweek(DateTime weekStart)
+{
+    using var connection = Database.Database.CreateConnection();
+    connection.Open();
+    connection.Execute(
+        "DELETE FROM daily_demand WHERE production_date = @weekStart;",
+        new { weekStart });
+}
+```
+
+---
+
+## 5. Get Last Imported Timestamp
+
+Returns the most recent `imported_at` value across all daily demand records.
+Used for change detection (detecting when the planner uploads a new file).
+
+### C# Implementation
+
+```csharp
+public DateTime? GetLastImportedAt()
+{
+    using var connection = Database.Database.CreateConnection();
+    connection.Open();
+    return connection.QuerySingleOrDefault<DateTime?>(
+        "SELECT MAX(imported_at) FROM daily_demand;");
 }
 ```

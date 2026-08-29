@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -39,6 +39,9 @@ namespace ASID.Edge.Models
 
         public DateTime? ConsumedAt { get; set; }
         public bool IsSuspectedNC { get; set; }
+        public bool IsNCConfirmed { get; set; }
+        public bool IsNCRejected { get; set; }
+        public int NCQuantity { get; set; }
 
     }
 }

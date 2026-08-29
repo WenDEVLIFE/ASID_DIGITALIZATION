@@ -1,7 +1,11 @@
-﻿using ASID.Edge.Models;
+using ASID.Edge.Models;
 using ASID.Edge.Services;
+using Dapper;
+using ASID.Edge.Repositories;
+using System.Linq;
 using ASID.Edge.Views.Controllers;
 using ASID.Edge.Views.Dialogs;
+using ASID.Edge.Views.Controls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,12 +27,6 @@ namespace ASID.Edge.Views.Controls
     /// </summary>
     public partial class TransactionHistoryControl : UserControl
     {
-        /// <summary>
-        /// Raised after a successful suspected-NC flag so the hosting view
-        /// can refresh its own dashboard immediately.
-        /// </summary>
-        public event EventHandler? RefreshRequested;
-
         public TransactionHistoryControl()
         {
             InitializeComponent();
@@ -36,18 +34,56 @@ namespace ASID.Edge.Views.Controls
 
         private bool modelAsc = true;
         private bool dateAsc = true;
+        private List<PUBodyTransactionHistoryItem> _allItems = new();
 
         public void Load(IEnumerable<PUBodyTransactionHistoryItem> items)
         {
-            var list = items.ToList();
+            _allItems = items.ToList();
+
+            ApplyFilter();
+
+            // RBAC gate (UI layer) — handlers re-check defensively.
+            NonConformance.IsEnabled =
+                ServiceProvider.Auth.CanFlagNC;
+
+            QAReview.IsEnabled =
+                ServiceProvider.Auth.CanReviewNC;
+
+            // Override (delete) button — Supervisor only
+            BtnOverride.IsEnabled =
+                ServiceProvider.Auth.CanOverride;
+            BtnOverride.Visibility =
+                ServiceProvider.Auth.CanOverride ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void TxtSearch_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            string query = TxtSearch?.Text?.Trim().ToLowerInvariant() ?? "";
+
+            var filtered = string.IsNullOrEmpty(query)
+                ? _allItems
+                : _allItems.Where(item =>
+                    (item.Status.ToString().ToLowerInvariant().Contains(query)) ||
+                    (item.Model?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.PartNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.SerialNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.OperatorId?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.LineNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.TrolleyNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.LaneNo?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.Date?.ToLowerInvariant().Contains(query) ?? false) ||
+                    (item.NCRemarks?.ToLowerInvariant().Contains(query) ?? false)
+                ).ToList();
 
             TransactionGrid.ItemsSource = null;
-            TransactionGrid.ItemsSource = list;
-
-            TxtRecordCount.Text = list.Count.ToString();
-
-            TxtLastRefresh.Text =
-                DateTime.Now.ToString("HH:mm:ss");
+            TransactionGrid.ItemsSource = filtered;
+            TxtRecordCount.Text = filtered.Count.ToString();
+            TxtLastRefresh.Text = DateTime.Now.ToString("HH:mm:ss");
         }
 
         private void OnSortByModelClick(object sender, RoutedEventArgs e)
@@ -78,13 +114,29 @@ namespace ASID.Edge.Views.Controls
             dateAsc = !dateAsc;
         }
 
+        private ToastNotification? _toast;
+        private ToastNotification Toast => _toast ??= FindToast();
+        private ToastNotification FindToast()
+        {
+            var w = Window.GetWindow(this) as MainWindow;
+            return w?.MainShell?.Toasts ?? new ToastNotification();
+        }
+
         private void NonConformance_Click(
             object sender,
             RoutedEventArgs e)
         {
-            var dialog =
-                new NonConformanceScanDialog();
+            if (!ServiceProvider.Auth.CanFlagNC)
+            {
+                Toast.Warning("You do not have permission to flag NC items.");
+                return;
+            }
 
+            var passwordDialog = new PasswordDialog();
+            if (passwordDialog.ShowDialog() != true)
+                return;
+
+            var dialog = new NonConformanceScanDialog();
             if (dialog.ShowDialog() != true)
                 return;
 
@@ -93,19 +145,101 @@ namespace ASID.Edge.Views.Controls
                 ServiceProvider
                     .NonConformance
                     .FlagAsSuspected(
-                        dialog.DataMatrix);
+                        dialog.DataMatrix,
+                        dialog.NCQuantity);
 
-                AutoCloseMessageBox.Show(
-                    "Success",
-                    "Material flagged as Suspected NC.");
-
-                RefreshRequested?.Invoke(this, EventArgs.Empty);
+                Toast.Success($"Material flagged as Suspected NC (Qty: {dialog.NCQuantity}). Warning symbol added.");
             }
             catch (Exception ex)
             {
-                AutoCloseMessageBox.Show(
-                    "Error",
-                    ex.Message);
+                Toast.Error(ex.Message);
+            }
+        }
+
+        private void QAReview_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ServiceProvider.Auth.CanReviewNC)
+            {
+                Toast.Warning("You do not have permission to review NC items.");
+                return;
+            }
+
+            string prefillDataMatrix = "";
+            if (TransactionGrid.SelectedItem is PUBodyTransactionHistoryItem selectedItem)
+            {
+                prefillDataMatrix = selectedItem.SerialNo;
+            }
+
+            var dialog = new QANonConformanceDialog(prefillDataMatrix);
+            if (dialog.ShowDialog() == true)
+            {
+                if (dialog.IsUnflagged)
+                {
+                    Toast.Success("Material marked as OK. Warning symbol removed.");
+                }
+                else if (dialog.IsScrapped)
+                {
+                    Toast.Success($"Material scrapped (Qty: {dialog.ScrapQuantity}). Deducted from inventory.");
+                }
+            }
+        }
+
+        private void Override_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ServiceProvider.Auth.CanOverride)
+            {
+                Toast.Warning("Only Supervisor can override (delete) stored data.");
+                return;
+            }
+
+            if (TransactionGrid.SelectedItem is not PUBodyTransactionHistoryItem selected)
+            {
+                Toast.Warning("Select a transaction row to override.");
+                return;
+            }
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"Delete transaction '{selected.SerialNo}' (Part: {selected.PartNo}, Status: {selected.Status})?\n\nThis action cannot be undone.",
+                "Confirm Override",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                // Delete from both SQLite and PostgreSQL
+                RepositoryProvider.Transactions.DeleteByDataMatrix(selected.SerialNo);
+
+                Toast.Success($"Transaction '{selected.SerialNo}' deleted.");
+
+                // Refresh the grid from local data
+                var all = RepositoryProvider.Transactions.GetAll();
+                var historyItems = all.Select(t => new PUBodyTransactionHistoryItem
+                {
+                    Status = t.Status,
+                    Model = t.Model,
+                    PartNo = t.PartNo,
+                    SerialNo = t.DataMatrix,
+                    SNP = t.SNP,
+                    OperatorId = t.OperatorId,
+                    LineNo = t.LineNo,
+                    TrolleyNo = t.TrolleyNo,
+                    LaneNo = t.LaneNo,
+                    Date = t.CreatedAt.ToString("yyyy-MM-dd"),
+                    Time = t.CreatedAt.ToString("HH:mm:ss"),
+                    IsSuspectedNC = t.IsSuspectedNC,
+                    IsNCConfirmed = t.IsNCConfirmed,
+                }).ToList();
+
+                TransactionGrid.ItemsSource = historyItems;
+                TxtRecordCount.Text = historyItems.Count.ToString();
+                TxtLastRefresh.Text = DateTime.Now.ToString("HH:mm:ss");
+            }
+            catch (Exception ex)
+            {
+                Toast.Error($"Override failed: {ex.Message}");
             }
         }
     }

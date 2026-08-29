@@ -164,5 +164,16 @@ WHERE
             var rows = connection.Execute(sql, transaction);
 
         }
+
+        public bool DeleteByDataMatrix(string dataMatrix)
+        {
+            using var connection =
+                Database.Database.CreateConnection();
+            connection.Open();
+
+            const string sql = "DELETE FROM transactions WHERE data_matrix = @dm;";
+            int rows = connection.Execute(sql, new { dm = dataMatrix });
+            return rows > 0;
+        }
     }
 }

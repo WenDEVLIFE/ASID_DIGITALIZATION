@@ -7,15 +7,15 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 {
     public class StorageContext
     {
-        public string OperatorId { get; set; } = "";
-
         public string KanbanNo { get; set; } = "";
 
-        public string LineNo { get; set; } = "";
+        public string LaneNo { get; set; } = "";
 
         public string TrolleyNo { get; set; } = "";
 
-        public string LaneNo { get; set; } = "";
+        public string CellNo { get; set; } = "";
+
+        public string OperatorId { get; set; } = "";
 
         public string DataMatrix { get; set; } = "";
 
@@ -24,6 +24,6 @@ namespace ASID.Edge.Workflows.PUBody.Storage
         public bool LaneValidated { get; set; }
 
         public WorkflowState State { get; set; } =
-            WorkflowState.WaitingForOperator;
+            WorkflowState.WaitingForKanban;
     }
 }

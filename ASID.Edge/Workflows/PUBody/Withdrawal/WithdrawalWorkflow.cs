@@ -1,6 +1,7 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Services;
 using ASID.Edge.Validation;
+using System.Windows;
 using ASID.Edge.Views.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -106,10 +107,26 @@ namespace ASID.Edge.Workflows.PUBody.Withdrawal
             if (!result.Success)
             {
                 _context.State = WorkflowState.Error;
+                _context.ValidationMessage = result.Message;
 
                 NotifyChanged();
 
-                AutoCloseMessageBox.Show("Error", result.Message);
+                // Show FIFO violation as warning, other errors as error.
+                string title = result.Severity == ValidationSeverity.Warning
+                    ? "FIFO Warning"
+                    : "Error";
+
+                MessageBox.Show(
+                    result.Message,
+                    title,
+                    MessageBoxButton.OK,
+                    result.Severity == ValidationSeverity.Warning
+                        ? MessageBoxImage.Warning
+                        : MessageBoxImage.Error);
+
+                // Reset back to ready state after showing error.
+                _context.State = WorkflowState.WaitingForVerification;
+                NotifyChanged();
 
                 return;
             }

@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Mapping;
+using ASID.Edge.Mapping;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
 using System.Collections.Generic;
@@ -49,7 +49,10 @@ namespace ASID.Edge.Services
 
         public List<PUBodyDailyDemandItem> GetDailyDemand()
         {
-            var demands = _dailyDemandRepository.GetByDate(DateTime.Today);
+            var demands = _dailyDemandRepository.GetAll();
+
+            // Get latest import timestamp for change detection
+            DateTime? lastImportedAt = _dailyDemandRepository.GetLastImportedAt();
 
             return demands
                 .GroupBy(x => new
@@ -58,15 +61,35 @@ namespace ASID.Edge.Services
                     x.PartNo,
                     x.ProductionDate
                 })
-                .Select(g => new PUBodyDailyDemandItem
+                .Select(g =>
                 {
-                    Date = g.Key.ProductionDate.ToString("yyyy-MM-dd"),
-                    Model = g.Key.Model,
-                    PartNo = g.Key.PartNo,
-                    Demand = g.Sum(x => x.Quantity),
+                    var matchingTx = Transactions.Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo).ToList();
 
-                    // We'll calculate this later
-                    DeliveredToP1 = 0
+                    // P2 Inventory = total quantity in Supermarket Storage
+                    int p2Inventory = matchingTx
+                        .Where(t => t.Status == MaterialStatus.Stored)
+                        .Sum(t => t.SNP);
+
+                    // Delivered to P1 = P1 Loading Bay (Received) + P1 Production (Consumed)
+                    int deliveredToP1 = matchingTx
+                        .Where(t => t.Status == MaterialStatus.Received || t.Status == MaterialStatus.Consumed)
+                        .Sum(t => t.SNP);
+
+                    // Scrapped = NC confirmed quantity + Scrapped status items
+                    int scrapped = matchingTx
+                        .Where(t => (t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped)
+                        .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
+
+                    return new PUBodyDailyDemandItem
+                    {
+                        Date = g.Key.ProductionDate.ToString("yyyy-MM-dd"),
+                        Model = g.Key.Model,
+                        PartNo = g.Key.PartNo,
+                        Demand = g.Sum(x => x.Quantity),
+                        P2Inventory = p2Inventory,
+                        DeliveredToP1 = deliveredToP1,
+                        Scrapped = scrapped
+                    };
                 })
                 .OrderBy(x => x.Model)
                 .ToList();

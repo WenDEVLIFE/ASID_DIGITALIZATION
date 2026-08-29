@@ -16,5 +16,7 @@ namespace ASID.Edge.Repositories.Interfaces
         IReadOnlyList<LaneOccupancy> GetLaneOccupancy();
 
         void Update(StorageTransaction transaction);
+
+        bool DeleteByDataMatrix(string dataMatrix);
     }
 }

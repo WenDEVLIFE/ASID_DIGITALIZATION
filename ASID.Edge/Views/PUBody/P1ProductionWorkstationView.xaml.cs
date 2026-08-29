@@ -84,6 +84,12 @@ namespace ASID.Edge.Views.PUBody
             _isListening = false;
         }
 
+        /// <summary>Called by MainShellView when USB scanner detects a barcode.</summary>
+        public void AcceptBarcode(string barcode)
+        {
+            Scanner_BarcodeReceived(this, barcode);
+        }
+
         private void P1ProductionPortal_ScanCompleted(
                 object? sender,
                 string barcode)
@@ -116,23 +122,31 @@ namespace ASID.Edge.Views.PUBody
 						  
         }
 
+        private ToastNotification? _toast;
+        private ToastNotification Toast => _toast ??= FindToast();
+        private ToastNotification FindToast()
+        {
+            var w = Window.GetWindow(this) as MainWindow;
+            return w?.MainShell?.Toasts ?? new ToastNotification();
+        }
+
         private async void Workflow_Completed(object? sender, EventArgs e)
         {
-
-														  
-
             var workflow =
                 (P1ProductionWorkflow)_workflowManager.CurrentWorkflow!;
 
-            _p1ProductionService.Commit(workflow.Context);
+            try
+            {
+                _p1ProductionService.Commit(workflow.Context);
+                Toast.Success("P1 Production Transaction Completed");
+            }
+            catch (Exception ex)
+            {
+                Toast.Error($"P1 Production failed: {ex.Message}");
+            }
 
-            AutoCloseMessageBox.Show("Success", "P1 Production Transaction Completed");
-
-            await Task.Delay(3000);
-
+            await Task.Delay(2000);
             workflow.Reset();
-																	
-
             RefreshUI();
         }
 

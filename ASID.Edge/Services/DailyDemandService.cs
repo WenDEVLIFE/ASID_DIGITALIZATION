@@ -1,5 +1,6 @@
-﻿using ASID.Edge.Helpers;
+using ASID.Edge.Helpers;
 using ASID.Edge.Repositories.Interfaces;
+using System;
 
 namespace ASID.Edge.Services;
 
@@ -13,22 +14,44 @@ public class DailyDemandService
     }
 
     /// <summary>
-    /// Parses the workbook and replaces the whole daily demand plan.
-    /// Returns the number of imported rows.
+    /// Import a production-plan Excel file.
+    /// Deletes existing demand for the same workweek, then inserts the new records.
+    /// Returns the parse result so the caller can display the workweek label.
     /// </summary>
-    /// <remarks>
-    /// Parsing happens BEFORE DeleteAll so a malformed file fails without
-    /// touching the database. DeleteAll wipes demand for ALL dates, not just
-    /// the dates in the imported file — accepted product decision.
-    /// </remarks>
-    public int ImportExcel(string filePath)
+    public ExcelImporter.ParseResult ImportExcel(string filePath)
     {
-        var demands = ExcelImporter.Parse(filePath);
+        var result = ExcelImporter.Parse(filePath);
 
+        // Delete all existing demand before importing (full workweek replacement)
         _repository.DeleteAll();
 
-        _repository.Insert(demands);
+        _repository.Insert(result.Demands);
 
-        return demands.Count;
+        return result;
+    }
+
+    /// <summary>
+    /// Check if the demand data has been updated since the given timestamp.
+    /// Used for change detection (e.g., polling or timer-based refresh).
+    /// </summary>
+    public bool HasDataChanged(DateTime? lastKnownImport)
+    {
+        var lastImportedAt = _repository.GetLastImportedAt();
+
+        if (lastImportedAt == null)
+            return false;
+
+        if (lastKnownImport == null)
+            return true;
+
+        return lastImportedAt.Value > lastKnownImport.Value;
+    }
+
+    /// <summary>
+    /// Get the timestamp of the most recent import.
+    /// </summary>
+    public DateTime? GetLastImportTimestamp()
+    {
+        return _repository.GetLastImportedAt();
     }
 }

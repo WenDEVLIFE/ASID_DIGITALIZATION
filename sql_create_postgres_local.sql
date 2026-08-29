@@ -42,7 +42,10 @@ CREATE TABLE transactions
     received_at     TIMESTAMP,
     consumed_at     TIMESTAMP,
 
-    is_suspected_nc BOOLEAN     NOT NULL DEFAULT FALSE
+    is_suspected_nc BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_nc_confirmed BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_nc_rejected  BOOLEAN     NOT NULL DEFAULT FALSE,
+    nc_quantity     INTEGER     NOT NULL DEFAULT 0
 );
 
 -- Performance indexes
@@ -64,5 +67,38 @@ CREATE TABLE daily_demand
     shift           SMALLINT    NOT NULL,
     model           VARCHAR(100),
     part_no         VARCHAR(100) NOT NULL,
-    quantity        INTEGER     NOT NULL
+    quantity        INTEGER     NOT NULL,
+    scrapped        INTEGER     NOT NULL DEFAULT 0,
+    imported_at     TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ===========================================================================
+-- users
+-- ===========================================================================
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users
+(
+    id            UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
+    username      TEXT      NOT NULL UNIQUE,
+    password_hash TEXT      NOT NULL,
+    role          TEXT      NOT NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_username
+    ON users(username);
+
+-- Seed users (dev-only). Passwords are stored as PBKDF2 (SHA-256, 100,000 iterations)
+-- in the format {iterations}.{saltBase64}.{hashBase64}.
+--
+-- rpingkian / 1234  → Operator  (stations only)
+-- vsendrijas / 5678 → QA        (stations + NC)
+-- cordonez / 4567   → Supervisor (stations + NC + override)
+-- vsendrijas.p / 7845 → Planner  (dashboard + import production plan)
+INSERT INTO users (username, password_hash, role) VALUES
+ ('rpingkian',   '100000./PzwRW3iWSQO6ocYyOAmqg==.Qi5DSaA2N6KsFkFHBTRv4qLqr0LmgFPezE3XEZHPFks=', 'operator'),
+ ('vsendrijas',  '100000.7gP6pxaWtEshcZDqHig5eQ==.qi4uZgj6uPjiLL/DJBKuVd89i5HDhjLlgRlN5Da4M3s=', 'qa'),
+ ('cordonez',    '100000.BPGX/TrkXhsabeg3clB4WA==.+iRnOiyGJT52s0zPSWpxTCBd1PgisUgp7DwJp5Rx6H0=', 'supervisor'),
+ ('vsendrijas.p','100000.0swiOwjI3eKKwLGNP5dmXQ==.I4hbwy+svxcKjTXKWwma1PFHwfwaiPE/516bAv2jWWE=', 'planner');
