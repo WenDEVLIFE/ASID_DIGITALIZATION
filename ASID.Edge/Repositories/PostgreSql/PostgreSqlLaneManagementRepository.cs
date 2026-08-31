@@ -241,14 +241,18 @@ WHERE lane_no = @LaneNo;",
             if (lane == null) return;
 
             int stored = (int)lane.actual_stored_qty;
+            int withdrawn = (int)lane.withdrawn_qty;
+            int balance = stored - withdrawn;
+            if (balance < 0) balance = 0;
             int maxQty = (int)lane.max_qty_stored;
             string partNo = (string)lane.part_no;
 
             string status, color;
 
-            if (stored >= maxQty) { status = "Full"; color = "Red"; }
-            else if (stored > 0 && partNo != "Not Assigned") { status = "Occupied"; color = "Green"; }
-            else if (stored == 0 && partNo != "Not Assigned") { status = "Vacant"; color = "Green"; }
+            // Status based on BALANCE (Stored - Withdrawn)
+            if (balance >= maxQty && partNo != "Not Assigned") { status = "Full"; color = "Red"; }
+            else if (balance > 0 && partNo != "Not Assigned") { status = "Occupied"; color = "Green"; }
+            else if (balance == 0 && partNo != "Not Assigned") { status = "Vacant"; color = "Green"; }
             else { status = "Not Assigned"; color = "Gray"; }
 
             connection.Execute(@"

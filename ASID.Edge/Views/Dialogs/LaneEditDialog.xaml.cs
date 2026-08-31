@@ -46,17 +46,18 @@ namespace ASID.Edge.Views.Dialogs
 
             string status, color;
 
-            if (stored >= maxQty)
+            // Status based on BALANCE (Stored - Withdrawn)
+            if (balance >= maxQty && partNo != "Not Assigned" && !string.IsNullOrEmpty(partNo))
             {
                 status = "Full";
                 color = "#E74C3C";
             }
-            else if (stored > 0 && partNo != "Not Assigned" && !string.IsNullOrEmpty(partNo))
+            else if (balance > 0 && partNo != "Not Assigned" && !string.IsNullOrEmpty(partNo))
             {
                 status = "Occupied";
                 color = "#27AE60";
             }
-            else if (stored == 0 && partNo != "Not Assigned" && !string.IsNullOrEmpty(partNo))
+            else if (balance == 0 && partNo != "Not Assigned" && !string.IsNullOrEmpty(partNo))
             {
                 status = "Vacant";
                 color = "#27AE60";
@@ -109,18 +110,21 @@ namespace ASID.Edge.Views.Dialogs
             _lane.ActualStoredQty = storedQty;
             _lane.WithdrawnQty = withdrawnQty;
 
-            // Recalculate status
-            if (storedQty >= maxQty)
+            // Recalculate status based on BALANCE
+            int saveBalance = storedQty - withdrawnQty;
+            if (saveBalance < 0) saveBalance = 0;
+
+            if (saveBalance >= maxQty && partNo != "Not Assigned")
             {
                 _lane.LaneStatus = "Full";
                 _lane.ColorStatus = "Red";
             }
-            else if (storedQty > 0 && partNo != "Not Assigned")
+            else if (saveBalance > 0 && partNo != "Not Assigned")
             {
                 _lane.LaneStatus = "Occupied";
                 _lane.ColorStatus = "Green";
             }
-            else if (storedQty == 0 && partNo != "Not Assigned")
+            else if (saveBalance == 0 && partNo != "Not Assigned")
             {
                 _lane.LaneStatus = "Vacant";
                 _lane.ColorStatus = "Green";

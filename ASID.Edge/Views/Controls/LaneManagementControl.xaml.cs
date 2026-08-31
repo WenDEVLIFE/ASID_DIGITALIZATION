@@ -85,18 +85,21 @@ namespace ASID.Edge.Views.Controls
 
                 foreach (var lane in lanes)
                 {
-                    // Recalculate color/status based on quantities
-                    if (lane.ActualStoredQty >= lane.MaxQtyStored)
+                    // Recalculate color/status based on BALANCE (Stored - Withdrawn)
+                    int balance = lane.ActualStoredQty - lane.WithdrawnQty;
+                    if (balance < 0) balance = 0;
+
+                    if (balance >= lane.MaxQtyStored && lane.PartNo != "Not Assigned")
                     {
                         lane.LaneStatus = "Full";
                         lane.ColorStatus = "Red";
                     }
-                    else if (lane.ActualStoredQty > 0 && lane.PartNo != "Not Assigned")
+                    else if (balance > 0 && lane.PartNo != "Not Assigned")
                     {
                         lane.LaneStatus = "Occupied";
                         lane.ColorStatus = "Green";
                     }
-                    else if (lane.ActualStoredQty == 0 && lane.PartNo != "Not Assigned")
+                    else if (balance == 0 && lane.PartNo != "Not Assigned")
                     {
                         lane.LaneStatus = "Vacant";
                         lane.ColorStatus = "Green";

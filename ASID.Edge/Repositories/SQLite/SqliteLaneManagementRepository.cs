@@ -251,22 +251,26 @@ WHERE lane_no = @LaneNo;",
             if (lane == null) return;
 
             int stored = (int)lane.actual_stored_qty;
+            int withdrawn = (int)lane.withdrawn_qty;
+            int balance = stored - withdrawn;
+            if (balance < 0) balance = 0;
             int maxQty = (int)lane.max_qty_stored;
             string partNo = (string)lane.part_no;
 
             string status, color;
 
-            if (stored >= maxQty)
+            // Status based on BALANCE (Stored - Withdrawn), not just Stored
+            if (balance >= maxQty && partNo != "Not Assigned")
             {
                 status = "Full";
                 color = "Red";
             }
-            else if (stored > 0 && partNo != "Not Assigned")
+            else if (balance > 0 && partNo != "Not Assigned")
             {
                 status = "Occupied";
                 color = "Green";
             }
-            else if (stored == 0 && partNo != "Not Assigned")
+            else if (balance == 0 && partNo != "Not Assigned")
             {
                 status = "Vacant";
                 color = "Green";
@@ -293,21 +297,27 @@ WHERE lane_no = @LaneNo;",
             // Demo lanes with test quantities to show movement
             var demos = new List<(string lane, string part, int max, int stored, int withdrawn)>
             {
-                ("A-01", "657040000G", 10, 8, 3),
-                ("A-02", "647187100F", 10, 10, 2),
-                ("A-03", "657040000G", 10, 5, 5),
-                ("A-04", "640578600E", 10, 3, 0),
-                ("B-01", "647187000A", 10, 6, 1),
-                ("B-02", "657040000G", 10, 0, 0),
-                ("B-03", "640578600E", 10, 10, 10),
-                ("B-04", "650436100H", 10, 2, 0),
-                ("B-05", "647187100F", 10, 0, 3),
+                //                                  lane,  part,          max, stored, withdrawn
+                // Balance-based status: Full = balance >= max, Occupied = balance > 0, Vacant = balance == 0
+                ("A-01", "657040000G", 10, 8, 3),   // balance=5  → Occupied
+                ("A-02", "647187100F", 10, 10, 2),  // balance=8  → Occupied (NOT Full, withdrawn reduced balance)
+                ("A-03", "657040000G", 10, 5, 5),   // balance=0  → Vacant (fully withdrawn)
+                ("A-04", "640578600E", 10, 3, 0),   // balance=3  → Occupied
+                ("A-05", "647187100F", 10, 10, 0),  // balance=10 → Full (balance == max)
+                ("A-06", "650436100H", 10, 4, 4),   // balance=0  → Vacant
+                ("B-01", "647187000A", 10, 6, 1),   // balance=5  → Occupied
+                ("B-02", "657040000G", 10, 0, 0),   // balance=0  → Vacant (never used)
+                ("B-03", "640578600E", 10, 10, 10), // balance=0  → Vacant (fully withdrawn)
+                ("B-04", "650436100H", 10, 2, 0),   // balance=2  → Occupied
+                ("B-05", "647187100F", 10, 0, 3),   // balance=0  → Vacant
             };
 
             foreach (var d in demos)
             {
-                string status = d.stored >= d.max ? "Full"
-                    : d.stored > 0 ? "Occupied"
+                int balance = d.stored - d.withdrawn;
+                if (balance < 0) balance = 0;
+                string status = balance >= d.max ? "Full"
+                    : balance > 0 ? "Occupied"
                     : "Vacant";
                 string color = status == "Full" ? "Red" : "Green";
 
