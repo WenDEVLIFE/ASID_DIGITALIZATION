@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Shapes;
 
 namespace ASID.Edge.Views.Controls
 {
@@ -69,6 +70,13 @@ namespace ASID.Edge.Views.Controls
             txtLine.Text = context.CellNo;
             txtOperator.Text = context.OperatorId;
 
+            // Show green checkmarks for fields that have data
+            SetCheckmark(chkKanban, txtKanban, !string.IsNullOrEmpty(context.KanbanNo));
+            SetCheckmark(chkLane, txtLane, !string.IsNullOrEmpty(context.LaneNo));
+            SetCheckmark(chkTrolley, txtTrolley, !string.IsNullOrEmpty(context.TrolleyNo));
+            SetCheckmark(chkLine, txtLine, !string.IsNullOrEmpty(context.CellNo));
+            SetCheckmark(chkOperator, txtOperator, !string.IsNullOrEmpty(context.OperatorId));
+
             btnApply.IsEnabled =
                 context.State == WorkflowState.ReadyForValidation;
 
@@ -114,6 +122,14 @@ namespace ASID.Edge.Views.Controls
 
         }
 
+        private void SetCheckmark(TextBlock check, TextBox textbox, bool hasData)
+        {
+            check.Visibility = hasData ? Visibility.Visible : Visibility.Collapsed;
+            textbox.Background = hasData
+                ? new SolidColorBrush(Color.FromRgb(220, 245, 220))  // light green
+                : new SolidColorBrush(Colors.White);
+        }
+
         private void Verification_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter)
@@ -146,6 +162,19 @@ namespace ASID.Edge.Views.Controls
             txtTrolley.Clear();
             txtLane.Clear();
             txtVerification.Clear();
+
+            // Reset checkmarks and backgrounds
+            chkKanban.Visibility = Visibility.Collapsed;
+            chkLane.Visibility = Visibility.Collapsed;
+            chkTrolley.Visibility = Visibility.Collapsed;
+            chkLine.Visibility = Visibility.Collapsed;
+            chkOperator.Visibility = Visibility.Collapsed;
+
+            txtKanban.Background = new SolidColorBrush(Colors.White);
+            txtLane.Background = new SolidColorBrush(Colors.White);
+            txtTrolley.Background = new SolidColorBrush(Colors.White);
+            txtLine.Background = new SolidColorBrush(Colors.White);
+            txtOperator.Background = new SolidColorBrush(Colors.White);
         }
 
     }

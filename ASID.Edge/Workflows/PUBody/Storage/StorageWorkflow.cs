@@ -13,7 +13,7 @@ namespace ASID.Edge.Workflows.PUBody.Storage
         public StorageContext Context => _context;
         public WorkflowState CurrentState => _context.State;
 
-        private readonly StorageValidationService _validation = new();
+        private readonly StorageValidationService _validation = new(Repositories.RepositoryProvider.Transactions);
         public event EventHandler? WorkflowChanged;
         public event EventHandler? Completed;
 

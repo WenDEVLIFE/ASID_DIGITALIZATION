@@ -45,12 +45,17 @@
                        Background="#0B3A66"
                        Foreground="White"/>
 
-                <TextBox x:Name="txtKanban"
-                         KeyDown="Scan_KeyDown"
-                         Grid.Row="0"
-                        Grid.Column="1"
-                        Margin="5"
-                        IsReadOnly="True"/>
+                <Grid Grid.Row="0" Grid.Column="1" Margin="5">
+                    <TextBox x:Name="txtKanban"
+                             KeyDown="Scan_KeyDown"
+                             FontWeight="Bold" FontSize="13"
+                             Padding="4,3"/>
+                    <TextBlock x:Name="chkKanban" Text="✔"
+                               Visibility="Collapsed"
+                               Foreground="Green" FontSize="14" FontWeight="Bold"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+                </Grid>
 
                 <!-- Step 2: Lane -->
                 <Button x:Name="btnLaneLabel"
@@ -61,12 +66,17 @@
                        Background="#0B3A66"
                        Foreground="White"/>
 
-                <TextBox x:Name="txtLane"
-                         KeyDown="Scan_KeyDown"
-                         Grid.Row="1"
-                        Grid.Column="1"
-                        Margin="5"
-                        IsReadOnly="True"/>
+                <Grid Grid.Row="1" Grid.Column="1" Margin="5">
+                    <TextBox x:Name="txtLane"
+                             KeyDown="Scan_KeyDown"
+                             FontWeight="Bold" FontSize="13"
+                             Padding="4,3"/>
+                    <TextBlock x:Name="chkLane" Text="✔"
+                               Visibility="Collapsed"
+                               Foreground="Green" FontSize="14" FontWeight="Bold"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+                </Grid>
 
                 <!-- Step 3: Trolley -->
                 <Button x:Name="btnTrolleyLabel"
@@ -77,11 +87,17 @@
                        Background="#0B3A66"
                        Foreground="White"/>
 
-                <TextBox x:Name="txtTrolley"
-                         KeyDown="Scan_KeyDown"
-                         Grid.Row="2"
-                        Grid.Column="1"
-                        Margin="5"/>
+                <Grid Grid.Row="2" Grid.Column="1" Margin="5">
+                    <TextBox x:Name="txtTrolley"
+                             KeyDown="Scan_KeyDown"
+                             FontWeight="Bold" FontSize="13"
+                             Padding="4,3"/>
+                    <TextBlock x:Name="chkTrolley" Text="✔"
+                               Visibility="Collapsed"
+                               Foreground="Green" FontSize="14" FontWeight="Bold"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+                </Grid>
 
                 <!-- Step 4: Cell -->
                 <Button x:Name="btnLineLabel"
@@ -92,11 +108,17 @@
                        Background="#0B3A66"
                        Foreground="White"/>
 
-                <TextBox x:Name="txtLine"
-                         KeyDown="Scan_KeyDown"
-                         Grid.Row="3"
-                        Grid.Column="1"
-                        Margin="5"/>
+                <Grid Grid.Row="3" Grid.Column="1" Margin="5">
+                    <TextBox x:Name="txtLine"
+                             KeyDown="Scan_KeyDown"
+                             FontWeight="Bold" FontSize="13"
+                             Padding="4,3"/>
+                    <TextBlock x:Name="chkLine" Text="✔"
+                               Visibility="Collapsed"
+                               Foreground="Green" FontSize="14" FontWeight="Bold"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+                </Grid>
 
                 <!-- Step 5: Operator -->
                 <Button x:Name="btnOperatorLabel"
@@ -107,11 +129,17 @@
                        Background="#0B3A66"
                        Foreground="White"/>
 
-                <TextBox x:Name="txtOperator"
-                         KeyDown="Scan_KeyDown"
-                         Grid.Row="4"
-                        Grid.Column="1"
-                        Margin="5"/>
+                <Grid Grid.Row="4" Grid.Column="1" Margin="5">
+                    <TextBox x:Name="txtOperator"
+                             KeyDown="Scan_KeyDown"
+                             FontWeight="Bold" FontSize="13"
+                             Padding="4,3"/>
+                    <TextBlock x:Name="chkOperator" Text="✔"
+                               Visibility="Collapsed"
+                               Foreground="Green" FontSize="14" FontWeight="Bold"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+                </Grid>
 
                 <!-- Verification -->
 

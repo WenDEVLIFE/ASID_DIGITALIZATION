@@ -27,6 +27,8 @@ namespace ASID.Edge.Views.Controls
     /// </summary>
     public partial class TransactionHistoryControl : UserControl
     {
+        public event EventHandler? RefreshRequested;
+
         public TransactionHistoryControl()
         {
             InitializeComponent();

@@ -46,7 +46,9 @@ namespace ASID.Edge.Services
                 .FirstOrDefault(o =>
                     string.Equals(o.LaneNo, laneNo, StringComparison.OrdinalIgnoreCase));
 
-            if (occupancy == null || occupancy.OpenCount > 0)
+            // Lane is available if it has no open transactions.
+            // occupancy == null means the lane has never been used — that's fine.
+            if (occupancy != null && occupancy.OpenCount > 0)
             {
                 return new ValidationResult
                 {
