@@ -21,9 +21,9 @@ namespace ASID.Edge.Repositories
         public static IDailyDemandRepository DailyDemands { get; } =
     new PostgreSqlDailyDemandRepository();
 
-        // Users (authentication) — SQLite so login works offline
+        // Users (authentication) — PostgreSQL (shared across all PCs)
         public static IUserRepository Users { get; } =
-            new SqliteUserRepository();
+            new PostgreSqlUserRepository();
 
         // Lane Management (Supervisor only)
         public static ILaneManagementRepository LaneManagement { get; } =
