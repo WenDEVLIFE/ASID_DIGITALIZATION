@@ -21,7 +21,7 @@ namespace ASID.Edge.Repositories
         public static IDailyDemandRepository DailyDemands { get; } =
     new PostgreSqlDailyDemandRepository();
 
-        // Users (authentication)
+        // Users (authentication) — PostgreSQL (shared across all PCs)
         public static IUserRepository Users { get; } =
             new PostgreSqlUserRepository();
 

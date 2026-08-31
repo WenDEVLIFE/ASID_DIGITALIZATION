@@ -115,7 +115,30 @@ namespace ASID.Edge.Views.Controls
 
         private LaneStatus GetLaneStatus(string laneName)
         {
-            if (_occupancy.TryGetValue(laneName, out int openCount) && openCount > 0)
+            // Check lane_management table for capacity-based status
+            try
+            {
+                var lane = Repositories.RepositoryProvider.LaneManagement
+                    .GetByLaneNo(laneName);
+
+                if (lane != null)
+                {
+                    int balance = lane.ActualStoredQty - lane.WithdrawnQty;
+                    if (balance < 0) balance = 0;
+
+                    if (lane.MaxQtyStored > 0 && balance >= lane.MaxQtyStored)
+                        return LaneStatus.Full;
+
+                    if (balance > 0 || lane.PartNo != "Not Assigned")
+                        return LaneStatus.Vacant;
+
+                    return LaneStatus.Vacant;
+                }
+            }
+            catch { /* fallback to occupancy check */ }
+
+            // Fallback: check open transaction count
+            if (_occupancy.TryGetValue(laneName, out int openCount) && openCount > 100)
                 return LaneStatus.Full;
 
             if (_occupancy.ContainsKey(laneName))

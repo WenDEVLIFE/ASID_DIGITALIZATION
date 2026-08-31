@@ -291,5 +291,7 @@ namespace ASID.Edge.Views
             StationHost.Content = ctrl;
         }
 
+
+
     }
 }
