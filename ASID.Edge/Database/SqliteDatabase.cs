@@ -117,6 +117,46 @@ CREATE TABLE IF NOT EXISTS lane_management
     updated_at       TEXT
 );
 ");
+
+        // Users table — local authentication so login works even when
+        // the PostgreSQL server is unreachable.
+        connection.Execute(@"
+CREATE TABLE IF NOT EXISTS users
+(
+    id              TEXT    PRIMARY KEY,
+    username        TEXT    NOT NULL UNIQUE,
+    password_hash   TEXT    NOT NULL,
+    role            TEXT    NOT NULL DEFAULT 'operator',
+    created_at      TEXT,
+    updated_at      TEXT
+);
+");
+
+        // Seed default users if table is empty
+        int userCount = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM users");
+        if (userCount == 0)
+        {
+            var now = DateTime.UtcNow.ToString("o");
+            var defaultUsers = new (string id, string username, string hash, string role)[]
+            {
+                (Guid.NewGuid().ToString(), "cordonez",
+                 Services.PasswordHasher.Hash("4567"), "supervisor"),
+                (Guid.NewGuid().ToString(), "rpingkian",
+                 Services.PasswordHasher.Hash("1234"), "operator"),
+                (Guid.NewGuid().ToString(), "admin",
+                 Services.PasswordHasher.Hash("admin"), "qa"),
+                (Guid.NewGuid().ToString(), "vsendrijas",
+                 Services.PasswordHasher.Hash("7845"), "planner"),
+            };
+
+            foreach (var u in defaultUsers)
+            {
+                connection.Execute(@"
+INSERT OR IGNORE INTO users (id, username, password_hash, role, created_at, updated_at)
+VALUES (@Id, @Username, @Hash, @Role, @Now, @Now);",
+                    new { u.id, u.username, u.hash, u.role, Now = now });
+            }
+        }
     }
 
     /// <summary>
