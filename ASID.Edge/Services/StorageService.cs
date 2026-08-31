@@ -1,5 +1,6 @@
 ﻿using ASID.Edge.Mapping;
 using ASID.Edge.Models;
+using ASID.Edge.Repositories;
 using ASID.Edge.Repositories.Interfaces;
 using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
@@ -61,6 +62,14 @@ public class StorageService
 
         // Save to repository
         _repository.Add(transaction);
+
+        // Update lane_management: increment stored qty for this lane
+        try
+        {
+            RepositoryProvider.LaneManagement
+                .IncrementStoredQty(context.LaneNo, kanban.PartNo, 1);
+        }
+        catch { /* lane update is best-effort */ }
 
         return item;
     }

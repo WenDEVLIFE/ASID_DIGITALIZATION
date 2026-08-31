@@ -77,7 +77,20 @@ namespace ASID.Edge.Views.PUBody
             {
                 try
                 {
-                    var seqDlg = new LaneSequenceDialog();
+                    // Fetch current lane occupancy from database
+                    var occupancy = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                    try
+                    {
+                        var lanes = Repositories.RepositoryProvider.Transactions.GetLaneOccupancy();
+                        foreach (var lane in lanes)
+                        {
+                            if (!string.IsNullOrEmpty(lane.LaneNo))
+                                occupancy[lane.LaneNo] = lane.OpenCount;
+                        }
+                    }
+                    catch { /* If DB fails, show all lanes as not assigned */ }
+
+                    var seqDlg = new LaneSequenceDialog(occupancy);
                     var window = Window.GetWindow(this);
                     if (window != null && window.IsLoaded && window.IsVisible)
                     {

@@ -75,6 +75,7 @@ namespace ASID.Edge.Views
             bool isSupervisor = role == Role.Supervisor;
             LblSystem.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
             btnUserManagement.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
+            btnLaneManagement.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
 
             // Subscribe to sync status changes.
             if (ServiceProvider.Sync is SyncService sync)
@@ -276,6 +277,18 @@ namespace ASID.Edge.Views
             _p1Production.Deactivate();
 
             StationHost.Content = new UserManagementControl();
+        }
+
+        private void btnLaneManagement_Click(object sender, RoutedEventArgs e)
+        {
+            _storage.Deactivate();
+            _withdrawal.Deactivate();
+            _p2LoadingBay.Deactivate();
+            _p1LoadingBay.Deactivate();
+            _p1Production.Deactivate();
+
+            var ctrl = new LaneManagementControl();
+            StationHost.Content = ctrl;
         }
 
     }

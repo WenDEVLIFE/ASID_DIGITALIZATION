@@ -53,7 +53,6 @@ namespace ASID.Edge.Views.Controls
 
             try
             {
-                // Check if username already exists
                 var existing = RepositoryProvider.Users.GetByUsername(username);
                 if (existing != null)
                 {
@@ -89,6 +88,24 @@ namespace ASID.Edge.Views.Controls
             }
         }
 
+        /// <summary>Edit button in the Action column</summary>
+        private void BtnEditUser_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn) return;
+            if (btn.Tag is not User selectedUser) return;
+
+            OpenEditDialog(selectedUser);
+        }
+
+        /// <summary>Delete button in the Action column</summary>
+        private void BtnDeleteUser_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn) return;
+            if (btn.Tag is not User selectedUser) return;
+
+            DeleteUser(selectedUser);
+        }
+
         private void EditUser_Click(object sender, RoutedEventArgs e)
         {
             var selected = UserGrid.SelectedItem as User;
@@ -99,8 +116,12 @@ namespace ASID.Edge.Views.Controls
                 return;
             }
 
-            // Open edit dialog
-            var dialog = new EditUserDialog(selected);
+            OpenEditDialog(selected);
+        }
+
+        private void OpenEditDialog(User selectedUser)
+        {
+            var dialog = new EditUserDialog(selectedUser);
             if (dialog.ShowDialog() == true)
             {
                 LoadUsers();
@@ -117,6 +138,11 @@ namespace ASID.Edge.Views.Controls
                 return;
             }
 
+            DeleteUser(selected);
+        }
+
+        private void DeleteUser(User selected)
+        {
             // Prevent deleting yourself
             if (selected.Username == ServiceProvider.Auth?.CurrentUser?.Username)
             {
@@ -169,7 +195,7 @@ namespace ASID.Edge.Views.Controls
 
             Title = $"Edit User: {user.Username}";
             Width = 350;
-            Height = 220;
+            Height = 300;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ResizeMode = System.Windows.ResizeMode.NoResize;
 
