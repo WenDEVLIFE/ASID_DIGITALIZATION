@@ -76,6 +76,8 @@ namespace Edge
             {
                 if (loggingOut)
                 {
+                    // Ensure session file is deleted before re-entering login gate.
+                    ASID.Edge.Services.SessionManager.Clear();
                     RunLoginGate();
                 }
                 else
