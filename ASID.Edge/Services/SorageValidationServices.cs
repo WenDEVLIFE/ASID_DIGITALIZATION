@@ -26,8 +26,8 @@ namespace ASID.Edge.Services
         }
 
         /// <summary>
-        /// A lane is assignable only if it exists in the transactions table
-        /// and has no open (consumed_at IS NULL) transaction.
+        /// A lane is assignable if it hasn't reached its max trolley capacity.
+        /// Capacity is checked against lane_management.max_qty_stored.
         /// </summary>
         public ValidationResult CheckAssignedLane(string laneNo)
         {
@@ -41,21 +41,45 @@ namespace ASID.Edge.Services
                 };
             }
 
-            var occupancy = _repository
-                .GetLaneOccupancy()
-                .FirstOrDefault(o =>
-                    string.Equals(o.LaneNo, laneNo, StringComparison.OrdinalIgnoreCase));
-
-            // Lane is available if it has no open transactions.
-            // occupancy == null means the lane has never been used — that's fine.
-            if (occupancy != null && occupancy.OpenCount > 0)
+            // Check lane capacity from lane_management table
+            try
             {
-                return new ValidationResult
+                var lane = Repositories.RepositoryProvider.LaneManagement
+                    .GetByLaneNo(laneNo);
+
+                if (lane != null)
                 {
-                    Success = false,
-                    Message = "Lane is not vacant",
-                    Severity = ValidationSeverity.Error
-                };
+                    int balance = lane.ActualStoredQty - lane.WithdrawnQty;
+                    if (balance < 0) balance = 0;
+
+                    if (lane.MaxQtyStored > 0 && balance >= lane.MaxQtyStored)
+                    {
+                        return new ValidationResult
+                        {
+                            Success = false,
+                            Message = $"Lane {laneNo} is FULL ({balance}/{lane.MaxQtyStored} trolleys).",
+                            Severity = ValidationSeverity.Error
+                        };
+                    }
+                }
+            }
+            catch
+            {
+                // If lane_management check fails, fall back to occupancy check
+                var occupancy = _repository
+                    .GetLaneOccupancy()
+                    .FirstOrDefault(o =>
+                        string.Equals(o.LaneNo, laneNo, StringComparison.OrdinalIgnoreCase));
+
+                if (occupancy != null && occupancy.OpenCount > 100)
+                {
+                    return new ValidationResult
+                    {
+                        Success = false,
+                        Message = "Lane is full",
+                        Severity = ValidationSeverity.Error
+                    };
+                }
             }
 
             return new ValidationResult
