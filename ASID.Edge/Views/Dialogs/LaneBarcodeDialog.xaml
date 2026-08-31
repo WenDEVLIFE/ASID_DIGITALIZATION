@@ -2,45 +2,65 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Lane Barcode"
-        Height="250"
-        Width="380"
+        Height="280"
+        Width="420"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="White">
     <Grid Margin="15">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border BorderBrush="Black"
-                BorderThickness="1.5"
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="Lane Barcode"
+                   FontSize="16" FontWeight="Bold"
+                   Foreground="#0B3A66"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,10"/>
+
+        <!-- Barcode Display -->
+        <Border Grid.Row="1"
+                BorderBrush="#CCC"
+                BorderThickness="1"
                 Padding="15"
                 Background="White"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
             <StackPanel HorizontalAlignment="Center">
                 <Image x:Name="imgBarcode"
-                       Width="260"
-                       Height="90"
+                       Width="300" Height="100"
                        Stretch="Uniform"/>
                 <TextBlock x:Name="txtLaneCode"
-                           Text="Lane A40"
-                           FontSize="18"
-                           FontWeight="Bold"
+                           Text="A-01"
+                           FontSize="18" FontWeight="Bold"
+                           Foreground="#333"
                            HorizontalAlignment="Center"
                            Margin="0,8,0,0"/>
             </StackPanel>
         </Border>
 
-        <StackPanel Grid.Row="1"
+        <!-- Instructions -->
+        <TextBlock Grid.Row="2"
+                   x:Name="txtInstruction"
+                   Text="Scan the barcode to store the lane number."
+                   FontSize="11" FontStyle="Italic"
+                   Foreground="#666"
+                   HorizontalAlignment="Center"
+                   Margin="0,10,0,0"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Margin="0,15,0,0">
+                    VerticalAlignment="Bottom"
+                    Margin="0,30,0,0">
             <Button x:Name="btnConfirm"
                     Content="OK"
-                    Width="80"
-                    Height="30"
+                    Width="80" Height="30"
                     Background="#0B3A66"
                     Foreground="White"
                     FontWeight="Bold"

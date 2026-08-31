@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 
 namespace ASID.Edge.Views.Dialogs
@@ -7,10 +8,13 @@ namespace ASID.Edge.Views.Dialogs
     {
         public string? SelectedLane { get; private set; }
 
-        public LaneSequenceDialog()
+        public LaneSequenceDialog(Dictionary<string, int>? occupancy = null)
         {
             InitializeComponent();
             LaneSequence.LaneSelected += LaneSequence_LaneSelected;
+
+            if (occupancy != null)
+                LaneSequence.SetOccupancy(occupancy);
         }
 
         private void LaneSequence_LaneSelected(object? sender, string laneCode)
