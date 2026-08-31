@@ -103,7 +103,7 @@ namespace ASID.Edge.Views.PUBody
                 }
                 catch (Exception ex)
                 {
-                    Toast?.Error($"Lane dialog error: {ex.Message}");
+                    Toast?.Error($"Lane dialog error: {ex.Message}\n{ex.InnerException?.Message ?? ""}\n{ex.StackTrace?.Substring(0, Math.Min(200, ex.StackTrace?.Length ?? 0))}");
                 }
             }
         }
