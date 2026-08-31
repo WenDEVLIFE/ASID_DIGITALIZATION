@@ -15,7 +15,11 @@
 
         <!-- Header -->
         <Border Grid.Row="0" Background="#0B3A66" Padding="12,10">
-            <TextBlock Text="LANE MANAGEMENT" Foreground="White" FontWeight="Bold" FontSize="18"/>
+            <Grid>
+                <TextBlock Text="LANE MANAGEMENT" Foreground="White" FontWeight="Bold" FontSize="18"/>
+                <TextBlock Text="💡 Double-click a cell to edit. Click Save when done." 
+                           Foreground="#B0C4DE" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            </Grid>
         </Border>
 
         <!-- Toolbar -->
@@ -26,7 +30,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0" Text="Supervisor Access Only" 
+            <TextBlock Grid.Column="0" Text="⚠ Supervisor Access Only" 
                        Foreground="#E74C3C" FontWeight="Bold" FontSize="12"
                        VerticalAlignment="Center" Margin="0,0,15,0"/>
 
@@ -48,9 +52,21 @@
                       RowHeaderWidth="0"
                       HeadersVisibility="Column"
                       SelectionMode="Single"
-                      FontSize="12">
+                      FontSize="12"
+                      CanUserResizeColumns="True"
+                      ColumnHeaderHeight="30">
+                <DataGrid.Resources>
+                    <!-- Kill row header gap completely -->
+                    <Style TargetType="{x:Type DataGridRowHeader}">
+                        <Setter Property="Width" Value="0"/>
+                        <Setter Property="MinWidth" Value="0"/>
+                        <Setter Property="MaxWidth" Value="0"/>
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </Style>
+                </DataGrid.Resources>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Lane No." Binding="{Binding LaneNo}" IsReadOnly="True" Width="80">
+                    <!-- Lane No - Read Only -->
+                    <DataGridTextColumn Header="Lane No." Binding="{Binding LaneNo, Mode=OneWay}" IsReadOnly="True" Width="*" MaxWidth="100">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
@@ -58,33 +74,53 @@
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Part Number" Binding="{Binding PartNo}" IsReadOnly="True" Width="120"/>
+                    <!-- Part Number - EDITABLE -->
+                    <DataGridTextColumn Header="Part Number ✏️" Binding="{Binding PartNo, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Width="*"/>
 
-                    <DataGridTextColumn Header="Max Qty Stored" Binding="{Binding MaxQtyStored}" Width="110">
+                    <!-- Max Qty Stored - EDITABLE -->
+                    <DataGridTextColumn Header="Max Qty ✏️" Binding="{Binding MaxQtyStored, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Width="*" MaxWidth="110">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
+                        <DataGridTextColumn.EditingElementStyle>
+                            <Style TargetType="TextBox">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.EditingElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Actual Stored Qty" Binding="{Binding ActualStoredQty}" IsReadOnly="True" Width="130">
+                    <!-- Actual Stored Qty - EDITABLE -->
+                    <DataGridTextColumn Header="Stored Qty ✏️" Binding="{Binding ActualStoredQty, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Width="*" MaxWidth="120">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
+                        <DataGridTextColumn.EditingElementStyle>
+                            <Style TargetType="TextBox">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.EditingElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Withdrawn Qty" Binding="{Binding WithdrawnQty}" IsReadOnly="True" Width="120">
+                    <!-- Withdrawn Qty - EDITABLE -->
+                    <DataGridTextColumn Header="Withdrawn ✏️" Binding="{Binding WithdrawnQty, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Width="*" MaxWidth="120">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
+                        <DataGridTextColumn.EditingElementStyle>
+                            <Style TargetType="TextBox">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.EditingElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Outstanding Qty" Binding="{Binding OutstandingQty}" IsReadOnly="True" Width="120">
+                    <!-- Outstanding Qty - Read Only (calculated) -->
+                    <DataGridTextColumn Header="Outstanding" Binding="{Binding OutstandingQty, Mode=OneWay}" IsReadOnly="True" Width="*" MaxWidth="110">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="Bold"/>
@@ -93,7 +129,8 @@
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Lane Status" Binding="{Binding LaneStatus}" IsReadOnly="True" Width="100">
+                    <!-- Lane Status - Read Only -->
+                    <DataGridTextColumn Header="Status" Binding="{Binding LaneStatus, Mode=OneWay}" IsReadOnly="True" Width="*" MaxWidth="110">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
@@ -102,7 +139,8 @@
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Color" Binding="{Binding ColorStatus}" IsReadOnly="True" Width="70">
+                    <!-- Color Status - Read Only -->
+                    <DataGridTextColumn Header="Color" Binding="{Binding ColorStatus, Mode=OneWay}" IsReadOnly="True" Width="*" MaxWidth="80">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -115,10 +153,10 @@
 
         <!-- Footer -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10,10">
-            <Button x:Name="btnSave" Content="Save Changes" Width="120" Height="32"
+            <Button x:Name="btnSave" Content="💾 Save Changes" Width="130" Height="32"
                     Background="#27AE60" Foreground="White" FontWeight="Bold"
                     Click="BtnSave_Click" Margin="5"/>
-            <Button x:Name="btnRefresh" Content="Refresh" Width="100" Height="32"
+            <Button x:Name="btnRefresh" Content="🔄 Refresh" Width="100" Height="32"
                     Background="#3498DB" Foreground="White" FontWeight="Bold"
                     Click="BtnRefresh_Click" Margin="5"/>
         </StackPanel>

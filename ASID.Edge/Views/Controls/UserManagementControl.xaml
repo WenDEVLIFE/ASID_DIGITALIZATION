@@ -51,16 +51,16 @@
 
         <!-- User Table -->
         <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="10"
-                BorderBrush="#E0E0E0" BorderThickness="1">
-            <DataGrid x:Name="UserGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                BorderBrush="#E0E0E0" BorderThickness="1">                <DataGrid x:Name="UserGrid" AutoGenerateColumns="False" IsReadOnly="True"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                       BorderThickness="0" AlternatingRowBackground="#F8F9FA"
-                      SelectionMode="Single" CanUserAddRows="False">
+                      SelectionMode="Single" CanUserAddRows="False"
+                      CanUserResizeColumns="True" ColumnHeaderHeight="30">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="120"/>
-                    <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="100"/>
-                    <DataGridTextColumn Header="Created" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="140"/>
-                    <DataGridTextColumn Header="Updated" Binding="{Binding UpdatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="140"/>
+                    <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="*"/>
+                    <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="*"/>
+                    <DataGridTextColumn Header="Created" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="*"/>
+                    <DataGridTextColumn Header="Updated" Binding="{Binding UpdatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

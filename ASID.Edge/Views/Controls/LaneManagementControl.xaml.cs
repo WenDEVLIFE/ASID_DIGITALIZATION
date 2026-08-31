@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace ASID.Edge.Views.Controls
 {
@@ -52,20 +51,26 @@ namespace ASID.Edge.Views.Controls
                 var lanes = dgLanes.ItemsSource as IEnumerable<LaneManagement>;
                 if (lanes == null) return;
 
+                int updatedCount = 0;
+
                 foreach (var lane in lanes)
                 {
-                    // Recalculate color based on outstanding qty
-                    if (lane.OutstandingQty >= lane.MaxQtyStored)
+                    // Recalculate Outstanding Qty
+                    int outstanding = lane.ActualStoredQty - lane.WithdrawnQty;
+                    if (outstanding < 0) outstanding = 0;
+
+                    // Recalculate color/status based on quantities
+                    if (lane.ActualStoredQty >= lane.MaxQtyStored)
                     {
                         lane.LaneStatus = "Full";
                         lane.ColorStatus = "Red";
                     }
-                    else if (lane.OutstandingQty > 0)
+                    else if (lane.ActualStoredQty > 0 && lane.PartNo != "Not Assigned")
                     {
                         lane.LaneStatus = "Occupied";
                         lane.ColorStatus = "Green";
                     }
-                    else if (lane.PartNo != "Not Assigned")
+                    else if (lane.ActualStoredQty == 0 && lane.PartNo != "Not Assigned")
                     {
                         lane.LaneStatus = "Vacant";
                         lane.ColorStatus = "Green";
@@ -77,12 +82,13 @@ namespace ASID.Edge.Views.Controls
                     }
 
                     RepositoryProvider.LaneManagement.Update(lane);
+                    updatedCount++;
                 }
 
-                MessageBox.Show("Lane configuration saved successfully!",
+                MessageBox.Show($"Successfully saved {updatedCount} lane configurations!",
                     "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                LoadData(); // Refresh
+                LoadData(); // Refresh to show updated values
             }
             catch (Exception ex)
             {
