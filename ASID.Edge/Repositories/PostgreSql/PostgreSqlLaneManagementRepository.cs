@@ -176,6 +176,90 @@ WHERE id = @Id;
             }
         }
 
+        public void IncrementStoredQty(string laneNo, string partNo, int quantity = 1)
+        {
+            using var connection = Database.Database.CreateConnection();
+            connection.Open();
+
+            var existing = connection.QueryFirstOrDefault<dynamic?>(
+                "SELECT * FROM lane_management WHERE lane_no = @LaneNo LIMIT 1;",
+                new { LaneNo = laneNo });
+
+            if (existing == null)
+            {
+                Add(new LaneManagement
+                {
+                    LaneNo = laneNo,
+                    PartNo = partNo,
+                    MaxQtyStored = 100,
+                    ActualStoredQty = quantity,
+                    WithdrawnQty = 0,
+                    LaneStatus = "Occupied",
+                    ColorStatus = "Green",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                connection.Execute(@"
+UPDATE lane_management SET
+    actual_stored_qty = actual_stored_qty + @Qty,
+    part_no = CASE WHEN part_no = 'Not Assigned' THEN @PartNo ELSE part_no END,
+    updated_at = @Now
+WHERE lane_no = @LaneNo;",
+                    new { Qty = quantity, PartNo = partNo, Now = DateTime.UtcNow, LaneNo = laneNo });
+            }
+
+            RecalculateStatus(laneNo);
+        }
+
+        public void IncrementWithdrawnQty(string laneNo, int quantity = 1)
+        {
+            using var connection = Database.Database.CreateConnection();
+            connection.Open();
+
+            connection.Execute(@"
+UPDATE lane_management SET
+    withdrawn_qty = withdrawn_qty + @Qty,
+    updated_at = @Now
+WHERE lane_no = @LaneNo;",
+                new { Qty = quantity, Now = DateTime.UtcNow, LaneNo = laneNo });
+
+            RecalculateStatus(laneNo);
+        }
+
+        public void RecalculateStatus(string laneNo)
+        {
+            using var connection = Database.Database.CreateConnection();
+            connection.Open();
+
+            var lane = connection.QueryFirstOrDefault<dynamic?>(
+                "SELECT * FROM lane_management WHERE lane_no = @LaneNo LIMIT 1;",
+                new { LaneNo = laneNo });
+
+            if (lane == null) return;
+
+            int stored = (int)lane.actual_stored_qty;
+            int maxQty = (int)lane.max_qty_stored;
+            string partNo = (string)lane.part_no;
+
+            string status, color;
+
+            if (stored >= maxQty) { status = "Full"; color = "Red"; }
+            else if (stored > 0 && partNo != "Not Assigned") { status = "Occupied"; color = "Green"; }
+            else if (stored == 0 && partNo != "Not Assigned") { status = "Vacant"; color = "Green"; }
+            else { status = "Not Assigned"; color = "Gray"; }
+
+            connection.Execute(@"
+UPDATE lane_management SET
+    lane_status = @Status,
+    color_status = @Color,
+    updated_at = @Now
+WHERE lane_no = @LaneNo;",
+                new { Status = status, Color = color, Now = DateTime.UtcNow, LaneNo = laneNo });
+        }
+
         private static DateTime ParseDateTime(object? value)
         {
             if (value == null) return DateTime.MinValue;

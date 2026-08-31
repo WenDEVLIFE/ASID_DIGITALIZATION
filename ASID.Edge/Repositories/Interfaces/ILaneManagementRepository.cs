@@ -11,5 +11,8 @@ namespace ASID.Edge.Repositories.Interfaces
         void Update(LaneManagement lane);
         void Delete(int id);
         void SeedDefaultLanes();
+        void IncrementStoredQty(string laneNo, string partNo, int quantity = 1);
+        void IncrementWithdrawnQty(string laneNo, int quantity = 1);
+        void RecalculateStatus(string laneNo);
     }
 }
