@@ -100,6 +100,23 @@ CREATE INDEX IF NOT EXISTS idx_sqlite_tx_synced
             "ALTER TABLE transactions ADD COLUMN nc_quantity INTEGER NOT NULL DEFAULT 0");
         AddColumnIfMissing("synced",
             "ALTER TABLE transactions ADD COLUMN synced INTEGER NOT NULL DEFAULT 0");
+
+        // Lane Management table
+        connection.Execute(@"
+CREATE TABLE IF NOT EXISTS lane_management
+(
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    lane_no          TEXT    NOT NULL UNIQUE,
+    part_no          TEXT    NOT NULL DEFAULT 'Not Assigned',
+    max_qty_stored   INTEGER NOT NULL DEFAULT 100,
+    actual_stored_qty INTEGER NOT NULL DEFAULT 0,
+    withdrawn_qty    INTEGER NOT NULL DEFAULT 0,
+    lane_status      TEXT    NOT NULL DEFAULT 'Not Assigned',
+    color_status     TEXT    NOT NULL DEFAULT 'Gray',
+    created_at       TEXT,
+    updated_at       TEXT
+);
+");
     }
 
     /// <summary>

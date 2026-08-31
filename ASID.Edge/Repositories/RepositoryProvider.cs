@@ -25,6 +25,10 @@ namespace ASID.Edge.Repositories
         public static IUserRepository Users { get; } =
             new PostgreSqlUserRepository();
 
+        // Lane Management (Supervisor only)
+        public static ILaneManagementRepository LaneManagement { get; } =
+            new SqliteLaneManagementRepository();
+
 
         // Shared UI Data
         public static List<PUBodyTransactionHistoryItem> TransactionHistory { get; }

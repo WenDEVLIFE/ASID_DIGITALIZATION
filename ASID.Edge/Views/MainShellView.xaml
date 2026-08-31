@@ -136,6 +136,13 @@
                                 Height="35"
                                 Visibility="Collapsed"/>
 
+                        <Button x:Name="btnLaneManagement"
+                                Content="🏷️ Lane Management"
+                                Click="btnLaneManagement_Click"
+                                Margin="5"
+                                Height="35"
+                                Visibility="Collapsed"/>
+
                         </StackPanel>
 
                 </DockPanel>
