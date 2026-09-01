@@ -56,12 +56,15 @@ namespace ASID.Edge.Helpers
             int firstDataRow = FindDataStartRow(worksheet);
 
             // Read workweek from Column A (first non-empty value)
+            // Convert week number to actual date (Monday of that week)
             string workweekLabel = "";
+            int workweekNumber = 0;
             for (int row = firstDataRow; row <= worksheet.Dimension.Rows; row++)
             {
                 string ww = worksheet.Cells[row, 1].Text.Trim();
-                if (!string.IsNullOrWhiteSpace(ww) && int.TryParse(ww, out _))
+                if (!string.IsNullOrWhiteSpace(ww) && int.TryParse(ww, out int wwNum))
                 {
+                    workweekNumber = wwNum;
                     workweekLabel = $"WW {ww}";
                     break;
                 }
@@ -101,7 +104,7 @@ namespace ASID.Edge.Helpers
                 // Include row even if demand is 0 (planner may update later)
                 demands.Add(new DailyDemand
                 {
-                    ProductionDate = DateTime.Today,
+                    ProductionDate = GetDateFromWeekNumber(workweekNumber),
                     Shift = 0,
                     Model = model,
                     PartNo = partNo,
@@ -231,6 +234,33 @@ namespace ASID.Edge.Helpers
                 }
             }
             return -1;
+        }
+
+        /// <summary>
+        /// Convert an ISO week number to the Monday date of that week.
+        /// Uses the current year. If the week number is out of range,
+        /// falls back to today's date.
+        /// </summary>
+        private static DateTime GetDateFromWeekNumber(int weekNumber)
+        {
+            if (weekNumber < 1 || weekNumber > 53)
+                return DateTime.Today;
+
+            // ISO 8601: Week 1 is the week containing the first Thursday of the year.
+            // January 4th is always in Week 1.
+            var jan4 = new DateTime(DateTime.Today.Year, 1, 4);
+            int startOfWeek1 = (int)jan4.DayOfWeek;
+            if (startOfWeek1 == 0) startOfWeek1 = 7; // Sunday = 7
+            var week1Monday = jan4.AddDays(-(startOfWeek1 - 1));
+
+            // Monday of the target week
+            var targetMonday = week1Monday.AddDays((weekNumber - 1) * 7);
+
+            // Sanity check: don't go more than 7 days before or after today
+            if (targetMonday.Year != DateTime.Today.Year)
+                return DateTime.Today;
+
+            return targetMonday;
         }
     }
 }
