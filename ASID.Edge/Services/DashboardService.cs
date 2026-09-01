@@ -65,9 +65,10 @@ namespace ASID.Edge.Services
                 {
                     var matchingTx = Transactions.Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo).ToList();
 
-                    // P2 Inventory = total quantity in Supermarket Storage
+                    // P2 Inventory = sum of ALL PU-Body Inventory (all statuses except Scrapped)
+                    // = P2 Supermarket + Floating + P2 Loading + P1 Loading + P1 Production
                     int p2Inventory = matchingTx
-                        .Where(t => t.Status == MaterialStatus.Stored)
+                        .Where(t => t.Status != MaterialStatus.Scrapped)
                         .Sum(t => t.SNP);
 
                     // Delivered to P1 = P1 Loading Bay (Received) + P1 Production (Consumed)

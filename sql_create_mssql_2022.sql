@@ -144,3 +144,30 @@ INSERT INTO dbo.users (username, password_hash, role) VALUES
  ('cordonez',    '100000.BPGX/TrkXhsabeg3clB4WA==.+iRnOiyGJT52s0zPSWpxTCBd1PgisUgp7DwJp5Rx6H0=', 'supervisor'),
  ('vsendrijas.p','100000.0swiOwjI3eKKwLGNP5dmXQ==.I4hbwy+svxcKjTXKWwma1PFHwfwaiPE/516bAv2jWWE=', 'planner');
 GO
+
+-- ===========================================================================
+-- lane_management
+-- ===========================================================================
+IF OBJECT_ID(N'dbo.lane_management', N'U') IS NOT NULL
+    DROP TABLE dbo.lane_management;
+GO
+
+CREATE TABLE dbo.lane_management
+(
+    id                INT IDENTITY(1,1) NOT NULL
+                            CONSTRAINT PK_lane_management PRIMARY KEY,
+    lane_no           NVARCHAR(50)  NOT NULL,
+    part_no           NVARCHAR(100) NOT NULL DEFAULT 'Not Assigned',
+    max_qty_stored    INT           NOT NULL DEFAULT 100,
+    actual_stored_qty INT           NOT NULL DEFAULT 0,
+    withdrawn_qty     INT           NOT NULL DEFAULT 0,
+    lane_status       NVARCHAR(50)  NOT NULL DEFAULT 'Not Assigned',
+    color_status      NVARCHAR(50)  NOT NULL DEFAULT 'Gray',
+    created_at        DATETIME2     NULL CONSTRAINT DF_lane_management_created_at DEFAULT SYSUTCDATETIME(),
+    updated_at        DATETIME2     NULL CONSTRAINT DF_lane_management_updated_at DEFAULT SYSUTCDATETIME()
+);
+GO
+
+CREATE UNIQUE INDEX UQ_lane_management_lane_no
+    ON dbo.lane_management(lane_no);
+GO

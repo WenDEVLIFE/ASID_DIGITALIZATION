@@ -102,3 +102,22 @@ INSERT INTO users (username, password_hash, role) VALUES
  ('vsendrijas',  '100000.7gP6pxaWtEshcZDqHig5eQ==.qi4uZgj6uPjiLL/DJBKuVd89i5HDhjLlgRlN5Da4M3s=', 'qa'),
  ('cordonez',    '100000.BPGX/TrkXhsabeg3clB4WA==.+iRnOiyGJT52s0zPSWpxTCBd1PgisUgp7DwJp5Rx6H0=', 'supervisor'),
  ('vsendrijas.p','100000.0swiOwjI3eKKwLGNP5dmXQ==.I4hbwy+svxcKjTXKWwma1PFHwfwaiPE/516bAv2jWWE=', 'planner');
+
+-- ===========================================================================
+-- lane_management
+-- ===========================================================================
+DROP TABLE IF EXISTS lane_management;
+
+CREATE TABLE lane_management
+(
+    id                SERIAL PRIMARY KEY,
+    lane_no           TEXT NOT NULL UNIQUE,
+    part_no           TEXT NOT NULL DEFAULT 'Not Assigned',
+    max_qty_stored    INTEGER NOT NULL DEFAULT 100,
+    actual_stored_qty INTEGER NOT NULL DEFAULT 0,
+    withdrawn_qty     INTEGER NOT NULL DEFAULT 0,
+    lane_status       TEXT NOT NULL DEFAULT 'Not Assigned',
+    color_status      TEXT NOT NULL DEFAULT 'Gray',
+    created_at        TIMESTAMP DEFAULT NOW(),
+    updated_at        TIMESTAMP DEFAULT NOW()
+);
