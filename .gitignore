@@ -366,3 +366,6 @@ FodyWeavers.xsd
 # Environment / secrets
 .env
 !.env.example
+
+# Large binary files
+*.zip
