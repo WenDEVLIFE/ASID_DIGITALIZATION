@@ -2,6 +2,7 @@ using ASID.Edge.Mapping;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using ASID.Edge.Repositories;
 using System;
@@ -81,9 +82,11 @@ namespace ASID.Edge.Services
                         .Where(t => (t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped)
                         .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
 
+                    // Show ISO week number (e.g. W33) instead of raw date
+                    int weekNum = ISOWeek.GetWeekOfYear(g.Key.ProductionDate);
                     return new PUBodyDailyDemandItem
                     {
-                        Date = g.Key.ProductionDate.ToString("yyyy-MM-dd"),
+                        Date = $"W{weekNum}",
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
                         Demand = g.Sum(x => x.Quantity),

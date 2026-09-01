@@ -6,6 +6,7 @@ using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.PUBody;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -177,7 +178,7 @@ namespace ASID.Edge.Views
                     .GroupBy(d => new { d.Model, d.PartNo })
                     .Select(g => new PUBodyDailyDemandItem
                     {
-                        Date = "",
+                        Date = $"W{ISOWeek.GetWeekOfYear(g.First().ProductionDate)}",
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
                         Demand = g.Sum(x => x.Quantity),
