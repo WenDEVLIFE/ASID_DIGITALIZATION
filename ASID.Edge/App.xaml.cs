@@ -95,8 +95,16 @@ namespace Edge
             {
                 await Task.Run(() =>
                 {
-                    using var connection = Db.CreateConnection();
-                    connection.Open();
+                    if (Db.Engine.Equals("mssql", StringComparison.OrdinalIgnoreCase))
+                    {
+                        using var conn = Db.CreateMssqlConnection();
+                        conn.Open();
+                    }
+                    else
+                    {
+                        using var conn = Db.CreateConnection();
+                        conn.Open();
+                    }
                 });
             }
             catch

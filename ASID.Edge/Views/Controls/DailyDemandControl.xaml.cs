@@ -1,6 +1,6 @@
 using ASID.Edge.Helpers;
 using ASID.Edge.Models;
-using ASID.Edge.Repositories.PostgreSql;
+using ASID.Edge.Repositories;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Dialogs;
 using ASID.Edge.Views.Controls;
@@ -23,7 +23,7 @@ namespace ASID.Edge.Views.Controls
         public event EventHandler? ImportCompleted;
 
         private readonly DailyDemandService _dailyDemandService = new(
-            new PostgreSqlDailyDemandRepository());
+            RepositoryProvider.DailyDemands);
 
         private bool modelAsc = true;
         private bool dateAsc = true;

@@ -69,12 +69,12 @@ namespace ASID.Edge.Views.Controllers
 
             try
             {
-                // Daily demand requires PostgreSQL — graceful fallback if offline
                 _dailyDemand.Load(
                     _dashboard.GetDailyDemand());
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[DashboardController] DailyDemand FAILED: {ex.Message}");
                 _dailyDemand.Load(new List<Models.PUBodyDailyDemandItem>());
             }
         }

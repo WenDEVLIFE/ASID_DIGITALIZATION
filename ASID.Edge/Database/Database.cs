@@ -150,7 +150,7 @@ public static class Database
         string password = GetRequiredValue(values, "ASID_MSSQL_PASSWORD");
 
         return $"Server={server};Database={database};User Id={username};Password={password};" +
-               $"TrustServerCertificate=True;Encrypt=Mandatory;";
+               $"TrustServerCertificate=True;Encrypt=Mandatory;Connection Timeout=5;";
     }
 
     private static string GetRequiredValue(

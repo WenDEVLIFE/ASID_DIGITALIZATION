@@ -1,6 +1,5 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories;
-using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.PUBody;
@@ -58,22 +57,23 @@ namespace ASID.Edge.Views
             // Role-based navigation
             var role = auth.CurrentRole;
             bool isPlanner = role == Role.Planner;
+            bool isSupervisor = role == Role.Supervisor;
+            bool isNonPlanner = !isPlanner;
 
-            // Planner → Dashboard only, hide all stations
-            // Operator/QA/Supervisor → Stations only, hide Dashboard
+            // Planner only → Dashboard visible
             LblDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
             btnDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
             SepDashboard.Visibility = isPlanner ? Visibility.Visible : Visibility.Collapsed;
 
-            LblPuBody.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
-            btnStorage.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
-            btnWithdrawal.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
-            btnP2LoadingBay.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
-            btnP1LoadingBay.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
-            btnP1Production.Visibility = isPlanner ? Visibility.Collapsed : Visibility.Visible;
+            // All non-planner roles see stations
+            LblPuBody.Visibility = isNonPlanner ? Visibility.Visible : Visibility.Collapsed;
+            btnStorage.Visibility = isNonPlanner ? Visibility.Visible : Visibility.Collapsed;
+            btnWithdrawal.Visibility = isNonPlanner ? Visibility.Visible : Visibility.Collapsed;
+            btnP2LoadingBay.Visibility = isNonPlanner ? Visibility.Visible : Visibility.Collapsed;
+            btnP1LoadingBay.Visibility = isNonPlanner ? Visibility.Visible : Visibility.Collapsed;
+            btnP1Production.Visibility = isNonPlanner ? Visibility.Visible : Visibility.Collapsed;
 
             // Supervisor → System section visible
-            bool isSupervisor = role == Role.Supervisor;
             LblSystem.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
             btnUserManagement.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
             btnLaneManagement.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
@@ -92,7 +92,7 @@ namespace ASID.Edge.Views
                 var role = auth.CurrentRole;
                 Toasts.Success($"Welcome, {user}! Logged in as {role}.", 2500);
 
-                // For Planner, load the dashboard with existing demand data
+                // For Planner/Supervisor, load the dashboard with existing demand data
                 switch (auth.CurrentRole)
                 {
                     case Role.Planner:
@@ -171,8 +171,8 @@ namespace ASID.Edge.Views
         {
             try
             {
-                var repo = new PostgreSqlDailyDemandRepository();
-                var allDemands = repo.GetAll();
+                var allDemands = RepositoryProvider.DailyDemands.GetAll();
+                System.Diagnostics.Debug.WriteLine($"[LoadDashboard] Got {allDemands.Count} demands from MSSQL");
 
                 var displayItems = allDemands
                     .GroupBy(d => new { d.Model, d.PartNo })
@@ -195,7 +195,8 @@ namespace ASID.Edge.Views
             {
                 // DB unreachable — show empty dashboard
                 _dashboard.Load(Array.Empty<PUBodyDailyDemandItem>());
-                System.Diagnostics.Debug.WriteLine($"LoadDashboard failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"LoadDashboard FAILED: {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show($"LoadDashboard error: {ex.Message}", "Debug", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -208,6 +209,7 @@ namespace ASID.Edge.Views
             _p1Production.Deactivate();
 
             StationHost.Content = _dashboard;
+            LoadDashboard();
         }
 
         private void btnStorage_Click(object sender, RoutedEventArgs e)

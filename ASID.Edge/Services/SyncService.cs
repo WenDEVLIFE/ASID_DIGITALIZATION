@@ -122,7 +122,9 @@ public class SyncService
                 return;
             }
 
-            using var pgConnection = Database.Database.CreateConnection();
+            using var pgConnection = Database.Database.Engine.Equals("mssql", StringComparison.OrdinalIgnoreCase)
+                ? (System.Data.Common.DbConnection)Database.Database.CreateMssqlConnection()
+                : Database.Database.CreateConnection();
             pgConnection.Open();
 
             int pushed = 0;

@@ -52,8 +52,10 @@ namespace ASID.Edge.Services
         {
             var demands = _dailyDemandRepository.GetAll();
 
-            // Get latest import timestamp for change detection
-            DateTime? lastImportedAt = _dailyDemandRepository.GetLastImportedAt();
+            // Try to get transactions for inventory calc, but don't fail if unavailable
+            IReadOnlyList<StorageTransaction> allTransactions;
+            try { allTransactions = Transactions; }
+            catch { allTransactions = new List<StorageTransaction>(); }
 
             return demands
                 .GroupBy(x => new
@@ -64,7 +66,7 @@ namespace ASID.Edge.Services
                 })
                 .Select(g =>
                 {
-                    var matchingTx = Transactions.Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo).ToList();
+                    var matchingTx = allTransactions.Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo).ToList();
 
                     // P2 Inventory = sum of ALL PU-Body Inventory (all statuses except Scrapped)
                     // = P2 Supermarket + Floating + P2 Loading + P1 Loading + P1 Production

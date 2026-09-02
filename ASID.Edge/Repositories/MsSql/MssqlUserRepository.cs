@@ -64,7 +64,7 @@ VALUES (@Id, @Username, @PasswordHash, @Role, @CreatedAt, @UpdatedAt);";
 
         connection.Execute(sql, new
         {
-            user.Id,
+            Id = user.Id == Guid.Empty ? Guid.NewGuid() : user.Id,
             user.Username,
             user.PasswordHash,
             user.Role,

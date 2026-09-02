@@ -25,7 +25,7 @@ namespace ASID.Edge.Repositories
 
         // Lane Management (Supervisor only)
         public static ILaneManagementRepository LaneManagement { get; } =
-            new SqliteLaneManagementRepository();
+            CreateLaneManagementRepo();
 
         // Shared UI Data
         public static List<PUBodyTransactionHistoryItem> TransactionHistory { get; }
@@ -62,6 +62,14 @@ namespace ASID.Edge.Repositories
             if (engine.Equals("mssql", StringComparison.OrdinalIgnoreCase))
                 return new MssqlUserRepository();
             return new PostgreSqlUserRepository();
+        }
+
+        private static ILaneManagementRepository CreateLaneManagementRepo()
+        {
+            string engine = Database.Database.Engine;
+            if (engine.Equals("mssql", StringComparison.OrdinalIgnoreCase))
+                return new MssqlLaneManagementRepository();
+            return new SqliteLaneManagementRepository();
         }
     }
 }

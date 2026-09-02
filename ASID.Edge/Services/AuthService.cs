@@ -40,9 +40,10 @@ namespace ASID.Edge.Services
             {
                 user = _users.GetByUsername(normalized);
             }
-            catch
+            catch (Exception ex)
             {
                 // Server unreachable — cannot authenticate
+                System.Diagnostics.Debug.WriteLine($"Login DB error: {ex.Message}");
                 return false;
             }
 
