@@ -19,7 +19,7 @@ public static class Database
     /// Returns the configured database engine: "postgresql" or "mssql".
     /// </summary>
     public static string Engine =>
-        GetOptionalValue(EnvValues, "ASID_DB_ENGINE", "postgresql");
+        GetOptionalValue(EnvValues, "ASID_DB_ENGINE", "mssql");
 
     /// <summary>
     /// Creates a PostgreSQL connection (legacy).
@@ -50,54 +50,54 @@ public static class Database
 
     private static IReadOnlyDictionary<string, string> LoadEnvFile()
     {
-        string envPath = FindEnvFile();
+        string? envPath = FindEnvFileOrNull();
 
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (string rawLine in File.ReadAllLines(envPath))
+
+        if (envPath != null)
         {
-            string line = rawLine.Trim();
-
-            // Skip blank lines and comments.
-            if (line.Length == 0 || line.StartsWith('#'))
+            foreach (string rawLine in File.ReadAllLines(envPath))
             {
-                continue;
-            }
+                string line = rawLine.Trim();
 
-            // Split on the first '=' only, so values may contain '='.
-            int equalsIndex = line.IndexOf('=');
-            if (equalsIndex <= 0)
-            {
-                continue; // No key (or missing '='): not a valid entry.
-            }
+                // Skip blank lines and comments.
+                if (line.Length == 0 || line.StartsWith('#'))
+                {
+                    continue;
+                }
 
-            string key = line.Substring(0, equalsIndex).Trim();
-            string value = line.Substring(equalsIndex + 1).Trim();
-            values[key] = value;
+                // Split on the first '=' only, so values may contain '='.
+                int equalsIndex = line.IndexOf('=');
+                if (equalsIndex <= 0)
+                {
+                    continue; // No key (or missing '='): not a valid entry.
+                }
+
+                string key = line.Substring(0, equalsIndex).Trim();
+                string value = line.Substring(equalsIndex + 1).Trim();
+                values[key] = value;
+            }
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("[Database] .env not found — using hardcoded fallback credentials.");
         }
 
         return values;
     }
 
-    private static string FindEnvFile()
+    private static string? FindEnvFileOrNull()
     {
         // Desktop app: the executable lives under ASID.Edge\bin\..., so walk
         // upward from AppContext.BaseDirectory until a .env is found.
         string? envFile = FindEnvFileUpward(AppContext.BaseDirectory);
-        if (envFile != null)
-        {
-            return envFile;
-        }
+        if (envFile != null) return envFile;
 
         // Fall back to the current working directory.
         envFile = FindEnvFileUpward(Directory.GetCurrentDirectory());
-        if (envFile != null)
-        {
-            return envFile;
-        }
+        if (envFile != null) return envFile;
 
-        throw new FileNotFoundException(
-            "The .env file could not be found. Copy '.env.example' to '.env' at the repository root " +
-            "and fill in the database values before starting the application.");
+        return null; // No .env found — will use hardcoded fallback.
     }
 
     private static string? FindEnvFileUpward(string startDirectory)
@@ -144,10 +144,10 @@ public static class Database
 
     private static string BuildMssqlConnectionString(IReadOnlyDictionary<string, string> values)
     {
-        string server = GetRequiredValue(values, "ASID_MSSQL_SERVER");
-        string database = GetRequiredValue(values, "ASID_MSSQL_DB");
-        string username = GetRequiredValue(values, "ASID_MSSQL_USER");
-        string password = GetRequiredValue(values, "ASID_MSSQL_PASSWORD");
+        string server = GetOptionalValue(values, "ASID_MSSQL_SERVER", "AZP-SQ01\\p01");
+        string database = GetOptionalValue(values, "ASID_MSSQL_DB", "asid_db");
+        string username = GetOptionalValue(values, "ASID_MSSQL_USER", "eondb_dbo");
+        string password = GetOptionalValue(values, "ASID_MSSQL_PASSWORD", "xuVLa!P4BT5A!Lgwf91b");
 
         return $"Server={server};Database={database};User Id={username};Password={password};" +
                $"TrustServerCertificate=True;Encrypt=Mandatory;Connection Timeout=5;";
