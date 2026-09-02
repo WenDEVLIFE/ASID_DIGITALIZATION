@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Npgsql;
+using Microsoft.Data.SqlClient;
 
 namespace ASID.Edge.Database;
 
@@ -14,9 +15,37 @@ public static class Database
         EnvValues = LoadEnvFile();
     }
 
+    /// <summary>
+    /// Returns the configured database engine: "postgresql" or "mssql".
+    /// </summary>
+    public static string Engine =>
+        GetOptionalValue(EnvValues, "ASID_DB_ENGINE", "postgresql");
+
+    /// <summary>
+    /// Creates a PostgreSQL connection (legacy).
+    /// </summary>
     public static NpgsqlConnection CreateConnection()
     {
-        return new NpgsqlConnection(BuildConnectionString(EnvValues));
+        return new NpgsqlConnection(BuildPostgresConnectionString(EnvValues));
+    }
+
+    /// <summary>
+    /// Creates an MSSQL connection.
+    /// </summary>
+    public static SqlConnection CreateMssqlConnection()
+    {
+        return new SqlConnection(BuildMssqlConnectionString(EnvValues));
+    }
+
+    /// <summary>
+    /// Creates a connection based on the configured engine.
+    /// Returns IDbConnection-compatible object — callers should cast.
+    /// </summary>
+    public static object CreateSmartConnection()
+    {
+        if (Engine.Equals("mssql", StringComparison.OrdinalIgnoreCase))
+            return CreateMssqlConnection();
+        return CreateConnection();
     }
 
     private static IReadOnlyDictionary<string, string> LoadEnvFile()
@@ -89,12 +118,12 @@ public static class Database
         return null;
     }
 
-    private static string BuildConnectionString(IReadOnlyDictionary<string, string> values)
+    private static string BuildPostgresConnectionString(IReadOnlyDictionary<string, string> values)
     {
         // Choose the active variable prefix based on the ASID_USE_LOCAL toggle.
         //   ASID_USE_LOCAL=true  -> ASID_LOCAL_DB_* (localhost)
         //   ASID_USE_LOCAL=false -> ASID_DB_*       (cloud / Neon)
-        bool useLocal = GetRequiredValue(values, "ASID_USE_LOCAL")
+        bool useLocal = GetOptionalValue(values, "ASID_USE_LOCAL", "true")
             .Equals("true", StringComparison.OrdinalIgnoreCase);
 
         string prefix = useLocal ? "ASID_LOCAL_DB_" : "ASID_DB_";
@@ -113,6 +142,17 @@ public static class Database
                sslOptions;
     }
 
+    private static string BuildMssqlConnectionString(IReadOnlyDictionary<string, string> values)
+    {
+        string server = GetRequiredValue(values, "ASID_MSSQL_SERVER");
+        string database = GetRequiredValue(values, "ASID_MSSQL_DB");
+        string username = GetRequiredValue(values, "ASID_MSSQL_USER");
+        string password = GetRequiredValue(values, "ASID_MSSQL_PASSWORD");
+
+        return $"Server={server};Database={database};User Id={username};Password={password};" +
+               $"TrustServerCertificate=True;Encrypt=Mandatory;";
+    }
+
     private static string GetRequiredValue(
         IReadOnlyDictionary<string, string> values,
         string envKey)
@@ -125,5 +165,15 @@ public static class Database
         }
 
         return value;
+    }
+
+    private static string GetOptionalValue(
+        IReadOnlyDictionary<string, string> values,
+        string envKey,
+        string defaultValue)
+    {
+        if (values.TryGetValue(envKey, out string? value) && !string.IsNullOrWhiteSpace(value))
+            return value;
+        return defaultValue;
     }
 }
