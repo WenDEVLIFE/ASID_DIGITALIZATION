@@ -144,7 +144,7 @@ public static class Database
 
     private static string BuildMssqlConnectionString(IReadOnlyDictionary<string, string> values)
     {
-        string server = GetOptionalValue(values, "ASID_MSSQL_SERVER", "AZP-SQ01\\p01");
+        string server = GetOptionalValue(values, "ASID_MSSQL_SERVER", "AZP-SQL01\\p01");
         string database = GetOptionalValue(values, "ASID_MSSQL_DB", "asid_db");
         string username = GetOptionalValue(values, "ASID_MSSQL_USER", "eondb_dbo");
         string password = GetOptionalValue(values, "ASID_MSSQL_PASSWORD", "xuVLa!P4BT5A!Lgwf91b");
