@@ -57,26 +57,32 @@ namespace ASID.Edge.Views
                 return;
             }
 
-            try
+            var result = ServiceProvider.Auth.Login(username, password);
+
+            switch (result)
             {
-                if (ServiceProvider.Auth.Login(username, password))
-                {
+                case Services.LoginResult.Success:
                     DialogResult = true;
                     Close();
                     return;
-                }
 
-                ShowError("Invalid username or password.");
-            }
-            catch (Exception ex)
-            {
-                ShowError($"Login failed: {ex.Message}");
+                case Services.LoginResult.DatabaseUnreachable:
+                    ShowError("Cannot connect to database. Please check your network connection and try again.");
+                    return;
+
+                case Services.LoginResult.InvalidCredentials:
+                    ShowError("Invalid username or password.");
+                    return;
+
+                default:
+                    ShowError("Login failed. Please try again.");
+                    return;
             }
         }
 
         private void ShowError(string message)
         {
-            ErrorText.Text = message;
+            MessageBox.Show(message, "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             PasswordInput.Clear();
             PasswordInput.Focus();
         }

@@ -4,6 +4,14 @@ using System;
 
 namespace ASID.Edge.Services
 {
+    public enum LoginResult
+    {
+        Success,
+        DatabaseUnreachable,
+        InvalidCredentials,
+        EmptyFields
+    }
+
     public class AuthService
     {
         private readonly IUserRepository _users;
@@ -31,7 +39,7 @@ namespace ASID.Edge.Services
         public bool CanOverride =>
             CurrentRole is Role.Supervisor;
 
-        public bool Login(string username, string password)
+        public LoginResult Login(string username, string password)
         {
             string normalized = username.Trim().ToLowerInvariant();
 
@@ -44,17 +52,17 @@ namespace ASID.Edge.Services
             {
                 // Server unreachable — cannot authenticate
                 System.Diagnostics.Debug.WriteLine($"Login DB error: {ex.Message}");
-                return false;
+                return LoginResult.DatabaseUnreachable;
             }
 
             if (user == null)
             {
-                return false;
+                return LoginResult.InvalidCredentials;
             }
 
             if (!PasswordHasher.Verify(password, user.PasswordHash))
             {
-                return false;
+                return LoginResult.InvalidCredentials;
             }
 
             CurrentUser = user;
@@ -63,7 +71,7 @@ namespace ASID.Edge.Services
             // Persist session so the user skips login next time.
             SessionManager.Save(normalized, user.Role);
 
-            return true;
+            return LoginResult.Success;
         }
 
         /// <summary>
