@@ -16,7 +16,7 @@ namespace ASID.Edge.Repositories
         public static readonly SqliteTransactionRepository SqliteTransactions
             = new();
 
-        public static ITransactionRepository Transactions { get; } = CreateTransactionRepo();
+        public static ITransactionRepository Transactions { get; } = SqliteTransactions;
         public static IDailyDemandRepository DailyDemands { get; } = CreateDailyDemandRepo();
 
         // Users (authentication) — PostgreSQL or MSSQL

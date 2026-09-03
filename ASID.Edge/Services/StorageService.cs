@@ -2,6 +2,7 @@
 using ASID.Edge.Models;
 using ASID.Edge.Repositories;
 using ASID.Edge.Repositories.Interfaces;
+using ASID.Edge.Repositories.MsSql;
 using ASID.Edge.Repositories.PostgreSql;
 using ASID.Edge.Services;
 using ASID.Edge.Workflows.PUBody.Storage;
@@ -60,8 +61,19 @@ public class StorageService
         //TODO: Change later to this --
         //transaction.Station = AppConfig.StationId;
 
-        // Save to repository
+        // Save to local SQLite (offline-first, always succeeds)
         _repository.Add(transaction);
+
+        // Also save to MSSQL directly (if reachable)
+        try
+        {
+            var mssql = new MssqlTransactionRepository();
+            mssql.Add(transaction);
+        }
+        catch
+        {
+            // MSSQL unreachable — SyncService will push later
+        }
 
         // Update lane_management: increment stored qty for this lane
         try

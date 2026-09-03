@@ -1,5 +1,6 @@
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
+using ASID.Edge.Repositories.MsSql;
 
 namespace ASID.Edge.Services
 {
@@ -11,6 +12,12 @@ namespace ASID.Edge.Services
             ITransactionRepository repository)
         {
             _repository = repository;
+        }
+
+        private void UpdateBoth(StorageTransaction transaction)
+        {
+            _repository.Update(transaction);
+            try { new MssqlTransactionRepository().Update(transaction); } catch { }
         }
 
         /// <summary>
@@ -35,7 +42,7 @@ namespace ASID.Edge.Services
             transaction.IsNCRejected = false;
             transaction.NCQuantity = ncQuantity > 0 ? ncQuantity : 1;
 
-            _repository.Update(transaction);
+            UpdateBoth(transaction);
         }
 
         /// <summary>
@@ -54,7 +61,7 @@ namespace ASID.Edge.Services
             transaction.IsNCRejected = false;
             transaction.NCQuantity = ncQuantity > 0 ? ncQuantity : 1;
 
-            _repository.Update(transaction);
+            UpdateBoth(transaction);
         }
 
         /// <summary>
@@ -76,7 +83,7 @@ namespace ASID.Edge.Services
             transaction.IsNCRejected = true;
             transaction.NCQuantity = 0;
 
-            _repository.Update(transaction);
+            UpdateBoth(transaction);
         }
 
         /// <summary>
@@ -104,7 +111,7 @@ namespace ASID.Edge.Services
             transaction.NCQuantity = qty;
             transaction.Status = MaterialStatus.Scrapped;
 
-            _repository.Update(transaction);
+            UpdateBoth(transaction);
         }
 
         /// <summary>Legacy confirm NC.</summary>
@@ -119,7 +126,7 @@ namespace ASID.Edge.Services
             transaction.IsNCConfirmed = true;
             transaction.IsNCRejected = false;
 
-            _repository.Update(transaction);
+            UpdateBoth(transaction);
         }
 
         /// <summary>Legacy reject NC.</summary>
@@ -134,7 +141,7 @@ namespace ASID.Edge.Services
             transaction.IsNCConfirmed = false;
             transaction.IsNCRejected = true;
 
-            _repository.Update(transaction);
+            UpdateBoth(transaction);
         }
     }
 }
