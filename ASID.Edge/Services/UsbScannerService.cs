@@ -71,10 +71,8 @@ namespace ASID.Edge.Services
                 return false;
             }
 
-            // Any other key resets scanner tracking
-            if (_isReceiving && key is not (Key.LeftShift or Key.RightShift
-                or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt
-                or Key.System or Key.None))
+            // Reset buffer only on explicit navigation/cancel keys like Escape or Tab
+            if (_isReceiving && key is Key.Escape or Key.Tab)
             {
                 Reset();
             }
