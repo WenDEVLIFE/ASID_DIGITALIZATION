@@ -1,4 +1,7 @@
-﻿using ASID.Edge.Models;
+using System;
+using System.Linq;
+using ASID.Edge.Models;
+using ASID.Edge.Repositories;
 
 namespace ASID.Edge.Services
 {
@@ -7,14 +10,15 @@ namespace ASID.Edge.Services
         public KanbanData Parse(string qr)
         {
             var p = qr.Split('|');
+            var partNo = (p.ElementAtOrDefault(1) ?? "").TrimStart('P');
 
             return new KanbanData
             {
                 ProductionLoop = p.ElementAtOrDefault(0) ?? "",
                 
-                Model = "PU BODY", //change this later to get from datbase
+                Model = ResolveModel(partNo),
 
-                PartNo = (p.ElementAtOrDefault(1) ?? "").TrimStart('P'),
+                PartNo = partNo,
 
                 Quantity = ParseQty(p.ElementAtOrDefault(2)),
 
@@ -29,6 +33,38 @@ namespace ASID.Edge.Services
 
                 Remarks = p.ElementAtOrDefault(14) ?? ""
             };
+        }
+
+        private string ResolveModel(string partNo)
+        {
+            if (string.IsNullOrWhiteSpace(partNo))
+                return string.Empty;
+
+            try
+            {
+                // 1. Check in-memory DailyDemand list if populated
+                var uiMatch = RepositoryProvider.DailyDemand?
+                    .FirstOrDefault(d => string.Equals(d.PartNo, partNo, StringComparison.OrdinalIgnoreCase));
+                if (uiMatch != null && !string.IsNullOrWhiteSpace(uiMatch.Model))
+                {
+                    return uiMatch.Model;
+                }
+
+                // 2. Query DailyDemands repository
+                var dbDemands = RepositoryProvider.DailyDemands?.GetAll();
+                var dbMatch = dbDemands?
+                    .FirstOrDefault(d => string.Equals(d.PartNo, partNo, StringComparison.OrdinalIgnoreCase));
+                if (dbMatch != null && !string.IsNullOrWhiteSpace(dbMatch.Model))
+                {
+                    return dbMatch.Model;
+                }
+            }
+            catch
+            {
+                // Fallback
+            }
+
+            return string.Empty;
         }
 
         private int ParseQty(string? value)
