@@ -369,3 +369,7 @@ FodyWeavers.xsd
 
 # Large binary files
 *.zip
+
+# Publish output directories
+publish_output/
+publish*/
