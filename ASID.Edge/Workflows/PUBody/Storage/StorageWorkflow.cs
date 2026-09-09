@@ -281,6 +281,11 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             var kanban =
                 parser.Parse(_context.KanbanNo);
 
+            if (string.IsNullOrEmpty(_context.SerialNo))
+            {
+                _context.SerialNo = Guid.NewGuid().ToString("N")[..8].ToUpper();
+            }
+
             var dm = new DataMatrixData
             {
                 TransactionId = DateTime.Now.ToString("HHmmss"),
@@ -321,6 +326,7 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             _context.TrolleyNo = "";
             _context.CellNo = "";
             _context.OperatorId = ServiceProvider.Auth.CurrentUser?.Username ?? "";
+            _context.SerialNo = "";
             _context.DataMatrix = "";
 
             Start();

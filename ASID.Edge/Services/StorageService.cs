@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Mapping;
+using ASID.Edge.Mapping;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories;
 using ASID.Edge.Repositories.Interfaces;
@@ -25,9 +25,10 @@ public class StorageService
 
         var kanban = parser.Parse(context.KanbanNo);
 
-        // Generate ONE serial number
-        var serial =
-            Guid.NewGuid().ToString("N")[..8].ToUpper();
+        // Reuse context.SerialNo if generated during Print(), otherwise generate one
+        var serial = !string.IsNullOrWhiteSpace(context.SerialNo)
+            ? context.SerialNo
+            : Guid.NewGuid().ToString("N")[..8].ToUpper();
 
         var item = new PUBodyTransactionHistoryItem
         {

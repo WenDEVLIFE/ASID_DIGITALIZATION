@@ -215,7 +215,10 @@ namespace ASID.Edge.Views.PUBody
                 ["QTY"] = kanban.Quantity.ToString(),
                 ["LINENO"] = workflow.Context.CellNo,
                 ["LANENO"] = workflow.Context.LaneNo,
-                ["TROLLEYNO"] = workflow.Context.TrolleyNo
+                ["TROLLEYNO"] = workflow.Context.TrolleyNo,
+                ["OPERATOR"] = workflow.Context.OperatorId,
+                ["SERIALNO"] = workflow.Context.SerialNo,
+                ["DATE"] = DateTime.Now.ToString("yyyy-MM-dd")
             };
 
             var zpl = new LabelTemplateService()

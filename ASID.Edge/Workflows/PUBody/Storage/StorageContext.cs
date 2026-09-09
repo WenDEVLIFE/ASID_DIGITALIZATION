@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Models;
+using ASID.Edge.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,6 +16,8 @@ namespace ASID.Edge.Workflows.PUBody.Storage
         public string CellNo { get; set; } = "";
 
         public string OperatorId { get; set; } = "";
+
+        public string SerialNo { get; set; } = "";
 
         public string DataMatrix { get; set; } = "";
 
