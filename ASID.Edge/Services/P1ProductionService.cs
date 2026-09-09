@@ -1,6 +1,5 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
-using ASID.Edge.Repositories.MsSql;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -26,7 +25,6 @@ namespace ASID.Edge.Services
             transaction.ConsumedAt = DateTime.Now;
 
             _repository.Update(transaction);
-            try { new MssqlTransactionRepository().Update(transaction); } catch { }
 
             return transaction;
         }

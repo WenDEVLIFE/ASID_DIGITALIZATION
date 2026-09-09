@@ -78,13 +78,6 @@ namespace ASID.Edge.Views
             btnUserManagement.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
             btnLaneManagement.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
 
-            // Subscribe to sync status changes.
-            if (ServiceProvider.Sync is SyncService sync)
-            {
-                sync.SyncCompleted += SyncCompleted;
-                sync.NetworkStatusChanged += NetworkStatusChanged;
-            }
-
             // Welcome toast
             Loaded += (_, _) =>
             {
@@ -106,34 +99,7 @@ namespace ASID.Edge.Views
             };
         }
 
-        private void SyncCompleted(int rows)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                SyncBorder.Background = new SolidColorBrush(
-                    System.Windows.Media.Color.FromRgb(0x2E, 0x7D, 0x32));
-                TxtSyncStatus.Text = $"✓ Synced ({rows})";
-            });
-        }
 
-        private void NetworkStatusChanged(bool isOnline)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                if (isOnline)
-                {
-                    SyncBorder.Background = new SolidColorBrush(
-                        System.Windows.Media.Color.FromRgb(0x2E, 0x7D, 0x32));
-                    TxtSyncStatus.Text = "✓ Online";
-                }
-                else
-                {
-                    SyncBorder.Background = new SolidColorBrush(
-                        System.Windows.Media.Color.FromRgb(0xD3, 0x2F, 0x2F));
-                    TxtSyncStatus.Text = "✗ Offline — data saved locally";
-                }
-            });
-        }
 
         /// <summary>
         /// Called by MainWindow when the USB scanner detects a barcode.

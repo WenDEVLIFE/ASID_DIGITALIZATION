@@ -1,7 +1,6 @@
 ﻿using ASID.Edge.Models;
 using ASID.Edge.Repositories;
 using ASID.Edge.Repositories.Interfaces;
-using ASID.Edge.Repositories.MsSql;
 using ASID.Edge.Workflows.PUBody.Withdrawal;
 
 namespace ASID.Edge.Services
@@ -24,9 +23,6 @@ namespace ASID.Edge.Services
             transaction.WithdrawnAt = DateTime.Now;
 
             _repository.Update(transaction);
-
-            // Also update MSSQL directly (if reachable)
-            try { new MssqlTransactionRepository().Update(transaction); } catch { }
 
             // Update lane_management: increment withdrawn qty for this lane
             try
