@@ -138,6 +138,7 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 
         public void Start()
         {
+            _context.OperatorId = ServiceProvider.Auth.CurrentUser?.Username ?? "";
             _context.State = WorkflowState.WaitingForKanban;
             NotifyChanged();
         }
@@ -212,7 +213,19 @@ namespace ASID.Edge.Workflows.PUBody.Storage
         private void HandleLine(string barcode)
         {
             _context.CellNo = barcode;
-            _context.State = WorkflowState.WaitingForOperator;
+            if (string.IsNullOrEmpty(_context.OperatorId))
+            {
+                _context.OperatorId = ServiceProvider.Auth.CurrentUser?.Username ?? "";
+            }
+
+            if (!string.IsNullOrEmpty(_context.OperatorId))
+            {
+                _context.State = WorkflowState.ReadyForValidation;
+            }
+            else
+            {
+                _context.State = WorkflowState.WaitingForOperator;
+            }
             NotifyChanged();
         }
 
@@ -307,7 +320,7 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             _context.LaneNo = "";
             _context.TrolleyNo = "";
             _context.CellNo = "";
-            _context.OperatorId = "";
+            _context.OperatorId = ServiceProvider.Auth.CurrentUser?.Username ?? "";
             _context.DataMatrix = "";
 
             Start();
