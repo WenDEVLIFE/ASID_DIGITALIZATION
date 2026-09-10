@@ -178,10 +178,9 @@ namespace ASID.Edge.Views.PUBody
                 LoginPortal.UpdateFromContext(
                     ((StorageWorkflow)_workflowManager.CurrentWorkflow).Context);
 
+                RefreshUI();
                 CheckAndShowLaneSequenceDialog();
             });
-
-            //RefreshUI();
         }
 
         private void LoginPortal_ApplyRequested(object? sender, EventArgs e)
@@ -194,7 +193,7 @@ namespace ASID.Edge.Views.PUBody
             LoginPortal.UpdateFromContext(
                 ((StorageWorkflow)_workflowManager.CurrentWorkflow).Context);
 
-            //RefreshUI();
+            RefreshUI();
         }
 
         private void LoginPortal_PrintRequested(object? sender, EventArgs e)
@@ -284,6 +283,7 @@ namespace ASID.Edge.Views.PUBody
             {
                 _storageService.Commit(workflow.Context);
                 Toast.Success("Storage Transaction Completed");
+                RefreshUI();
             }
             catch (Exception ex)
             {

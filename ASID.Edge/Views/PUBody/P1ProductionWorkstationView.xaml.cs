@@ -115,6 +115,8 @@ namespace ASID.Edge.Views.PUBody
                 WorkflowStatus.UpdateMessage(
                     _workflowManager.CurrentWorkflow.CurrentMessage);
 
+                RefreshUI();
+
 													 
 																				   
             });
@@ -139,6 +141,7 @@ namespace ASID.Edge.Views.PUBody
             {
                 _p1ProductionService.Commit(workflow.Context);
                 Toast.Success("P1 Production Transaction Completed");
+                RefreshUI();
             }
             catch (Exception ex)
             {

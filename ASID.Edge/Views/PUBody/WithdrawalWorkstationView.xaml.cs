@@ -115,6 +115,7 @@ namespace ASID.Edge.Views.PUBody
                 WorkflowStatus.UpdateMessage(
                     _workflowManager.CurrentWorkflow.CurrentMessage);
 
+                RefreshUI();
             });
         }
 
@@ -135,6 +136,7 @@ namespace ASID.Edge.Views.PUBody
             {
                 _withdrawalService.Commit(workflow.Context);
                 Toast.Success("Withdrawal Transaction Completed");
+                RefreshUI();
             }
             catch (Exception ex)
             {

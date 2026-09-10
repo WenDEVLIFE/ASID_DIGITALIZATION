@@ -119,6 +119,8 @@ namespace ASID.Edge.Views.PUBody
                 WorkflowStatus.UpdateMessage(
                     _workflowManager.CurrentWorkflow.CurrentMessage);
 
+                RefreshUI();
+
 													 
 																				   
             });
@@ -143,6 +145,7 @@ namespace ASID.Edge.Views.PUBody
             {
                 _p1LoadingBayService.Commit(workflow.Context);
                 Toast.Success("P1 Loading Bay Transaction Completed");
+                RefreshUI();
             }
             catch (Exception ex)
             {

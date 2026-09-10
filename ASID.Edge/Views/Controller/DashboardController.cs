@@ -59,8 +59,9 @@ namespace ASID.Edge.Views.Controllers
                 _withdrawal.Load(
                     _dashboard.GetWithdrawalHistory());
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[DashboardController] Refresh FAILED: {ex}");
                 // SQLite/transaction queries failed — show empty grids
                 _transactionHistory.Load(new List<Models.PUBodyTransactionHistoryItem>());
                 _inventory.Load(new List<Models.PUBodyInventoryItem>());
