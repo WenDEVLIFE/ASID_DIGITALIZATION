@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Services;
+using ASID.Edge.Services;
 using ASID.Edge.Views.Controls;
 using System.Windows.Threading;
 
@@ -46,6 +46,8 @@ namespace ASID.Edge.Views.Controllers
             _refreshTimer.Stop();
         }
 
+        private string? _lastErrorMessage;
+
         public void Refresh()
         {
             try
@@ -58,10 +60,26 @@ namespace ASID.Edge.Views.Controllers
 
                 _withdrawal.Load(
                     _dashboard.GetWithdrawalHistory());
+
+                _lastErrorMessage = null;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[DashboardController] Refresh FAILED: {ex}");
+                
+                if (_lastErrorMessage != ex.Message)
+                {
+                    _lastErrorMessage = ex.Message;
+                    System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"Failed to load Dashboard data from database:\n\n{ex.Message}\n\nType: {ex.GetType().Name}",
+                            "Database Load Error",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error);
+                    });
+                }
+
                 // SQLite/transaction queries failed — show empty grids
                 _transactionHistory.Load(new List<Models.PUBodyTransactionHistoryItem>());
                 _inventory.Load(new List<Models.PUBodyInventoryItem>());

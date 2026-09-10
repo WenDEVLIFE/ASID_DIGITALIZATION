@@ -63,30 +63,30 @@ VALUES
 
         const string sql = @"
 SELECT
-    data_matrix AS DataMatrix,
-    serial_no AS SerialNo,
-    model AS Model,
-    part_no AS PartNo,
-    quantity AS SNP,
-    kanban_no AS KanbanNo,
-    operator_id AS OperatorId,
-    line_no AS LineNo,
-    lane_no AS LaneNo,
-    trolley_no AS TrolleyNo,
-    station AS Station,
-    status AS StatusText,
-    is_suspected_nc AS IsSuspectedNC,
-    is_nc_confirmed AS IsNCConfirmed,
-    is_nc_rejected AS IsNCRejected,
-    nc_quantity AS NCQuantity,
-    created_at AS CreatedAt,
-    updated_at AS UpdatedAt,
-    withdrawn_at AS WithdrawnAt,
-    forpickup_at AS ForPickupAt,
-    received_at AS ReceivedAt,
-    consumed_at AS ConsumedAt
-FROM transactions
-WHERE data_matrix = @dataMatrix;";
+    [data_matrix] AS [DataMatrix],
+    [serial_no] AS [SerialNo],
+    [model] AS [Model],
+    [part_no] AS [PartNo],
+    [quantity] AS [SNP],
+    [kanban_no] AS [KanbanNo],
+    [operator_id] AS [OperatorId],
+    [line_no] AS [LineNo],
+    [lane_no] AS [LaneNo],
+    [trolley_no] AS [TrolleyNo],
+    [station] AS [Station],
+    [status] AS [StatusText],
+    [is_suspected_nc] AS [IsSuspectedNC],
+    [is_nc_confirmed] AS [IsNCConfirmed],
+    [is_nc_rejected] AS [IsNCRejected],
+    [nc_quantity] AS [NCQuantity],
+    [created_at] AS [CreatedAt],
+    [updated_at] AS [UpdatedAt],
+    [withdrawn_at] AS [WithdrawnAt],
+    [forpickup_at] AS [ForPickupAt],
+    [received_at] AS [ReceivedAt],
+    [consumed_at] AS [ConsumedAt]
+FROM [transactions]
+WHERE [data_matrix] = @dataMatrix;";
 
         var row = connection.QueryFirstOrDefault(sql, new { dataMatrix });
         if (row == null) return null;
@@ -101,29 +101,29 @@ WHERE data_matrix = @dataMatrix;";
 
         const string sql = @"
 SELECT
-    data_matrix AS DataMatrix,
-    serial_no AS SerialNo,
-    model AS Model,
-    part_no AS PartNo,
-    quantity AS SNP,
-    kanban_no AS KanbanNo,
-    operator_id AS OperatorId,
-    line_no AS LineNo,
-    lane_no AS LaneNo,
-    trolley_no AS TrolleyNo,
-    station AS Station,
-    status AS StatusText,
-    is_suspected_nc AS IsSuspectedNC,
-    is_nc_confirmed AS IsNCConfirmed,
-    is_nc_rejected AS IsNCRejected,
-    nc_quantity AS NCQuantity,
-    created_at AS CreatedAt,
-    updated_at AS UpdatedAt,
-    withdrawn_at AS WithdrawnAt,
-    forpickup_at AS ForPickupAt,
-    received_at AS ReceivedAt,
-    consumed_at AS ConsumedAt
-FROM transactions;";
+    [data_matrix] AS [DataMatrix],
+    [serial_no] AS [SerialNo],
+    [model] AS [Model],
+    [part_no] AS [PartNo],
+    [quantity] AS [SNP],
+    [kanban_no] AS [KanbanNo],
+    [operator_id] AS [OperatorId],
+    [line_no] AS [LineNo],
+    [lane_no] AS [LaneNo],
+    [trolley_no] AS [TrolleyNo],
+    [station] AS [Station],
+    [status] AS [StatusText],
+    [is_suspected_nc] AS [IsSuspectedNC],
+    [is_nc_confirmed] AS [IsNCConfirmed],
+    [is_nc_rejected] AS [IsNCRejected],
+    [nc_quantity] AS [NCQuantity],
+    [created_at] AS [CreatedAt],
+    [updated_at] AS [UpdatedAt],
+    [withdrawn_at] AS [WithdrawnAt],
+    [forpickup_at] AS [ForPickupAt],
+    [received_at] AS [ReceivedAt],
+    [consumed_at] AS [ConsumedAt]
+FROM [transactions];";
 
         var rows = connection.Query(sql).ToList();
         var result = new List<StorageTransaction>();

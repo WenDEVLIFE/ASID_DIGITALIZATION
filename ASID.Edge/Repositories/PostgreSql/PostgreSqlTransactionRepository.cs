@@ -1,4 +1,4 @@
-﻿using ASID.Edge.Database;
+using ASID.Edge.Database;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
 using Dapper;
@@ -110,11 +110,14 @@ SELECT
     station AS Station,
     status AS Status,
     is_suspected_nc AS IsSuspectedNC,
+    is_nc_confirmed AS IsNCConfirmed,
+    is_nc_rejected AS IsNCRejected,
+    nc_quantity AS NCQuantity,
     created_at AS CreatedAt,
     withdrawn_at AS WithdrawnAt,
-forpickup_at AS ForPickupAt,
-received_at AS ReceivedAt,
-consumed_at AS ConsumedAt
+    forpickup_at AS ForPickupAt,
+    received_at AS ReceivedAt,
+    consumed_at AS ConsumedAt
 FROM transactions;
 ")
             .ToList();
