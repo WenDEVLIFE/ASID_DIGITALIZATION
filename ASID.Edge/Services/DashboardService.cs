@@ -28,7 +28,7 @@ namespace ASID.Edge.Services
         public List<PUBodyTransactionHistoryItem> GetTransactionHistory()
         {
             return Transactions
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderBy(x => x.CreatedAt)
                 .Select(TransactionHistoryMapper.Map)
                 .ToList();
         }
