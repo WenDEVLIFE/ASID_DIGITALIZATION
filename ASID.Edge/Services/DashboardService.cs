@@ -35,7 +35,17 @@ namespace ASID.Edge.Services
 
         public List<PUBodyInventoryItem> GetInventory()
         {
-            return InventoryMapper.Map(Transactions);
+            List<DailyDemand>? demands = null;
+            try
+            {
+                demands = _dailyDemandRepository.GetAll();
+            }
+            catch
+            {
+                // Demand data is optional for inventory background coloring.
+            }
+
+            return InventoryMapper.Map(Transactions, demands);
         }
 
         public List<PUBodyWithdrawalItem> GetWithdrawalHistory()
@@ -85,16 +95,19 @@ namespace ASID.Edge.Services
                         .Where(t => (t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped)
                         .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
 
+                    int demand = g.Sum(x => x.Quantity);
+
                     // Business week label (ISO week + 1, e.g. W39) instead of raw date
                     return new PUBodyDailyDemandItem
                     {
                         Date = IsoWeekHelper.GetBusinessWeekLabel(g.Key.ProductionDate),
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
-                        Demand = g.Sum(x => x.Quantity),
+                        Demand = demand,
                         P2Inventory = p2Inventory,
                         DeliveredToP1 = deliveredToP1,
-                        Scrapped = scrapped
+                        Scrapped = scrapped,
+                        P2InventoryBackground = InventoryMapper.GetBackgroundBrush(p2Inventory, demand)
                     };
                 })
                 .OrderBy(x => x.Model)

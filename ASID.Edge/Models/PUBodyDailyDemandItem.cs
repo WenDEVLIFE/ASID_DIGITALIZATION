@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Media;
 
 namespace ASID.Edge.Models
 {
@@ -24,5 +25,7 @@ namespace ASID.Edge.Models
         /// Variance = DeliveredToP1 (current ISO week) minus Demand plus Scrapped.
         /// </summary>
         public int Variance => DeliveredToP1 - Demand - Scrapped;
+
+        public Brush? P2InventoryBackground { get; set; }
     }
 }

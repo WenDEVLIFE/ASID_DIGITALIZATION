@@ -147,7 +147,13 @@
                 <DataGridTextColumn Header="Model Name" Binding="{Binding Model}" Width="*"/>
                 <DataGridTextColumn Header="Part No" Binding="{Binding PartNo}" Width="*"/>
                 <DataGridTextColumn Header="Demand" Binding="{Binding Demand}" Width="*"/>
-                <DataGridTextColumn Header="P2 Inventory" Binding="{Binding P2Inventory}" Width="*"/>
+                <DataGridTextColumn Header="P2 Inventory" Binding="{Binding P2Inventory}" Width="*">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Background" Value="{Binding P2InventoryBackground}"/>
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
                 <DataGridTextColumn Header="Delivered to P1" Binding="{Binding DeliveredToP1}" Width="*"/>
                 <DataGridTextColumn Header="Scrapped" Binding="{Binding Scrapped}" Width="*"/>
                 <DataGridTextColumn Header="Variance" Binding="{Binding Variance}" Width="*"/>

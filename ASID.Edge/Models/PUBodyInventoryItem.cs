@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Media;
 
 namespace ASID.Edge.Models
 {
@@ -19,5 +20,7 @@ namespace ASID.Edge.Models
         public int InventoryP1LoadingBay { get; set; }
 
         public int InventoryP1Production { get; set; }
+
+        public Brush? P2SupermarketBackground { get; set; }
     }
 }
