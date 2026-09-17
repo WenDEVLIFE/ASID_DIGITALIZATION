@@ -1,8 +1,8 @@
+using ASID.Edge.Helpers;
 using ASID.Edge.Mapping;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories.Interfaces;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using ASID.Edge.Repositories;
 using System;
@@ -68,15 +68,16 @@ namespace ASID.Edge.Services
                 {
                     var matchingTx = allTransactions.Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo).ToList();
 
-                    // P2 Inventory = sum of ALL PU-Body Inventory (all statuses except Scrapped)
-                    // = P2 Supermarket + Floating + P2 Loading + P1 Loading + P1 Production
+                    // P2 Inventory = sum of Stored (P2 Supermarket) transactions only
                     int p2Inventory = matchingTx
-                        .Where(t => t.Status != MaterialStatus.Scrapped)
+                        .Where(t => t.Status == MaterialStatus.Stored)
                         .Sum(t => t.SNP);
 
-                    // Delivered to P1 = P1 Loading Bay (Received) + P1 Production (Consumed)
+                    // Delivered to P1 = Received + Consumed, filtered to the current ISO week
                     int deliveredToP1 = matchingTx
-                        .Where(t => t.Status == MaterialStatus.Received || t.Status == MaterialStatus.Consumed)
+                        .Where(t =>
+                            (t.Status == MaterialStatus.Received && IsoWeekHelper.IsInCurrentWeek(t.ReceivedAt))
+                            || (t.Status == MaterialStatus.Consumed && IsoWeekHelper.IsInCurrentWeek(t.ConsumedAt)))
                         .Sum(t => t.SNP);
 
                     // Scrapped = NC confirmed quantity + Scrapped status items
@@ -84,11 +85,10 @@ namespace ASID.Edge.Services
                         .Where(t => (t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped)
                         .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
 
-                    // Show ISO week number (e.g. W33) instead of raw date
-                    int weekNum = ISOWeek.GetWeekOfYear(g.Key.ProductionDate);
+                    // Business week label (ISO week + 1, e.g. W39) instead of raw date
                     return new PUBodyDailyDemandItem
                     {
-                        Date = $"W{weekNum}",
+                        Date = IsoWeekHelper.GetBusinessWeekLabel(g.Key.ProductionDate),
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
                         Demand = g.Sum(x => x.Quantity),

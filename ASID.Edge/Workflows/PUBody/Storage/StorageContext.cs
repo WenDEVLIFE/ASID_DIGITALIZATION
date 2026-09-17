@@ -21,6 +21,8 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 
         public string DataMatrix { get; set; } = "";
 
+        public string? LastError { get; set; }
+
         public bool ThresholdValidated { get; set; }
 
         public bool LaneValidated { get; set; }

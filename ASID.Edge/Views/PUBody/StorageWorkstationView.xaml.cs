@@ -163,6 +163,7 @@ namespace ASID.Edge.Views.PUBody
 
             RefreshUI();
             CheckAndShowLaneSequenceDialog();
+            ShowWorkflowErrorIfAny();
         }
 
         private void Scanner_BarcodeReceived(object? sender, string barcode)
@@ -180,7 +181,18 @@ namespace ASID.Edge.Views.PUBody
 
                 RefreshUI();
                 CheckAndShowLaneSequenceDialog();
+                ShowWorkflowErrorIfAny();
             });
+        }
+
+        private void ShowWorkflowErrorIfAny()
+        {
+            if (_workflowManager.CurrentWorkflow is StorageWorkflow sw &&
+                sw.CurrentState == WorkflowState.Error &&
+                !string.IsNullOrEmpty(sw.Context.LastError))
+            {
+                Toast.Warning(sw.Context.LastError);
+            }
         }
 
         private void LoginPortal_ApplyRequested(object? sender, EventArgs e)

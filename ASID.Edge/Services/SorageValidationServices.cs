@@ -1,4 +1,6 @@
-﻿using ASID.Edge.Repositories.Interfaces;
+﻿using ASID.Edge.Helpers;
+using ASID.Edge.Models;
+using ASID.Edge.Repositories.Interfaces;
 using ASID.Edge.Validation;
 
 namespace ASID.Edge.Services
@@ -96,6 +98,66 @@ namespace ASID.Edge.Services
             {
                 Success = true,
                 Message = "Inventory threshold OK",
+                Severity = ValidationSeverity.Information
+            };
+        }
+
+        /// <summary>
+        /// Blocks storing a scanned data matrix in the Supermarket when the part's
+        /// weekly variance (DeliveredToP1 - (Demand + Scrapped)) is zero or positive.
+        /// Negative variance (under-delivery) is allowed.
+        /// </summary>
+        public ValidationResult CheckStoreThreshold(string kanbanNo)
+        {
+            var kanban = new KanbanParser().Parse(kanbanNo);
+            string partNo = kanban.PartNo;
+
+            if (string.IsNullOrEmpty(partNo))
+            {
+                return new ValidationResult
+                {
+                    Success = false,
+                    Message = "Invalid kanban",
+                    Severity = ValidationSeverity.Error
+                };
+            }
+
+            var transactions = _repository.GetAll();
+            var demands = Repositories.RepositoryProvider.DailyDemands.GetAll();
+
+            int demand = demands
+                .Where(d => d.PartNo == partNo && IsoWeekHelper.IsInCurrentWeek(d.ProductionDate))
+                .Sum(d => d.Quantity);
+
+            int delivered = transactions
+                .Where(t =>
+                    t.PartNo == partNo
+                    && ((t.Status == MaterialStatus.Received && IsoWeekHelper.IsInCurrentWeek(t.ReceivedAt))
+                        || (t.Status == MaterialStatus.Consumed && IsoWeekHelper.IsInCurrentWeek(t.ConsumedAt))))
+                .Sum(t => t.SNP);
+
+            int scrapped = transactions
+                .Where(t =>
+                    t.PartNo == partNo
+                    && ((t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped))
+                .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
+
+            int variance = delivered - (demand + scrapped);
+
+            if (variance >= 0)
+            {
+                return new ValidationResult
+                {
+                    Success = false,
+                    Message = "EXCEEDED THRESHOLD LIMIT",
+                    Severity = ValidationSeverity.Error
+                };
+            }
+
+            return new ValidationResult
+            {
+                Success = true,
+                Message = "Threshold OK",
                 Severity = ValidationSeverity.Information
             };
         }

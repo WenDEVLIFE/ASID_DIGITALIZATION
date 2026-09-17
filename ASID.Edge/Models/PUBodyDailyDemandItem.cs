@@ -20,6 +20,9 @@ namespace ASID.Edge.Models
 
         public int Scrapped { get; set; }
 
-        public int Variance => Demand - P2Inventory - Scrapped;
+        /// <summary>
+        /// Variance = DeliveredToP1 (current ISO week) minus Demand plus Scrapped.
+        /// </summary>
+        public int Variance => DeliveredToP1 - Demand - Scrapped;
     }
 }

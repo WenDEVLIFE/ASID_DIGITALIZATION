@@ -1,11 +1,9 @@
 ﻿using ASID.Edge.Models;
-using ASID.Edge.Repositories;
 using ASID.Edge.Services;
 using ASID.Edge.Views.Controls;
 using ASID.Edge.Views.PUBody;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -137,23 +135,8 @@ namespace ASID.Edge.Views
         {
             try
             {
-                var allDemands = RepositoryProvider.DailyDemands.GetAll();
-                System.Diagnostics.Debug.WriteLine($"[LoadDashboard] Got {allDemands.Count} demands from MSSQL");
-
-                var displayItems = allDemands
-                    .GroupBy(d => new { d.Model, d.PartNo })
-                    .Select(g => new PUBodyDailyDemandItem
-                    {
-                        Date = $"W{ISOWeek.GetWeekOfYear(g.First().ProductionDate)}",
-                        Model = g.Key.Model,
-                        PartNo = g.Key.PartNo,
-                        Demand = g.Sum(x => x.Quantity),
-                        P2Inventory = 0,
-                        DeliveredToP1 = 0,
-                        Scrapped = g.Sum(x => x.Scrapped)
-                    })
-                    .OrderBy(x => x.Model)
-                    .ToList();
+                var displayItems = ServiceProvider.Dashboard.GetDailyDemand();
+                System.Diagnostics.Debug.WriteLine($"[LoadDashboard] Got {displayItems.Count} demand rows");
 
                 _dashboard.Load(displayItems);
             }

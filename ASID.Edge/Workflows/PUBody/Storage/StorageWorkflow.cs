@@ -149,15 +149,20 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             {
                 if (barcode == _context.DataMatrix)
                 {
+                    var threshold = _validation.CheckStoreThreshold(_context.KanbanNo);
+                    if (!threshold.Success)
+                    {
+                        _context.State = WorkflowState.Error;
+                        _context.LastError = threshold.Message;
+                        NotifyChanged();
+                        return;
+                    }
                     _context.State = WorkflowState.Completed;
+                    _context.LastError = null;
                     NotifyChanged();
                     NotifyCompleted();
                 }
-                else
-                {
-                    _context.State = WorkflowState.Error;
-                    NotifyChanged();
-                }
+                else { _context.State = WorkflowState.Error; _context.LastError = null; NotifyChanged(); }
                 return;
             }
 
@@ -328,6 +333,7 @@ namespace ASID.Edge.Workflows.PUBody.Storage
             _context.OperatorId = ServiceProvider.Auth.CurrentUser?.Username ?? "";
             _context.SerialNo = "";
             _context.DataMatrix = "";
+            _context.LastError = null;
 
             Start();
 
