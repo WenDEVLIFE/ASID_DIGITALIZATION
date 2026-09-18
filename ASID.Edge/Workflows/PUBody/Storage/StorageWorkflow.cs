@@ -145,7 +145,10 @@ namespace ASID.Edge.Workflows.PUBody.Storage
 
         public void ProcessScan(string barcode)
         {
-            if (_context.State == WorkflowState.WaitingForVerification)
+            // Allow retrying the verification scan after a threshold block
+            // (state was set to Error) by accepting the same DataMatrix again.
+            if (_context.State == WorkflowState.WaitingForVerification ||
+                (_context.State == WorkflowState.Error && barcode == _context.DataMatrix))
             {
                 if (barcode == _context.DataMatrix)
                 {

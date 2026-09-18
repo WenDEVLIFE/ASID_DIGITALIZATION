@@ -191,7 +191,10 @@ namespace ASID.Edge.Views.PUBody
                 sw.CurrentState == WorkflowState.Error &&
                 !string.IsNullOrEmpty(sw.Context.LastError))
             {
-                Toast.Warning(sw.Context.LastError);
+                AutoCloseMessageBox.Show(
+                    "WARNING",
+                    sw.Context.LastError,
+                    seconds: 3);
             }
         }
 

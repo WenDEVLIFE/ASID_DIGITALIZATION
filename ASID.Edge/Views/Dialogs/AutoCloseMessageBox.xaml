@@ -18,7 +18,7 @@
 
             <TextBlock x:Name="MessageText"
                        Margin="0,15,0,0"
-                       FontSize="16"
+                       FontSize="20"
                        TextAlignment="Center"
                        TextWrapping="Wrap"/>
 
