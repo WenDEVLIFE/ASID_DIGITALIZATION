@@ -16,8 +16,12 @@ public class StorageService
         _repository = repository;
     }
 
+    public string? LastLaneWarning { get; private set; }
+
     public PUBodyTransactionHistoryItem Commit(StorageContext context)
     {
+        LastLaneWarning = null;
+
         var transaction =
             StorageTransactionMapper.ToTransaction(context);
 
@@ -70,7 +74,11 @@ public class StorageService
             RepositoryProvider.LaneManagement
                 .IncrementStoredQty(context.LaneNo, kanban.PartNo, 1);
         }
-        catch { /* lane update is best-effort */ }
+        catch (Exception ex)
+        {
+            LastLaneWarning = $"Lane record update failed: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine($"Lane record update failed: {ex}");
+        }
 
         return item;
     }

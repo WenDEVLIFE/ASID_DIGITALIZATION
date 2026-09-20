@@ -298,6 +298,10 @@ namespace ASID.Edge.Views.PUBody
             {
                 _storageService.Commit(workflow.Context);
                 Toast.Success("Storage Transaction Completed");
+                if (!string.IsNullOrEmpty(_storageService.LastLaneWarning))
+                {
+                    Toast.Warning(_storageService.LastLaneWarning);
+                }
                 RefreshUI();
             }
             catch (Exception ex)

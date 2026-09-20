@@ -106,27 +106,24 @@ WHERE id = @Id;";
         using var connection = CreateConn();
         connection.Open();
 
-        // Check if lanes already exist
-        int count = connection.QuerySingleOrDefault<int>("SELECT COUNT(*) FROM lane_management;");
-        if (count > 0) return;
+        // Canonical lanes: A-01..A-50, B-01..B-50 (100 total).
+        // Idempotent per lane: insert only the lanes that do not already exist,
+        // so a table holding legacy rows still receives the missing lanes.
+        const string sql = @"
+IF NOT EXISTS (SELECT 1 FROM lane_management WHERE lane_no = @LaneNo)
+BEGIN
+    INSERT INTO lane_management (lane_no, part_no, max_qty_stored, actual_stored_qty, withdrawn_qty, lane_status, color_status, created_at, updated_at)
+    VALUES (@LaneNo, 'Not Assigned', 100, 0, 0, 'Not Assigned', 'Gray', @Now, @Now);
+END";
 
-        // Seed default lanes A1-A10, B1-B10
-        var lanes = new List<string>();
+        var now = DateTime.UtcNow;
+
         foreach (char row in new[] { 'A', 'B' })
         {
-            for (int i = 1; i <= 10; i++)
+            for (int i = 1; i <= 50; i++)
             {
-                lanes.Add($"{row}{i}");
+                connection.Execute(sql, new { LaneNo = $"{row}-{i:D2}", Now = now });
             }
-        }
-
-        const string sql = @"
-INSERT INTO lane_management (lane_no, part_no, max_qty_stored, actual_stored_qty, withdrawn_qty, lane_status, color_status, created_at, updated_at)
-VALUES (@LaneNo, 'Not Assigned', 100, 0, 0, 'Not Assigned', 'Gray', @Now, @Now);";
-
-        foreach (var lane in lanes)
-        {
-            connection.Execute(sql, new { LaneNo = lane, Now = DateTime.UtcNow });
         }
     }
 
@@ -135,14 +132,24 @@ VALUES (@LaneNo, 'Not Assigned', 100, 0, 0, 'Not Assigned', 'Gray', @Now, @Now);
         using var connection = CreateConn();
         connection.Open();
 
-        const string sql = @"
-UPDATE lane_management
-SET actual_stored_qty = actual_stored_qty + @Qty,
-    part_no = @PartNo,
-    updated_at = @Now
-WHERE lane_no = @LaneNo;";
+        var lane = (laneNo ?? string.Empty).Trim();
 
-        connection.Execute(sql, new { Qty = quantity, PartNo = partNo, LaneNo = laneNo, Now = DateTime.UtcNow });
+        const string sql = @"
+IF EXISTS (SELECT 1 FROM lane_management WHERE lane_no = @LaneNo)
+BEGIN
+    UPDATE lane_management
+    SET actual_stored_qty = actual_stored_qty + @Qty,
+        part_no = @PartNo,
+        updated_at = @Now
+    WHERE lane_no = @LaneNo;
+END
+ELSE
+BEGIN
+    INSERT INTO lane_management (lane_no, part_no, max_qty_stored, actual_stored_qty, withdrawn_qty, lane_status, color_status, created_at, updated_at)
+    VALUES (@LaneNo, @PartNo, 100, @Qty, 0, 'Occupied', 'Green', @Now, @Now);
+END";
+
+        connection.Execute(sql, new { LaneNo = lane, PartNo = partNo, Qty = quantity, Now = DateTime.UtcNow });
     }
 
     public void IncrementWithdrawnQty(string laneNo, int quantity = 1)

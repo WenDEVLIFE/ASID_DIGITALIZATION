@@ -130,49 +130,22 @@ WHERE id = @Id;
             using var connection = Database.Database.CreateConnection();
             connection.Open();
 
-            var existing = connection.Query<int>("SELECT COUNT(*) FROM lane_management;").FirstOrDefault();
-            if (existing > 0) return;
+            // Canonical lanes: A-01..A-50, B-01..B-50 (100 total).
+            // Idempotent per lane: insert only the lanes that do not already exist.
+            const string sql = @"
+INSERT INTO lane_management
+    (lane_no, part_no, max_qty_stored, actual_stored_qty, withdrawn_qty, lane_status, color_status, created_at, updated_at)
+SELECT @LaneNo, 'Not Assigned', 100, 0, 0, 'Not Assigned', 'Gray', @Now, @Now
+WHERE NOT EXISTS (SELECT 1 FROM lane_management WHERE lane_no = @LaneNo);";
 
             var now = DateTime.UtcNow;
-            var lanes = new List<LaneManagement>();
 
-            // A-01 to A-50
-            for (int i = 1; i <= 50; i++)
+            foreach (char row in new[] { 'A', 'B' })
             {
-                lanes.Add(new LaneManagement
+                for (int i = 1; i <= 50; i++)
                 {
-                    LaneNo = $"A-{i:D2}",
-                    PartNo = "Not Assigned",
-                    MaxQtyStored = 100,
-                    ActualStoredQty = 0,
-                    WithdrawnQty = 0,
-                    LaneStatus = "Not Assigned",
-                    ColorStatus = "Gray",
-                    CreatedAt = now,
-                    UpdatedAt = now
-                });
-            }
-
-            // B-01 to B-50
-            for (int i = 1; i <= 50; i++)
-            {
-                lanes.Add(new LaneManagement
-                {
-                    LaneNo = $"B-{i:D2}",
-                    PartNo = "Not Assigned",
-                    MaxQtyStored = 100,
-                    ActualStoredQty = 0,
-                    WithdrawnQty = 0,
-                    LaneStatus = "Not Assigned",
-                    ColorStatus = "Gray",
-                    CreatedAt = now,
-                    UpdatedAt = now
-                });
-            }
-
-            foreach (var lane in lanes)
-            {
-                Add(lane);
+                    connection.Execute(sql, new { LaneNo = $"{row}-{i:D2}", Now = now });
+                }
             }
         }
 
@@ -181,37 +154,32 @@ WHERE id = @Id;
             using var connection = Database.Database.CreateConnection();
             connection.Open();
 
+            var lane = (laneNo ?? string.Empty).Trim();
+
             var existing = connection.QueryFirstOrDefault<dynamic?>(
                 "SELECT * FROM lane_management WHERE lane_no = @LaneNo LIMIT 1;",
-                new { LaneNo = laneNo });
+                new { LaneNo = lane });
 
             if (existing == null)
             {
-                Add(new LaneManagement
-                {
-                    LaneNo = laneNo,
-                    PartNo = partNo,
-                    MaxQtyStored = 100,
-                    ActualStoredQty = quantity,
-                    WithdrawnQty = 0,
-                    LaneStatus = "Occupied",
-                    ColorStatus = "Green",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                });
+                connection.Execute(@"
+INSERT INTO lane_management
+    (lane_no, part_no, max_qty_stored, actual_stored_qty, withdrawn_qty, lane_status, color_status, created_at, updated_at)
+VALUES (@LaneNo, @PartNo, 100, @Qty, 0, 'Occupied', 'Green', @Now, @Now);",
+                    new { LaneNo = lane, PartNo = partNo, Qty = quantity, Now = DateTime.UtcNow });
             }
             else
             {
                 connection.Execute(@"
 UPDATE lane_management SET
     actual_stored_qty = actual_stored_qty + @Qty,
-    part_no = CASE WHEN part_no = 'Not Assigned' THEN @PartNo ELSE part_no END,
+    part_no = @PartNo,
     updated_at = @Now
 WHERE lane_no = @LaneNo;",
-                    new { Qty = quantity, PartNo = partNo, Now = DateTime.UtcNow, LaneNo = laneNo });
+                    new { Qty = quantity, PartNo = partNo, Now = DateTime.UtcNow, LaneNo = lane });
             }
 
-            RecalculateStatus(laneNo);
+            RecalculateStatus(lane);
         }
 
         public void IncrementWithdrawnQty(string laneNo, int quantity = 1)

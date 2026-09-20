@@ -131,58 +131,22 @@ WHERE id = @Id;
             using var connection = SqliteDatabase.CreateConnection();
             connection.Open();
 
-            var existing = connection.Query<int>("SELECT COUNT(*) FROM lane_management;").FirstOrDefault();
-            if (existing > 0)
-            {
-                // Check if all lanes are empty (Not Assigned, 0 stored)
-                var hasAnyData = connection.Query<int>(
-                    "SELECT COUNT(*) FROM lane_management WHERE actual_stored_qty > 0 OR part_no != 'Not Assigned';")
-                    .FirstOrDefault();
-                if (hasAnyData > 0) return;
-
-                // All lanes empty — populate demo data
-                SeedDemoData(connection);
-                return;
-            }
+            // Canonical lanes: A-01..A-50, B-01..B-50 (100 total).
+            // Idempotent per lane: insert only the lanes that do not already exist.
+            const string sql = @"
+INSERT INTO lane_management
+    (lane_no, part_no, max_qty_stored, actual_stored_qty, withdrawn_qty, lane_status, color_status, created_at, updated_at)
+SELECT @LaneNo, 'Not Assigned', 100, 0, 0, 'Not Assigned', 'Gray', @Now, @Now
+WHERE NOT EXISTS (SELECT 1 FROM lane_management WHERE lane_no = @LaneNo);";
 
             var now = DateTime.UtcNow;
-            var lanes = new List<LaneManagement>();
 
-            for (int i = 1; i <= 50; i++)
+            foreach (char row in new[] { 'A', 'B' })
             {
-                lanes.Add(new LaneManagement
+                for (int i = 1; i <= 50; i++)
                 {
-                    LaneNo = $"A-{i:D2}",
-                    PartNo = "Not Assigned",
-                    MaxQtyStored = 100,
-                    ActualStoredQty = 0,
-                    WithdrawnQty = 0,
-                    LaneStatus = "Not Assigned",
-                    ColorStatus = "Gray",
-                    CreatedAt = now,
-                    UpdatedAt = now
-                });
-            }
-
-            for (int i = 1; i <= 50; i++)
-            {
-                lanes.Add(new LaneManagement
-                {
-                    LaneNo = $"B-{i:D2}",
-                    PartNo = "Not Assigned",
-                    MaxQtyStored = 100,
-                    ActualStoredQty = 0,
-                    WithdrawnQty = 0,
-                    LaneStatus = "Not Assigned",
-                    ColorStatus = "Gray",
-                    CreatedAt = now,
-                    UpdatedAt = now
-                });
-            }
-
-            foreach (var lane in lanes)
-            {
-                Add(lane);
+                    connection.Execute(sql, new { LaneNo = $"{row}-{i:D2}", Now = now });
+                }
             }
         }
 
@@ -191,37 +155,32 @@ WHERE id = @Id;
             using var connection = SqliteDatabase.CreateConnection();
             connection.Open();
 
+            var lane = (laneNo ?? string.Empty).Trim();
+
             var existing = connection.QueryFirstOrDefault(
                 "SELECT * FROM lane_management WHERE lane_no = @LaneNo LIMIT 1;",
-                new { LaneNo = laneNo });
+                new { LaneNo = lane });
 
             if (existing == null)
             {
-                Add(new LaneManagement
-                {
-                    LaneNo = laneNo,
-                    PartNo = partNo,
-                    MaxQtyStored = 100,
-                    ActualStoredQty = quantity,
-                    WithdrawnQty = 0,
-                    LaneStatus = "Occupied",
-                    ColorStatus = "Green",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                });
+                connection.Execute(@"
+INSERT INTO lane_management
+    (lane_no, part_no, max_qty_stored, actual_stored_qty, withdrawn_qty, lane_status, color_status, created_at, updated_at)
+VALUES (@LaneNo, @PartNo, 100, @Qty, 0, 'Occupied', 'Green', @Now, @Now);",
+                    new { LaneNo = lane, PartNo = partNo, Qty = quantity, Now = DateTime.UtcNow });
             }
             else
             {
                 connection.Execute(@"
 UPDATE lane_management SET
     actual_stored_qty = actual_stored_qty + @Qty,
-    part_no = CASE WHEN part_no = 'Not Assigned' THEN @PartNo ELSE part_no END,
+    part_no = @PartNo,
     updated_at = @Now
 WHERE lane_no = @LaneNo;",
-                    new { Qty = quantity, PartNo = partNo, Now = DateTime.UtcNow, LaneNo = laneNo });
+                    new { Qty = quantity, PartNo = partNo, Now = DateTime.UtcNow, LaneNo = lane });
             }
 
-            RecalculateStatus(laneNo);
+            RecalculateStatus(lane);
         }
 
         public void IncrementWithdrawnQty(string laneNo, int quantity = 1)
@@ -288,61 +247,6 @@ UPDATE lane_management SET
     updated_at = @Now
 WHERE lane_no = @LaneNo;",
                 new { Status = status, Color = color, Now = DateTime.UtcNow, LaneNo = laneNo });
-        }
-
-        private void SeedDemoData(SqliteConnection connection)
-        {
-            var now = DateTime.UtcNow;
-
-            // Demo lanes with test quantities to show movement
-            var demos = new List<(string lane, string part, int max, int stored, int withdrawn)>
-            {
-                //                                  lane,  part,          max, stored, withdrawn
-                // Balance-based status: Full = balance >= max, Occupied = balance > 0, Vacant = balance == 0
-                ("A-01", "657040000G", 10, 8, 3),   // balance=5  → Occupied
-                ("A-02", "647187100F", 10, 10, 2),  // balance=8  → Occupied (NOT Full, withdrawn reduced balance)
-                ("A-03", "657040000G", 10, 5, 5),   // balance=0  → Vacant (fully withdrawn)
-                ("A-04", "640578600E", 10, 3, 0),   // balance=3  → Occupied
-                ("A-05", "647187100F", 10, 10, 0),  // balance=10 → Full (balance == max)
-                ("A-06", "650436100H", 10, 4, 4),   // balance=0  → Vacant
-                ("B-01", "647187000A", 10, 6, 1),   // balance=5  → Occupied
-                ("B-02", "657040000G", 10, 0, 0),   // balance=0  → Vacant (never used)
-                ("B-03", "640578600E", 10, 10, 10), // balance=0  → Vacant (fully withdrawn)
-                ("B-04", "650436100H", 10, 2, 0),   // balance=2  → Occupied
-                ("B-05", "647187100F", 10, 0, 3),   // balance=0  → Vacant
-            };
-
-            foreach (var d in demos)
-            {
-                int balance = d.stored - d.withdrawn;
-                if (balance < 0) balance = 0;
-                string status = balance >= d.max ? "Full"
-                    : balance > 0 ? "Occupied"
-                    : "Vacant";
-                string color = status == "Full" ? "Red" : "Green";
-
-                connection.Execute(@"
-UPDATE lane_management SET
-    part_no = @PartNo,
-    max_qty_stored = @MaxQty,
-    actual_stored_qty = @Stored,
-    withdrawn_qty = @Withdrawn,
-    lane_status = @Status,
-    color_status = @Color,
-    updated_at = @Now
-WHERE lane_no = @LaneNo;",
-                    new
-                    {
-                        PartNo = d.part,
-                        MaxQty = d.max,
-                        Stored = d.stored,
-                        Withdrawn = d.withdrawn,
-                        Status = status,
-                        Color = color,
-                        Now = now,
-                        LaneNo = d.lane
-                    });
-            }
         }
 
         private static DateTime ParseDateTime(object? value)
