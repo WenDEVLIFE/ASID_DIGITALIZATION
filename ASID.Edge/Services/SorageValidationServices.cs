@@ -104,8 +104,9 @@ namespace ASID.Edge.Services
 
         /// <summary>
         /// Blocks storing a scanned data matrix in the Supermarket when the part's
-        /// weekly variance (DeliveredToP1 - (Demand + Scrapped)) is zero or positive.
-        /// Negative variance (under-delivery) is allowed.
+        /// cumulative Stored-only P2 inventory is >= the TOTAL demand summed across
+        /// ALL weeks in daily_demand for that PartNo (week-independent basis).
+        /// With both values at 0 the gate blocks (0 >= 0), matching prior parity.
         /// </summary>
         public ValidationResult CheckStoreThreshold(string kanbanNo)
         {
@@ -125,26 +126,17 @@ namespace ASID.Edge.Services
             var transactions = _repository.GetAll();
             var demands = Repositories.RepositoryProvider.DailyDemands.GetAll();
 
-            int demand = demands
-                .Where(d => d.PartNo == partNo && IsoWeekHelper.IsInCurrentWeek(d.ProductionDate))
+            // Total demand across all weeks for this part (no week scoping).
+            int totalDemand = demands
+                .Where(d => d.PartNo == partNo)
                 .Sum(d => d.Quantity);
 
-            int delivered = transactions
-                .Where(t =>
-                    t.PartNo == partNo
-                    && ((t.Status == MaterialStatus.Received && IsoWeekHelper.IsInCurrentWeek(t.ReceivedAt))
-                        || (t.Status == MaterialStatus.Consumed && IsoWeekHelper.IsInCurrentWeek(t.ConsumedAt))))
+            // Only Stored units count toward the P2 total.
+            int p2Stored = transactions
+                .Where(t => t.PartNo == partNo && t.Status == MaterialStatus.Stored)
                 .Sum(t => t.SNP);
 
-            int scrapped = transactions
-                .Where(t =>
-                    t.PartNo == partNo
-                    && ((t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped))
-                .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
-
-            int variance = delivered - (demand + scrapped);
-
-            if (variance >= 0)
+            if (p2Stored >= totalDemand)
             {
                 return new ValidationResult
                 {

@@ -238,6 +238,7 @@ WHERE
             IsNCRejected = dict["IsNCRejected"] != null && Convert.ToBoolean(dict["IsNCRejected"]),
             NCQuantity = dict["NCQuantity"] != null ? Convert.ToInt32(dict["NCQuantity"]) : 0,
             CreatedAt = dict["CreatedAt"] != null ? Convert.ToDateTime(dict["CreatedAt"]) : DateTime.MinValue,
+            UpdatedAt = dict["UpdatedAt"] != null ? Convert.ToDateTime(dict["UpdatedAt"]) : null,
             WithdrawnAt = dict["WithdrawnAt"] != null ? Convert.ToDateTime(dict["WithdrawnAt"]) : null,
             ForPickupAt = dict["ForPickupAt"] != null ? Convert.ToDateTime(dict["ForPickupAt"]) : null,
             ReceivedAt = dict["ReceivedAt"] != null ? Convert.ToDateTime(dict["ReceivedAt"]) : null,

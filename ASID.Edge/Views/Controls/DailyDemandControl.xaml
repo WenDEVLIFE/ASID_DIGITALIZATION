@@ -22,6 +22,9 @@
             <RowDefinition Height="Auto"/>
             <!-- Toolbar: Sort + Import button -->
 
+            <RowDefinition Height="Auto"/>
+            <!-- Week / column filters + search -->
+
             <RowDefinition Height="*"/>
             <!-- DataGrid -->
         </Grid.RowDefinitions>
@@ -128,9 +131,76 @@
 
         </Grid>
 
+        <!-- ================= FILTERS + SEARCH ================= -->
+        <Grid Grid.Row="4" Margin="5,0,5,5">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- WEEK FILTER -->
+            <TextBlock Grid.Column="0"
+                       Text="Week:"
+                       VerticalAlignment="Center"
+                       Margin="5,0,4,0"/>
+
+            <ComboBox Grid.Column="1"
+                      x:Name="CmbWeek"
+                      Width="180"
+                      Margin="0,0,12,0"
+                      VerticalContentAlignment="Center"
+                      SelectionChanged="CmbWeek_SelectionChanged"/>
+
+            <!-- MODEL COLUMN FILTER -->
+            <TextBlock Grid.Column="2"
+                       Text="Model:"
+                       VerticalAlignment="Center"
+                       Margin="0,0,4,0"/>
+
+            <TextBox Grid.Column="3"
+                     x:Name="TxtFilterModel"
+                     Width="130"
+                     Margin="0,0,12,0"
+                     VerticalContentAlignment="Center"
+                     TextChanged="ColumnFilter_TextChanged"/>
+
+            <!-- PART NO COLUMN FILTER -->
+            <TextBlock Grid.Column="4"
+                       Text="Part No:"
+                       VerticalAlignment="Center"
+                       Margin="0,0,4,0"/>
+
+            <TextBox Grid.Column="5"
+                     x:Name="TxtFilterPartNo"
+                     Width="130"
+                     Margin="0,0,12,0"
+                     VerticalContentAlignment="Center"
+                     TextChanged="ColumnFilter_TextChanged"/>
+
+            <!-- FREE-TEXT SEARCH -->
+            <TextBlock Grid.Column="6"
+                       Text="Search:"
+                       VerticalAlignment="Center"
+                       Margin="0,0,4,0"/>
+
+            <TextBox Grid.Column="7"
+                     x:Name="TxtSearch"
+                     Margin="0,0,5,0"
+                     VerticalContentAlignment="Center"
+                     TextChanged="Search_TextChanged"/>
+
+        </Grid>
+
         <!-- ================= DATA GRID ================= -->
         <DataGrid x:Name="DailyDemandGrid"
-                  Grid.Row="4"
+                  Grid.Row="5"
                   Margin="5"
                   AutoGenerateColumns="False"
                   HorizontalAlignment="Stretch"

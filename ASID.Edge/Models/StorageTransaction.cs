@@ -31,6 +31,8 @@ namespace ASID.Edge.Models
 
         public DateTime CreatedAt { get; set; }
 
+        public DateTime? UpdatedAt { get; set; }
+
         public DateTime? WithdrawnAt { get; set; }
 
         public DateTime? ForPickupAt { get; set; }

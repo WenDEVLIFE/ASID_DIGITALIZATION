@@ -1,9 +1,26 @@
 /*
 ================================================================================
+ *** SUPERSEDED - DO NOT USE AS EXPECTED RESULTS ***
+================================================================================
+ The storage gate basis changed in change `daily-demand-multiweek-and-filters`:
+ the gate is now "cumulative Stored-only P2 Inventory >= TOTAL all-week demand"
+ (it no longer uses Variance >= 0).
+
+ Under the new basis, this file's verdicts are WRONG for:
+   THR-B  old: BLOCKED (variance 0)   -> now ALLOWED (P2 0 < demand 50)
+   THR-C  old: BLOCKED (variance +20) -> now ALLOWED (P2 0 < demand 30)
+ THR-A and THR-D remain ALLOWED (different reason).
+
+ USE INSTEAD: test_multiweek_matrix.sql
+================================================================================
+
+/*
+================================================================================
  ASID - Manual Runtime Test Matrix: Daily Demand Variance Threshold (T4b/T4c)
 ================================================================================
  Run against the SAME MSSQL instance the app uses (see .env / Database.cs).
  Applies to change: daily-demand-variance-threshold (verify phase).
+ HISTORY: this matrix validated the original variance-based gate.
 
  Test parts use the THR-* prefix to avoid KanbanParser.TrimStart('P') stripping
  a leading 'P' from the part field. Kanban format: LOOP|THR-A|Q40|SKAN-TA1

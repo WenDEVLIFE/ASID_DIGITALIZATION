@@ -67,51 +67,89 @@ namespace ASID.Edge.Services
             try { allTransactions = Transactions; }
             catch { allTransactions = new List<StorageTransaction>(); }
 
+            // P2 Inventory basis: cumulative Stored-only units per Model+PartNo across ALL weeks.
+            // Repeated on every week row; never week-filtered.
+            var p2ByModelPartNo = allTransactions
+                .Where(t => t.Status == MaterialStatus.Stored)
+                .GroupBy(t => (t.Model, t.PartNo))
+                .ToDictionary(g => g.Key, g => g.Sum(t => t.SNP));
+
+            // Color denominator: TOTAL all-week demand per Model+PartNo (consistent with the gate basis).
+            var totalDemandByModelPartNo = demands
+                .GroupBy(d => (d.Model, d.PartNo))
+                .ToDictionary(g => g.Key, g => g.Sum(d => d.Quantity));
+
             return demands
                 .GroupBy(x => new
                 {
                     x.Model,
                     x.PartNo,
-                    x.ProductionDate
+                    // Canonical week key: Monday of the production week. Normalizing here (instead of
+                    // grouping on the raw ProductionDate) keeps rows correct across a year boundary.
+                    WeekStart = IsoWeekHelper.GetWeekStart(x.ProductionDate)
                 })
                 .Select(g =>
                 {
-                    var matchingTx = allTransactions.Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo).ToList();
+                    var key = (g.Key.Model, g.Key.PartNo);
 
-                    // P2 Inventory = sum of Stored (P2 Supermarket) transactions only
-                    int p2Inventory = matchingTx
-                        .Where(t => t.Status == MaterialStatus.Stored)
-                        .Sum(t => t.SNP);
+                    var matchingTx = allTransactions
+                        .Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo)
+                        .ToList();
 
-                    // Delivered to P1 = Received + Consumed, filtered to the current ISO week
+                    // P2 Inventory = cumulative Stored-only total (all weeks), repeated per week row.
+                    int p2Inventory = p2ByModelPartNo.TryGetValue(key, out int storedTotal) ? storedTotal : 0;
+
+                    // Delivered to P1 = Received + Consumed attributed to THIS production week.
                     int deliveredToP1 = matchingTx
                         .Where(t =>
-                            (t.Status == MaterialStatus.Received && IsoWeekHelper.IsInCurrentWeek(t.ReceivedAt))
-                            || (t.Status == MaterialStatus.Consumed && IsoWeekHelper.IsInCurrentWeek(t.ConsumedAt)))
+                            (t.Status == MaterialStatus.Received && IsoWeekHelper.IsInWeek(t.ReceivedAt, g.Key.WeekStart))
+                            || (t.Status == MaterialStatus.Consumed && IsoWeekHelper.IsInWeek(t.ConsumedAt, g.Key.WeekStart)))
                         .Sum(t => t.SNP);
 
-                    // Scrapped = NC confirmed quantity + Scrapped status items
+                    // Scrapped = NC confirmed quantity + Scrapped status items, attributed to THIS week
+                    // via CreatedAt with UpdatedAt as fallback (there is no scrapped_at column).
                     int scrapped = matchingTx
                         .Where(t => (t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped)
+                        .Where(t => IsoWeekHelper.IsInWeek(ScrapTimestamp(t), g.Key.WeekStart))
                         .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
 
                     int demand = g.Sum(x => x.Quantity);
 
-                    // Business week label (ISO week + 1, e.g. W39) instead of raw date
+                    // Cumulative color ratio uses the all-week demand denominator, not this week's demand.
+                    int totalDemand = totalDemandByModelPartNo.TryGetValue(key, out int allWeekDemand)
+                        ? allWeekDemand
+                        : demand;
+
+                    // Dual-convention week label, e.g. "W39 (ISO W38)".
                     return new PUBodyDailyDemandItem
                     {
-                        Date = IsoWeekHelper.GetBusinessWeekLabel(g.Key.ProductionDate),
+                        WeekStart = g.Key.WeekStart,
+                        Date = IsoWeekHelper.GetWeekDisplayLabel(g.Key.WeekStart),
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
                         Demand = demand,
                         P2Inventory = p2Inventory,
                         DeliveredToP1 = deliveredToP1,
                         Scrapped = scrapped,
-                        P2InventoryBackground = InventoryMapper.GetBackgroundBrush(p2Inventory, demand)
+                        P2InventoryBackground = InventoryMapper.GetBackgroundBrush(p2Inventory, totalDemand)
                     };
                 })
                 .OrderBy(x => x.Model)
+                .ThenBy(x => x.PartNo)
+                .ThenBy(x => x.WeekStart)
                 .ToList();
+        }
+
+        /// <summary>
+        /// Week attribution timestamp for scrapped units: CreatedAt when set, otherwise UpdatedAt.
+        /// Returns null when neither is available so the row is only visible in the all-weeks view.
+        /// </summary>
+        private static DateTime? ScrapTimestamp(StorageTransaction transaction)
+        {
+            if (transaction.CreatedAt != default(DateTime))
+                return transaction.CreatedAt;
+
+            return transaction.UpdatedAt;
         }
     }
 }

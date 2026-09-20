@@ -9,6 +9,11 @@ namespace ASID.Edge.Models
     {
         public string Date { get; set; } = "";
 
+        /// <summary>
+        /// Canonical week key: the Monday of the production week this row belongs to.
+        /// </summary>
+        public DateTime WeekStart { get; set; }
+
         public string Model { get; set; } = "";
 
         public string PartNo { get; set; } = "";

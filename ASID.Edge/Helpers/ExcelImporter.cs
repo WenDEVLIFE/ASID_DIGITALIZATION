@@ -2,6 +2,7 @@ using ASID.Edge.Models;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -20,6 +21,10 @@ namespace ASID.Edge.Helpers
     ///     Col B -> Serial Production  (Model Name)
     ///     Col D -> PU Body PN         (Part Number)
     ///     Col E -> Rev 0              (Demand quantity)
+    ///
+    /// Col A may repeat a week (merged cells expose the value only on the top-left
+    /// row), so the last numeric week is carried forward to following data rows.
+    /// A single file MAY therefore contain several production weeks.
     /// </summary>
     public static class ExcelImporter
     {
@@ -27,6 +32,9 @@ namespace ASID.Edge.Helpers
         {
             public List<DailyDemand> Demands { get; set; } = new();
             public string WorkweekLabel { get; set; } = "";
+
+            /// <summary>Distinct Monday week keys present in the parsed file.</summary>
+            public List<DateTime> WeekStarts { get; set; } = new();
         }
 
         public static ParseResult Parse(string filePath)
@@ -55,21 +63,6 @@ namespace ASID.Edge.Helpers
             // Find the data start row (first row where Col A has a numeric workweek)
             int firstDataRow = FindDataStartRow(worksheet);
 
-            // Read workweek from Column A (first non-empty value)
-            // Convert week number to actual date (Monday of that week)
-            string workweekLabel = "";
-            int workweekNumber = 0;
-            for (int row = firstDataRow; row <= worksheet.Dimension.Rows; row++)
-            {
-                string ww = worksheet.Cells[row, 1].Text.Trim();
-                if (!string.IsNullOrWhiteSpace(ww) && int.TryParse(ww, out int wwNum))
-                {
-                    workweekNumber = wwNum;
-                    workweekLabel = $"WW {ww}";
-                    break;
-                }
-            }
-
             // Find model and part number columns (first match in header rows)
             int modelCol = FindColumn(worksheet, 2, 4, "Serial Production");
             int partNoCol = FindColumn(worksheet, 2, 4, "PU Body PN");
@@ -83,9 +76,18 @@ namespace ASID.Edge.Helpers
             if (demandCol <= 0) demandCol = 5;  // E
 
             var demands = new List<DailyDemand>();
+            var weekNumbers = new List<int>();
+
+            // Col A carries the workweek. Merged cells expose the value only on the
+            // top-left row, so carry the last numeric week forward to the rows below.
+            int currentWeekNumber = 0;
 
             for (int row = firstDataRow; row <= worksheet.Dimension.Rows; row++)
             {
+                string weekText = worksheet.Cells[row, 1].Text.Trim();
+                if (!string.IsNullOrWhiteSpace(weekText) && int.TryParse(weekText, out int parsedWeek))
+                    currentWeekNumber = parsedWeek;
+
                 string model = worksheet.Cells[row, modelCol].Text.Trim();
                 if (string.IsNullOrWhiteSpace(model))
                     continue;
@@ -104,7 +106,7 @@ namespace ASID.Edge.Helpers
                 // Include row even if demand is 0 (planner may update later)
                 demands.Add(new DailyDemand
                 {
-                    ProductionDate = GetDateFromWeekNumber(workweekNumber),
+                    ProductionDate = GetDateFromWeekNumber(currentWeekNumber),
                     Shift = 0,
                     Model = model,
                     PartNo = partNo,
@@ -112,12 +114,27 @@ namespace ASID.Edge.Helpers
                     Scrapped = 0,
                     ImportedAt = DateTime.UtcNow
                 });
+
+                if (currentWeekNumber is >= 1 and <= 53 && !weekNumbers.Contains(currentWeekNumber))
+                    weekNumbers.Add(currentWeekNumber);
             }
+
+            // Distinct Monday week keys actually present in the file. Derived from the
+            // parsed rows so every inserted week is covered by the per-week delete.
+            var weekStarts = demands
+                .Select(d => d.ProductionDate.Date)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
+
+            // A single week keeps the historical "WW n" label; multi-week files list them.
+            string workweekLabel = string.Join(", ", weekNumbers.Select(w => $"WW {w}"));
 
             return new ParseResult
             {
                 Demands = demands,
-                WorkweekLabel = workweekLabel
+                WorkweekLabel = workweekLabel,
+                WeekStarts = weekStarts
             };
         }
 
@@ -237,30 +254,19 @@ namespace ASID.Edge.Helpers
         }
 
         /// <summary>
-        /// Convert an ISO week number to the Monday date of that week.
-        /// Uses the current year. If the week number is out of range,
-        /// falls back to today's date.
+        /// Convert an ISO week number to the Monday date of that week, using the
+        /// current year as the plan year. Uses ISOWeek.ToDateTime so cross-year weeks
+        /// (e.g. a W53/W1 that spills into the adjacent calendar year) resolve to their
+        /// real Monday instead of being clamped back to today.
         /// </summary>
         private static DateTime GetDateFromWeekNumber(int weekNumber)
         {
             if (weekNumber < 1 || weekNumber > 53)
-                return DateTime.Today;
+                return IsoWeekHelper.GetWeekStart(DateTime.Today);
 
-            // ISO 8601: Week 1 is the week containing the first Thursday of the year.
-            // January 4th is always in Week 1.
-            var jan4 = new DateTime(DateTime.Today.Year, 1, 4);
-            int startOfWeek1 = (int)jan4.DayOfWeek;
-            if (startOfWeek1 == 0) startOfWeek1 = 7; // Sunday = 7
-            var week1Monday = jan4.AddDays(-(startOfWeek1 - 1));
-
-            // Monday of the target week
-            var targetMonday = week1Monday.AddDays((weekNumber - 1) * 7);
-
-            // Sanity check: don't go more than 7 days before or after today
-            if (targetMonday.Year != DateTime.Today.Year)
-                return DateTime.Today;
-
-            return targetMonday;
+            // ISO 8601: ISOWeek.ToDateTime resolves the actual Monday for (year, week),
+            // including the range where week 1 / week 53 cross a calendar-year boundary.
+            return ISOWeek.ToDateTime(DateTime.Today.Year, weekNumber, DayOfWeek.Monday);
         }
     }
 }
