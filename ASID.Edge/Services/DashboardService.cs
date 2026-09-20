@@ -45,7 +45,11 @@ namespace ASID.Edge.Services
                 // Demand data is optional for inventory background coloring.
             }
 
-            return InventoryMapper.Map(Transactions, demands);
+            // The PU-Body Inventory table has no week dimension, so its P2 Supermarket cell
+            // color ratio is scoped to the production week containing today (current-week demand).
+            var currentWeekStart = IsoWeekHelper.GetWeekStart(DateTime.Today);
+
+            return InventoryMapper.Map(Transactions, demands, currentWeekStart);
         }
 
         public List<PUBodyWithdrawalItem> GetWithdrawalHistory()
@@ -73,11 +77,6 @@ namespace ASID.Edge.Services
                 .Where(t => t.Status == MaterialStatus.Stored)
                 .GroupBy(t => (t.Model, t.PartNo))
                 .ToDictionary(g => g.Key, g => g.Sum(t => t.SNP));
-
-            // Color denominator: TOTAL all-week demand per Model+PartNo (consistent with the gate basis).
-            var totalDemandByModelPartNo = demands
-                .GroupBy(d => (d.Model, d.PartNo))
-                .ToDictionary(g => g.Key, g => g.Sum(d => d.Quantity));
 
             return demands
                 .GroupBy(x => new
@@ -115,15 +114,12 @@ namespace ASID.Edge.Services
 
                     int demand = g.Sum(x => x.Quantity);
 
-                    // Cumulative color ratio uses the all-week demand denominator, not this week's demand.
-                    int totalDemand = totalDemandByModelPartNo.TryGetValue(key, out int allWeekDemand)
-                        ? allWeekDemand
-                        : demand;
-
-                    // Dual-convention week label, e.g. "W39 (ISO W38)".
+                    // Color ratio per row = cumulative Stored P2 / THIS row's week demand
+                    // (not the all-week total). Yellow 90-100%, Red >= 101%, none when demand 0.
                     return new PUBodyDailyDemandItem
                     {
                         WeekStart = g.Key.WeekStart,
+                        // Dual-convention week label, e.g. "W39 (ISO W38)".
                         Date = IsoWeekHelper.GetWeekDisplayLabel(g.Key.WeekStart),
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
@@ -131,7 +127,7 @@ namespace ASID.Edge.Services
                         P2Inventory = p2Inventory,
                         DeliveredToP1 = deliveredToP1,
                         Scrapped = scrapped,
-                        P2InventoryBackground = InventoryMapper.GetBackgroundBrush(p2Inventory, totalDemand)
+                        P2InventoryBackground = InventoryMapper.GetBackgroundBrush(p2Inventory, demand)
                     };
                 })
                 .OrderBy(x => x.Model)

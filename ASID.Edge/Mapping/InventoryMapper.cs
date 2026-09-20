@@ -1,4 +1,5 @@
-﻿using ASID.Edge.Models;
+﻿using ASID.Edge.Helpers;
+using ASID.Edge.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media;
@@ -7,11 +8,19 @@ namespace ASID.Edge.Mapping
 {
     public static class InventoryMapper
     {
+        /// <summary>
+        /// Maps storage transactions to PU-Body inventory rows. When <paramref name="demandWeekStart"/>
+        /// is supplied, the P2 Supermarket background ratio uses only the demand of that production
+        /// week; when null, all-week demand is summed (legacy behavior).
+        /// </summary>
         public static List<PUBodyInventoryItem> Map(
             IEnumerable<StorageTransaction> transactions,
-            IEnumerable<DailyDemand>? dailyDemands = null)
+            IEnumerable<DailyDemand>? dailyDemands = null,
+            DateTime? demandWeekStart = null)
         {
             var demandByModelPartNo = dailyDemands?
+                .Where(d => demandWeekStart == null
+                    || IsoWeekHelper.IsInWeek(d.ProductionDate, demandWeekStart.Value))
                 .GroupBy(d => (d.Model, d.PartNo))
                 .ToDictionary(g => g.Key, g => g.Sum(d => d.Quantity));
 

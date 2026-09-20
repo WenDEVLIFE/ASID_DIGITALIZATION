@@ -104,9 +104,11 @@ namespace ASID.Edge.Services
 
         /// <summary>
         /// Blocks storing a scanned data matrix in the Supermarket when the part's
-        /// cumulative Stored-only P2 inventory is >= the TOTAL demand summed across
-        /// ALL weeks in daily_demand for that PartNo (week-independent basis).
-        /// With both values at 0 the gate blocks (0 >= 0), matching prior parity.
+        /// cumulative Stored-only P2 inventory is >= the demand of the CURRENT production
+        /// week (the week containing <see cref="DateTime.Today"/>) for that PartNo.
+        /// The storage scan has no week picker, so the gate is scoped to the current week only.
+        /// Variance is display-only and never gates. With both values at 0 the gate blocks
+        /// (0 >= 0), matching prior parity.
         /// </summary>
         public ValidationResult CheckStoreThreshold(string kanbanNo)
         {
@@ -126,9 +128,11 @@ namespace ASID.Edge.Services
             var transactions = _repository.GetAll();
             var demands = Repositories.RepositoryProvider.DailyDemands.GetAll();
 
-            // Total demand across all weeks for this part (no week scoping).
-            int totalDemand = demands
+            // Demand basis: only the production week containing today.
+            var currentWeekStart = IsoWeekHelper.GetWeekStart(DateTime.Today);
+            int currentWeekDemand = demands
                 .Where(d => d.PartNo == partNo)
+                .Where(d => IsoWeekHelper.IsInWeek(d.ProductionDate, currentWeekStart))
                 .Sum(d => d.Quantity);
 
             // Only Stored units count toward the P2 total.
@@ -136,7 +140,7 @@ namespace ASID.Edge.Services
                 .Where(t => t.PartNo == partNo && t.Status == MaterialStatus.Stored)
                 .Sum(t => t.SNP);
 
-            if (p2Stored >= totalDemand)
+            if (p2Stored >= currentWeekDemand)
             {
                 return new ValidationResult
                 {
