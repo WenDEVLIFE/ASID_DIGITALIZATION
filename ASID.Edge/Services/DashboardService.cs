@@ -119,7 +119,7 @@ namespace ASID.Edge.Services
                     return new PUBodyDailyDemandItem
                     {
                         WeekStart = g.Key.WeekStart,
-                        // Dual-convention week label, e.g. "W39 (ISO W38)".
+                        // Business week label only, e.g. "W39" (ISO value intentionally hidden).
                         Date = IsoWeekHelper.GetWeekDisplayLabel(g.Key.WeekStart),
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,
@@ -130,9 +130,11 @@ namespace ASID.Edge.Services
                         P2InventoryBackground = InventoryMapper.GetBackgroundBrush(p2Inventory, demand)
                     };
                 })
-                .OrderBy(x => x.Model)
+                // Default order: newest production workweek first, then Model/PartNo within
+                // the same week so the grid stays grouped and readable.
+                .OrderByDescending(x => x.WeekStart)
+                .ThenBy(x => x.Model)
                 .ThenBy(x => x.PartNo)
-                .ThenBy(x => x.WeekStart)
                 .ToList();
         }
 

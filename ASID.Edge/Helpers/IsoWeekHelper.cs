@@ -48,13 +48,11 @@ namespace ASID.Edge.Helpers
         }
 
         /// <summary>
-        /// Dual-convention display label: business week (ISO + 1) followed by the raw ISO week,
-        /// e.g. 2026-09-14 → "W39 (ISO W38)". Display-only; no stored date changes.
+        /// Display label for the production workweek column. Returns only the business week
+        /// label (ISO week + 1), e.g. 2026-09-14 → "W39". The raw ISO week is intentionally
+        /// NOT shown. Display-only; no stored date changes.
         /// </summary>
-        public static string GetWeekDisplayLabel(DateTime weekStart)
-        {
-            int isoWeek = ISOWeek.GetWeekOfYear(weekStart);
-            return $"{GetBusinessWeekLabel(weekStart)} (ISO W{isoWeek})";
-        }
+        public static string GetWeekDisplayLabel(DateTime weekStart) =>
+            GetBusinessWeekLabel(weekStart);
     }
 }

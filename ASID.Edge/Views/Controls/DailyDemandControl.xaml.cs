@@ -56,6 +56,17 @@ namespace ASID.Edge.Views.Controls
 
             // Persistent view: assigned once, never reassigned.
             _view = new ListCollectionView(_items) { Filter = Match };
+
+            // Default order: newest production workweek first, then Model/PartNo inside the
+            // same week so the grid stays grouped and readable. The column sort buttons below
+            // clear and replace these descriptions with a single key, preserving their behavior.
+            _view.SortDescriptions.Add(new SortDescription(
+                "WeekStart", ListSortDirection.Descending));
+            _view.SortDescriptions.Add(new SortDescription(
+                "Model", ListSortDirection.Ascending));
+            _view.SortDescriptions.Add(new SortDescription(
+                "PartNo", ListSortDirection.Ascending));
+
             DailyDemandGrid.ItemsSource = _view;
 
             // Poll for demand changes every 30 seconds
