@@ -18,6 +18,7 @@ namespace ASID.Edge.Repositories
 
         public static ITransactionRepository Transactions { get; } = CreateTransactionRepo();
         public static IDailyDemandRepository DailyDemands { get; } = CreateDailyDemandRepo();
+        public static IPlantReturnRepository PlantReturns { get; } = CreatePlantReturnRepo();
 
         // Users (authentication) — PostgreSQL or MSSQL
         public static IUserRepository Users { get; } =
@@ -54,6 +55,14 @@ namespace ASID.Edge.Repositories
             if (engine.Equals("mssql", StringComparison.OrdinalIgnoreCase))
                 return new MssqlDailyDemandRepository();
             return new PostgreSqlDailyDemandRepository();
+        }
+
+        private static IPlantReturnRepository CreatePlantReturnRepo()
+        {
+            string engine = Database.Database.Engine;
+            if (engine.Equals("mssql", StringComparison.OrdinalIgnoreCase))
+                return new MssqlPlantReturnRepository();
+            return new PostgreSqlPlantReturnRepository();
         }
 
         private static IUserRepository CreateUserRepo()

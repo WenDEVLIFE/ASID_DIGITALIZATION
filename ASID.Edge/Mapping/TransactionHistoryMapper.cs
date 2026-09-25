@@ -14,6 +14,7 @@ namespace ASID.Edge.Mapping
                 PartNo = t.PartNo,
                 SNP = t.SNP,
                 SerialNo = t.SerialNo,
+                DataMatrix = t.DataMatrix,
                 LineNo = t.LineNo,
                 LaneNo = t.LaneNo,
                 TrolleyNo = t.TrolleyNo,

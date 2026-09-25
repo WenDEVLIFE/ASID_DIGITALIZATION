@@ -15,6 +15,10 @@ namespace ASID.Edge.Models
 
         public string SerialNo { get; set; } = "";
 
+        // Primary key of the transaction (transactions.data_matrix) — required for
+        // supervisor edit/delete actions, which key on data_matrix, not serial_no.
+        public string DataMatrix { get; set; } = "";
+
         public int SNP { get; set; }
 
         public string LineNo { get; set; } = "";

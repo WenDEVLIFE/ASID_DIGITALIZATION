@@ -121,3 +121,21 @@ CREATE TABLE lane_management
     created_at        TIMESTAMP DEFAULT NOW(),
     updated_at        TIMESTAMP DEFAULT NOW()
 );
+
+-- ===========================================================================
+-- plant_return
+-- ===========================================================================
+DROP TABLE IF EXISTS plant_return;
+
+CREATE TABLE plant_return
+(
+    id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    part_no     VARCHAR(100) NOT NULL,
+    quantity    INTEGER      NOT NULL,
+    remarks     VARCHAR(500),
+    username    VARCHAR(100),
+    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_plant_return_part_no_created_at
+    ON plant_return(part_no, created_at);

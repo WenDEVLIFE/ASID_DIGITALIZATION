@@ -236,6 +236,46 @@ WHERE
         TransactionChanged?.Invoke();
     }
 
+    public void UpdateDetails(StorageTransaction transaction)
+    {
+        using var connection = SqliteDatabase.CreateConnection();
+        connection.Open();
+
+        const string sql = @"
+UPDATE transactions
+SET
+    model = @Model,
+    part_no = @PartNo,
+    serial_no = @SerialNo,
+    quantity = @SNP,
+    operator_id = @OperatorId,
+    line_no = @LineNo,
+    lane_no = @LaneNo,
+    trolley_no = @TrolleyNo,
+    created_at = @CreatedAt,
+    updated_at = @UpdatedAt,
+    synced = 0
+WHERE
+    data_matrix = @DataMatrix;";
+
+        connection.Execute(sql, new
+        {
+            transaction.Model,
+            transaction.PartNo,
+            transaction.SerialNo,
+            transaction.SNP,
+            transaction.OperatorId,
+            transaction.LineNo,
+            transaction.LaneNo,
+            transaction.TrolleyNo,
+            CreatedAt = transaction.CreatedAt.ToString("o"),
+            UpdatedAt = DateTime.UtcNow.ToString("o"),
+            transaction.DataMatrix
+        });
+
+        TransactionChanged?.Invoke();
+    }
+
     public IReadOnlyList<LaneOccupancy> GetLaneOccupancy()
     {
         using var connection = SqliteDatabase.CreateConnection();

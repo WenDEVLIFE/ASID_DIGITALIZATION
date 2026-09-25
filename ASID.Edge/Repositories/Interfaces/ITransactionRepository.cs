@@ -17,6 +17,9 @@ namespace ASID.Edge.Repositories.Interfaces
 
         void Update(StorageTransaction transaction);
 
+        /// <summary>Supervisor correction path: updates the descriptive/identifying fields of an existing transaction (keyed by data_matrix). Does not change lifecycle/NC state.</summary>
+        void UpdateDetails(StorageTransaction transaction);
+
         bool DeleteByDataMatrix(string dataMatrix);
     }
 }

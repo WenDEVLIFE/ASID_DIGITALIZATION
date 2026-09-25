@@ -75,6 +75,36 @@ namespace ASID.Edge.Services
         }
 
         /// <summary>
+        /// Verifies a username/password pair against the user store WITHOUT changing the
+        /// current session. Used for action re-authorization (e.g. Plant Return), where
+        /// any valid account may authorize the action.
+        /// </summary>
+        public bool VerifyCredentials(string username, string password)
+        {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(password))
+                return false;
+
+            string normalized = username.Trim().ToLowerInvariant();
+
+            User? user;
+            try
+            {
+                user = _users.GetByUsername(normalized);
+            }
+            catch (Exception ex)
+            {
+                // Bad input or unreachable store must never throw — treat as invalid.
+                System.Diagnostics.Debug.WriteLine($"VerifyCredentials DB error: {ex.Message}");
+                return false;
+            }
+
+            if (user == null)
+                return false;
+
+            return PasswordHasher.Verify(password, user.PasswordHash);
+        }
+
+        /// <summary>
         /// Restore a previously saved session (username + role).
         /// Returns true if a valid session was restored.
         /// </summary>

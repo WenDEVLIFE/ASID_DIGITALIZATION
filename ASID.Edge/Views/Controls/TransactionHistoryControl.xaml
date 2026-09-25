@@ -81,6 +81,18 @@
 
             <!-- RIGHT : Action Buttons -->
             <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <!-- Plant Return — visible to ALL roles (not RBAC-gated). -->
+                <Button x:Name="PlantReturn"
+                        Click="PlantReturn_Click"
+                        Margin="5" Padding="12,5"
+                        Background="#FFD400" Foreground="#3A2E00"
+                        FontWeight="SemiBold" Cursor="Hand">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#x21A9; " FontSize="14"/>
+                        <TextBlock Text="Plant Return"/>
+                    </StackPanel>
+                </Button>
+
                 <Button x:Name="NonConformance"
                         Click="NonConformance_Click"
                         Margin="5" Padding="12,5"
@@ -111,6 +123,32 @@
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#x1F5D1; " FontSize="14"/>
                         <TextBlock Text="Override"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Explicit edit — Supervisor only (RBAC-gated in Load()). -->
+                <Button x:Name="BtnEditRow"
+                        Click="EditRow_Click"
+                        Margin="5" Padding="12,5"
+                        Background="#0277BD" Foreground="White"
+                        FontWeight="SemiBold" Cursor="Hand"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#x270F; " FontSize="14"/>
+                        <TextBlock Text="Edit Row"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Explicit delete — Supervisor only (RBAC-gated in Load()). -->
+                <Button x:Name="BtnDeleteRow"
+                        Click="DeleteRow_Click"
+                        Margin="5" Padding="12,5"
+                        Background="#C62828" Foreground="White"
+                        FontWeight="SemiBold" Cursor="Hand"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#x1F5D1; " FontSize="14"/>
+                        <TextBlock Text="Delete Row"/>
                     </StackPanel>
                 </Button>
             </StackPanel>

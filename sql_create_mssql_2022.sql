@@ -353,6 +353,55 @@ GO
 
 /*
 ===============================================================================
+ 6. PLANT RETURN
+===============================================================================
+*/
+
+IF OBJECT_ID(N'dbo.plant_return', N'U') IS NOT NULL
+    DROP TABLE dbo.plant_return;
+GO
+
+
+CREATE TABLE dbo.plant_return
+(
+    id              UNIQUEIDENTIFIER NOT NULL
+                        CONSTRAINT PK_plant_return
+                        PRIMARY KEY
+                        DEFAULT NEWID(),
+
+    part_no         NVARCHAR(100)    NOT NULL,
+
+    quantity        INT              NOT NULL,
+
+    remarks         NVARCHAR(500)    NULL,
+
+    /*
+       Username of the user who authorized the return.
+    */
+    username        NVARCHAR(100)    NULL,
+
+    created_at      DATETIME2        NOT NULL
+                        CONSTRAINT DF_plant_return_created_at
+                        DEFAULT SYSUTCDATETIME()
+);
+GO
+
+
+/*
+===============================================================================
+ PLANT RETURN INDEX
+===============================================================================
+
+ Supports the dashboard lookup of a part number's returns within a week.
+*/
+CREATE INDEX IX_plant_return_part_no_created_at
+    ON dbo.plant_return(part_no, created_at);
+GO
+
+
+
+/*
+===============================================================================
  OPTIONAL VERIFICATION
 ===============================================================================
 
@@ -369,7 +418,8 @@ WHERE TABLE_SCHEMA = 'dbo'
       'transactions',
       'daily_demand',
       'users',
-      'lane_management'
+      'lane_management',
+      'plant_return'
   )
 ORDER BY TABLE_NAME;
 GO
@@ -388,7 +438,8 @@ WHERE t.name IN
     'transactions',
     'daily_demand',
     'users',
-    'lane_management'
+    'lane_management',
+    'plant_return'
 )
 AND i.name IS NOT NULL
 ORDER BY

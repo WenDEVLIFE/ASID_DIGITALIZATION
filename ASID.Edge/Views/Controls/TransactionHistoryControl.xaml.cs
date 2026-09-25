@@ -1,4 +1,5 @@
 using ASID.Edge.Models;
+using ASID.Edge.Mapping;
 using ASID.Edge.Services;
 using Dapper;
 using ASID.Edge.Repositories;
@@ -56,6 +57,13 @@ namespace ASID.Edge.Views.Controls
                 ServiceProvider.Auth.CanOverride;
             BtnOverride.Visibility =
                 ServiceProvider.Auth.CanOverride ? Visibility.Visible : Visibility.Collapsed;
+
+            // Explicit Edit / Delete row buttons — Supervisor only.
+            bool isSupervisor = ServiceProvider.Auth.CanOverride;
+            BtnEditRow.IsEnabled = isSupervisor;
+            BtnEditRow.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
+            BtnDeleteRow.IsEnabled = isSupervisor;
+            BtnDeleteRow.Visibility = isSupervisor ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void TxtSearch_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -158,6 +166,33 @@ namespace ASID.Edge.Views.Controls
             }
         }
 
+        private void PlantReturn_Click(object sender, RoutedEventArgs e)
+        {
+            // No RBAC gate: any role may open the dialog, which itself requires
+            // a valid account to authorize the return.
+            var dialog = new PlantReturnDialog();
+
+            var owner = Window.GetWindow(this);
+            if (owner != null)
+                dialog.Owner = owner;
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            var created = dialog.CreatedReturn;
+            Toast.Success(
+                $"Plant return saved (Part: {created?.PartNo}, Qty: {created?.Quantity}). " +
+                "Reflected under Scrapped for the current week.");
+
+            // Dashboard reload: PU-Body station views subscribe to RefreshRequested
+            // and forward it to DashboardController.Refresh().
+            RefreshRequested?.Invoke(this, EventArgs.Empty);
+
+            // Keep this control consistent (plant returns are not transaction rows,
+            // so the grid content itself does not change).
+            ApplyFilter();
+        }
+
         private void QAReview_Click(object sender, RoutedEventArgs e)
         {
             if (!ServiceProvider.Auth.CanReviewNC)
@@ -224,6 +259,7 @@ namespace ASID.Edge.Views.Controls
                     Model = t.Model,
                     PartNo = t.PartNo,
                     SerialNo = t.DataMatrix,
+                    DataMatrix = t.DataMatrix,
                     SNP = t.SNP,
                     OperatorId = t.OperatorId,
                     LineNo = t.LineNo,
@@ -243,6 +279,135 @@ namespace ASID.Edge.Views.Controls
             {
                 Toast.Error($"Override failed: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Supervisor-only: edit the descriptive fields of the selected transaction.
+        /// Not audited — there is no audit table (out of scope for this change).
+        /// </summary>
+        private void EditRow_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ServiceProvider.Auth.CanOverride)
+            {
+                Toast.Warning("Only Supervisor can edit transaction data.");
+                return;
+            }
+
+            if (TransactionGrid.SelectedItem is not PUBodyTransactionHistoryItem selected)
+            {
+                Toast.Warning("Select a transaction row to edit.");
+                return;
+            }
+
+            string dataMatrix = selected.DataMatrix;
+            if (string.IsNullOrWhiteSpace(dataMatrix))
+            {
+                Toast.Warning("This row has no data matrix key and cannot be edited.");
+                return;
+            }
+
+            StorageTransaction? transaction;
+            try
+            {
+                transaction = RepositoryProvider.Transactions.GetByDataMatrix(dataMatrix);
+            }
+            catch (Exception ex)
+            {
+                Toast.Error($"Failed to load transaction: {ex.Message}");
+                return;
+            }
+
+            if (transaction == null)
+            {
+                Toast.Warning("Transaction not found in the database.");
+                return;
+            }
+
+            var dialog = new TransactionEditDialog(transaction);
+
+            var owner = Window.GetWindow(this);
+            if (owner != null)
+                dialog.Owner = owner;
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            try
+            {
+                RepositoryProvider.Transactions.UpdateDetails(dialog.UpdatedTransaction);
+
+                Toast.Success($"Transaction '{transaction.SerialNo}' updated.");
+
+                // Reload keeping the current search/filter, then refresh the dashboard tables.
+                ReloadFromRepository();
+                RefreshRequested?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // Keep the grid unchanged on failure.
+                Toast.Error($"Update failed: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Supervisor-only explicit row delete. This is the explicit equivalent of the
+        /// Override button (same hard delete keyed by data_matrix); Override is kept as-is.
+        /// Not audited — there is no audit table (out of scope for this change).
+        /// </summary>
+        private void DeleteRow_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ServiceProvider.Auth.CanOverride)
+            {
+                Toast.Warning("Only Supervisor can delete transaction data.");
+                return;
+            }
+
+            if (TransactionGrid.SelectedItem is not PUBodyTransactionHistoryItem selected)
+            {
+                Toast.Warning("Select a transaction row to delete.");
+                return;
+            }
+
+            string dataMatrix = selected.DataMatrix;
+            if (string.IsNullOrWhiteSpace(dataMatrix))
+            {
+                Toast.Warning("This row has no data matrix key and cannot be deleted.");
+                return;
+            }
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"Delete transaction '{selected.SerialNo}' (Part: {selected.PartNo}, Status: {selected.Status})?\n\nThis action cannot be undone.",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                RepositoryProvider.Transactions.DeleteByDataMatrix(dataMatrix);
+
+                Toast.Success($"Transaction '{selected.SerialNo}' deleted.");
+
+                // Reload keeping the current search/filter, then refresh the dashboard tables.
+                ReloadFromRepository();
+                RefreshRequested?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                Toast.Error($"Delete failed: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Reloads the grid from the repository, preserving the current search/filter
+        /// (Load -> ApplyFilter reuses the existing TxtSearch text).
+        /// </summary>
+        private void ReloadFromRepository()
+        {
+            var all = RepositoryProvider.Transactions.GetAll();
+            Load(all.Select(TransactionHistoryMapper.Map));
         }
     }
 }

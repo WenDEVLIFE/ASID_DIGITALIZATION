@@ -78,6 +78,22 @@ namespace ASID.Edge.Services
                 .GroupBy(t => (t.Model, t.PartNo))
                 .ToDictionary(g => g.Key, g => g.Sum(t => t.SNP));
 
+            // Plant returns for the CURRENT week, aggregated by PartNo. Loaded once (not per row)
+            // and defensively: a missing table or DB error must not break the dashboard.
+            var currentWeekStart = IsoWeekHelper.GetWeekStart(DateTime.Today);
+            Dictionary<string, int> plantReturnsByPartNo = new(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                plantReturnsByPartNo = RepositoryProvider.PlantReturns
+                    .GetByWeek(currentWeekStart)
+                    .GroupBy(p => p.PartNo)
+                    .ToDictionary(g => g.Key, g => g.Sum(p => p.Quantity), StringComparer.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                // Plant returns are optional for the Scrapped computation.
+            }
+
             return demands
                 .GroupBy(x => new
                 {
@@ -111,6 +127,14 @@ namespace ASID.Edge.Services
                         .Where(t => (t.IsNCConfirmed && t.NCQuantity > 0) || t.Status == MaterialStatus.Scrapped)
                         .Where(t => IsoWeekHelper.IsInWeek(ScrapTimestamp(t), g.Key.WeekStart))
                         .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
+
+                    // Plant returns are absorbed into Scrapped ONLY for the current week, matched by
+                    // Part No (the Plant Return form has no Model field). Other weeks are unaffected.
+                    if (g.Key.WeekStart == currentWeekStart
+                        && plantReturnsByPartNo.TryGetValue(g.Key.PartNo, out int plantReturnQty))
+                    {
+                        scrapped += plantReturnQty;
+                    }
 
                     int demand = g.Sum(x => x.Quantity);
 

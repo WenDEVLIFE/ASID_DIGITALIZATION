@@ -168,6 +168,44 @@ WHERE
 
         }
 
+        public void UpdateDetails(StorageTransaction transaction)
+        {
+            using var connection =
+                Database.Database.CreateConnection();
+
+            connection.Open();
+
+            const string sql = @"
+UPDATE transactions
+SET
+    model = @Model,
+    part_no = @PartNo,
+    serial_no = @SerialNo,
+    quantity = @SNP,
+    operator_id = @OperatorId,
+    line_no = @LineNo,
+    lane_no = @LaneNo,
+    trolley_no = @TrolleyNo,
+    created_at = @CreatedAt,
+    updated_at = CURRENT_TIMESTAMP
+WHERE
+    data_matrix = @DataMatrix;";
+
+            connection.Execute(sql, new
+            {
+                transaction.Model,
+                transaction.PartNo,
+                transaction.SerialNo,
+                transaction.SNP,
+                transaction.OperatorId,
+                transaction.LineNo,
+                transaction.LaneNo,
+                transaction.TrolleyNo,
+                transaction.CreatedAt,
+                transaction.DataMatrix
+            });
+        }
+
         public bool DeleteByDataMatrix(string dataMatrix)
         {
             using var connection =
