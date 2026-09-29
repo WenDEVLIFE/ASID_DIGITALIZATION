@@ -10,7 +10,11 @@ namespace ASID.Edge.Services
         public KanbanData Parse(string qr)
         {
             var p = qr.Split('|');
-            var partNo = (p.ElementAtOrDefault(1) ?? "").TrimStart('P');
+            // Do NOT strip leading 'P': part numbers legitimately start with it and the
+            // old TrimStart('P') corrupted stored values (e.g. P12345 -> 12345), breaking
+            // the daily_demand join. Dashboard matching is now prefix-tolerant so legacy
+            // already-corrupted rows still join.
+            var partNo = (p.ElementAtOrDefault(1) ?? "").Trim();
 
             return new KanbanData
             {

@@ -36,7 +36,7 @@ namespace ASID.Edge.Views.Controls
         }
 
         private bool modelAsc = true;
-        private bool dateAsc = true;
+        private bool dateAsc = false;
         private List<PUBodyTransactionHistoryItem> _allItems = new();
 
         public void Load(IEnumerable<PUBodyTransactionHistoryItem> items)

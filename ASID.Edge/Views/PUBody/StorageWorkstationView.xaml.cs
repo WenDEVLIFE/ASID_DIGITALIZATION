@@ -68,6 +68,8 @@ namespace ASID.Edge.Views.PUBody
                     Inventory,
                     Withdrawal,
                     DailyDemand);
+
+            TransactionHistory.RefreshRequested += (_, _) => _dashboardController.Refresh();
         }
 
         private void CheckAndShowLaneSequenceDialog()

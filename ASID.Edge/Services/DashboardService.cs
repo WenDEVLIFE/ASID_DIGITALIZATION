@@ -28,7 +28,7 @@ namespace ASID.Edge.Services
         public List<PUBodyTransactionHistoryItem> GetTransactionHistory()
         {
             return Transactions
-                .OrderBy(x => x.CreatedAt)
+                .OrderByDescending(x => x.CreatedAt)
                 .Select(TransactionHistoryMapper.Map)
                 .ToList();
         }
@@ -71,23 +71,30 @@ namespace ASID.Edge.Services
             try { allTransactions = Transactions; }
             catch { allTransactions = new List<StorageTransaction>(); }
 
-            // P2 Inventory basis: cumulative Stored-only units per Model+PartNo across ALL weeks.
-            // Repeated on every week row; never week-filtered.
-            var p2ByModelPartNo = allTransactions
+            // P2 Inventory basis: cumulative Stored-only units per NORMALIZED Part No across
+            // ALL weeks. Repeated on every week row; never week-filtered.
+            // Part numbers are normalized on BOTH sides of the join (see NormalizePartNo):
+            // the legacy KanbanParser.TrimStart('P') corrupted transactions.part_no
+            // (P12345 -> 12345) while the Excel-imported daily_demand kept the prefix, and
+            // casing can differ between the two sources. Comparing the normalized forms lets
+            // legacy already-corrupted rows still join clean/current ones.
+            var p2ByPartNo = allTransactions
                 .Where(t => t.Status == MaterialStatus.Stored)
-                .GroupBy(t => (t.Model, t.PartNo))
+                .GroupBy(t => NormalizePartNo(t.PartNo))
                 .ToDictionary(g => g.Key, g => g.Sum(t => t.SNP));
 
-            // Plant returns for the CURRENT week, aggregated by PartNo. Loaded once (not per row)
-            // and defensively: a missing table or DB error must not break the dashboard.
+            // Plant returns for the CURRENT week, aggregated by NORMALIZED Part No. Loaded once
+            // (not per row) and defensively: a missing table or DB error must not break the
+            // dashboard. Normalization matches the transaction join tolerance (legacy 'P'
+            // stripping + case differences).
             var currentWeekStart = IsoWeekHelper.GetWeekStart(DateTime.Today);
-            Dictionary<string, int> plantReturnsByPartNo = new(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, int> plantReturnsByPartNo = new();
             try
             {
                 plantReturnsByPartNo = RepositoryProvider.PlantReturns
                     .GetByWeek(currentWeekStart)
-                    .GroupBy(p => p.PartNo)
-                    .ToDictionary(g => g.Key, g => g.Sum(p => p.Quantity), StringComparer.OrdinalIgnoreCase);
+                    .GroupBy(p => NormalizePartNo(p.PartNo))
+                    .ToDictionary(g => g.Key, g => g.Sum(p => p.Quantity));
             }
             catch
             {
@@ -105,20 +112,26 @@ namespace ASID.Edge.Services
                 })
                 .Select(g =>
                 {
-                    var key = (g.Key.Model, g.Key.PartNo);
+                    // Match transactions by NORMALIZED Part No ONLY. The PU-Body part number is
+                    // the real join key; Model is display-only and is deliberately NOT required
+                    // to match (daily_demand.Model and transactions.Model can differ in casing
+                    // or format, and the Plant Return feature already matches by Part No alone).
+                    string normalizedPartNo = NormalizePartNo(g.Key.PartNo);
 
                     var matchingTx = allTransactions
-                        .Where(t => t.Model == g.Key.Model && t.PartNo == g.Key.PartNo)
+                        .Where(t => NormalizePartNo(t.PartNo) == normalizedPartNo)
                         .ToList();
 
                     // P2 Inventory = cumulative Stored-only total (all weeks), repeated per week row.
-                    int p2Inventory = p2ByModelPartNo.TryGetValue(key, out int storedTotal) ? storedTotal : 0;
+                    int p2Inventory = p2ByPartNo.TryGetValue(normalizedPartNo, out int storedTotal) ? storedTotal : 0;
 
-                    // Delivered to P1 = Received + Consumed attributed to THIS production week.
+                    // Delivered to P1 = units whose P1-loading-bay receipt falls inside THIS week,
+                    // regardless of any later status advance (Received -> Consumed previously made
+                    // already-received units vanish). Rows with no received_at fall back to the
+                    // consumed timestamp so units that skipped the loading-bay step still count.
                     int deliveredToP1 = matchingTx
-                        .Where(t =>
-                            (t.Status == MaterialStatus.Received && IsoWeekHelper.IsInWeek(t.ReceivedAt, g.Key.WeekStart))
-                            || (t.Status == MaterialStatus.Consumed && IsoWeekHelper.IsInWeek(t.ConsumedAt, g.Key.WeekStart)))
+                        .Where(t => IsoWeekHelper.IsInWeek(t.ReceivedAt, g.Key.WeekStart)
+                                 || (t.ReceivedAt == null && IsoWeekHelper.IsInWeek(t.ConsumedAt, g.Key.WeekStart)))
                         .Sum(t => t.SNP);
 
                     // Scrapped = NC confirmed quantity + Scrapped status items, attributed to THIS week
@@ -129,9 +142,10 @@ namespace ASID.Edge.Services
                         .Sum(t => t.Status == MaterialStatus.Scrapped ? t.SNP : t.NCQuantity);
 
                     // Plant returns are absorbed into Scrapped ONLY for the current week, matched by
-                    // Part No (the Plant Return form has no Model field). Other weeks are unaffected.
+                    // NORMALIZED Part No (the Plant Return form has no Model field). Other weeks are
+                    // unaffected.
                     if (g.Key.WeekStart == currentWeekStart
-                        && plantReturnsByPartNo.TryGetValue(g.Key.PartNo, out int plantReturnQty))
+                        && plantReturnsByPartNo.TryGetValue(normalizedPartNo, out int plantReturnQty))
                     {
                         scrapped += plantReturnQty;
                     }
@@ -161,6 +175,16 @@ namespace ASID.Edge.Services
                 .ThenBy(x => x.PartNo)
                 .ToList();
         }
+
+        /// <summary>
+        /// Normalizes a PU-Body part number for joining transactions against
+        /// daily_demand. The legacy KanbanParser stripped leading 'P' characters from
+        /// scanned part numbers, so the two tables can hold the same part with and
+        /// without that prefix. Comparison is therefore whitespace-trimmed,
+        /// leading-'P'-tolerant and case-insensitive on BOTH sides.
+        /// </summary>
+        private static string NormalizePartNo(string? value) =>
+            (value ?? string.Empty).Trim().TrimStart('P', 'p').ToUpperInvariant();
 
         /// <summary>
         /// Week attribution timestamp for scrapped units: CreatedAt when set, otherwise UpdatedAt.
