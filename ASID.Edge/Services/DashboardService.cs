@@ -157,7 +157,7 @@ namespace ASID.Edge.Services
                     return new PUBodyDailyDemandItem
                     {
                         WeekStart = g.Key.WeekStart,
-                        // Business week label only, e.g. "W39" (ISO value intentionally hidden).
+                        // ISO week label matching the planner's "Work Week" column, e.g. "W41".
                         Date = IsoWeekHelper.GetWeekDisplayLabel(g.Key.WeekStart),
                         Model = g.Key.Model,
                         PartNo = g.Key.PartNo,

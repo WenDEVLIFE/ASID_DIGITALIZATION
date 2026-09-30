@@ -170,7 +170,7 @@ namespace ASID.Edge.Views.Controls
         {
             _view.SortDescriptions.Clear();
 
-            // Sort on the canonical Monday week key (not the "W39 (ISO W38)" label),
+            // Sort on the canonical Monday week key (not the "W41" label),
             // so cross-year weeks order chronologically.
             _view.SortDescriptions.Add(new SortDescription(
                 "WeekStart",

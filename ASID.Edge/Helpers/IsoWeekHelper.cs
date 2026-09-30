@@ -20,12 +20,6 @@ namespace ASID.Edge.Helpers
         }
 
         /// <summary>
-        /// Business week label = ISO week number + 1 (e.g. 2026-09-14, ISO W38 → "W39").
-        /// </summary>
-        public static string GetBusinessWeekLabel(DateTime date) =>
-            $"W{ISOWeek.GetWeekOfYear(date) + 1}";
-
-        /// <summary>
         /// Returns the Monday (date only) of the ISO week containing <paramref name="date"/>.
         /// Used as the canonical week key for daily demand rows.
         /// </summary>
@@ -48,11 +42,16 @@ namespace ASID.Edge.Helpers
         }
 
         /// <summary>
-        /// Display label for the production workweek column. Returns only the business week
-        /// label (ISO week + 1), e.g. 2026-09-14 → "W39". The raw ISO week is intentionally
-        /// NOT shown. Display-only; no stored date changes.
+        /// Display label for the production workweek column: the week number as it appears in
+        /// the planner's Excel file, e.g. the Monday of ISO W41 → "W41".
+        ///
+        /// The plan's "Work Week" column is interpreted as the ISO week
+        /// (see ExcelImporter.GetDateFromWeekNumber), so the dashboard prints the SAME number
+        /// the planner typed — there is deliberately NO +1 offset (the old
+        /// "business week = ISO + 1" label printed W42 for a plan week of W41).
+        /// Display-only; no stored date changes.
         /// </summary>
         public static string GetWeekDisplayLabel(DateTime weekStart) =>
-            GetBusinessWeekLabel(weekStart);
+            $"W{ISOWeek.GetWeekOfYear(weekStart)}";
     }
 }
