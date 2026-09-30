@@ -42,6 +42,14 @@ namespace ASID.Edge.Helpers
         }
 
         /// <summary>
+        /// The plan's production week number for a date: the ISO week number, i.e. the
+        /// SAME number the planner types in the Excel "Work Week" column
+        /// (see ExcelImporter.GetDateFromWeekNumber). Single source for both the
+        /// "Production Week" grid label and the workweek banner so they can never drift.
+        /// </summary>
+        public static int GetWeekNumber(DateTime date) => ISOWeek.GetWeekOfYear(date);
+
+        /// <summary>
         /// Display label for the production workweek column: the week number as it appears in
         /// the planner's Excel file, e.g. the Monday of ISO W41 → "W41".
         ///
@@ -52,6 +60,6 @@ namespace ASID.Edge.Helpers
         /// Display-only; no stored date changes.
         /// </summary>
         public static string GetWeekDisplayLabel(DateTime weekStart) =>
-            $"W{ISOWeek.GetWeekOfYear(weekStart)}";
+            $"W{GetWeekNumber(weekStart)}";
     }
 }

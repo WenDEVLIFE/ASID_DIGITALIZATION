@@ -129,6 +129,10 @@ namespace ASID.Edge.Views.Controls
             _view.Refresh();
             RestoreVerticalScrollOffset(_savedVerticalOffset);
 
+            // Banner is derived from the rows actually loaded on EVERY path
+            // (post-import, restart, 5s auto-refresh, filter/sort re-apply).
+            UpdateWorkweekBanner(materialized);
+
             // RBAC gate (UI layer) — handler re-checks defensively.
             ImportPlannerButton.IsEnabled =
                 ServiceProvider.Auth.CanImportDemand;
@@ -138,22 +142,43 @@ namespace ASID.Edge.Views.Controls
             HideChangeBanner();
         }
 
-        /// <summary>Load items with a workweek label header.</summary>
+        /// <summary>
+        /// Load items. The workweek banner is now derived from the loaded rows
+        /// (see <see cref="UpdateWorkweekBanner"/>), so the import-supplied label
+        /// is intentionally ignored — it can no longer make the banner stale or
+        /// inconsistent with the grid.
+        /// </summary>
         public void LoadWithWorkweek(
             IEnumerable<PUBodyDailyDemandItem> items,
             string workweekLabel)
         {
-            if (!string.IsNullOrWhiteSpace(workweekLabel))
-            {
-                WorkweekBanner.Visibility = Visibility.Visible;
-                WorkweekText.Text = $"Production Workweek: {workweekLabel}";
-            }
-            else
+            Load(items);
+        }
+
+        /// <summary>
+        /// Derives the workweek banner from the rows actually loaded: the distinct
+        /// production weeks, newest first, rendered with the same week number as the
+        /// "Production Week" column (<see cref="IsoWeekHelper.GetWeekNumber"/>).
+        /// Called on every <see cref="Load"/> so the banner can never drift from the grid.
+        /// </summary>
+        private void UpdateWorkweekBanner(IEnumerable<PUBodyDailyDemandItem> items)
+        {
+            var weeks = items
+                .Select(i => i.WeekStart.Date)
+                .Where(d => d != default)
+                .Distinct()
+                .OrderByDescending(d => d)
+                .ToList();
+
+            if (weeks.Count == 0)
             {
                 WorkweekBanner.Visibility = Visibility.Collapsed;
+                return;
             }
 
-            Load(items);
+            WorkweekBanner.Visibility = Visibility.Visible;
+            WorkweekText.Text =
+                $"Production Workweek: {string.Join(", ", weeks.Select(w => $"WW {IsoWeekHelper.GetWeekNumber(w)}"))}";
         }
 
         private void SortByModel(object sender, RoutedEventArgs e)
