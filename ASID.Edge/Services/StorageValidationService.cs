@@ -106,6 +106,11 @@ namespace ASID.Edge.Services
         /// Blocks storing a scanned data matrix in the Supermarket when the part's
         /// cumulative Stored-only P2 inventory is >= the demand of the LATEST production
         /// week present in the plan for that PartNo (the active plan week).
+        /// Matching is normalization-based and shared with the dashboard: both the
+        /// scanned part number and the plan/transaction rows are compared through
+        /// <see cref="PartNoNormalizer.Normalize"/> (whitespace-trimmed,
+        /// leading-'P'-tolerant and case-insensitive), so a part stored with or without
+        /// the legacy 'P' prefix still joins.
         /// If the part has no plan rows at all, demand is 0 and the gate blocks (0 >= 0),
         /// matching prior parity.
         /// Variance is display-only and never gates.
@@ -125,6 +130,8 @@ namespace ASID.Edge.Services
                 };
             }
 
+            var normalizedPartNo = PartNoNormalizer.Normalize(partNo);
+
             var transactions = _repository.GetAll();
             var demands = Repositories.RepositoryProvider.DailyDemands.GetAll();
 
@@ -134,7 +141,7 @@ namespace ASID.Edge.Services
             int latestWeekDemand = 0;
 
             var partDemands = demands
-                .Where(d => d.PartNo == partNo)
+                .Where(d => PartNoNormalizer.Normalize(d.PartNo) == normalizedPartNo)
                 .ToList();
 
             if (partDemands.Count > 0)
@@ -149,7 +156,7 @@ namespace ASID.Edge.Services
 
             // Only Stored units count toward the P2 total.
             int p2Stored = transactions
-                .Where(t => t.PartNo == partNo && t.Status == MaterialStatus.Stored)
+                .Where(t => PartNoNormalizer.Normalize(t.PartNo) == normalizedPartNo && t.Status == MaterialStatus.Stored)
                 .Sum(t => t.SNP);
 
             if (p2Stored >= latestWeekDemand)

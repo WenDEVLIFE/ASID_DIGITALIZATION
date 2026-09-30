@@ -73,14 +73,14 @@ namespace ASID.Edge.Services
 
             // P2 Inventory basis: cumulative Stored-only units per NORMALIZED Part No across
             // ALL weeks. Repeated on every week row; never week-filtered.
-            // Part numbers are normalized on BOTH sides of the join (see NormalizePartNo):
+            // Part numbers are normalized on BOTH sides of the join (see PartNoNormalizer.Normalize):
             // the legacy KanbanParser.TrimStart('P') corrupted transactions.part_no
             // (P12345 -> 12345) while the Excel-imported daily_demand kept the prefix, and
             // casing can differ between the two sources. Comparing the normalized forms lets
             // legacy already-corrupted rows still join clean/current ones.
             var p2ByPartNo = allTransactions
                 .Where(t => t.Status == MaterialStatus.Stored)
-                .GroupBy(t => NormalizePartNo(t.PartNo))
+                .GroupBy(t => PartNoNormalizer.Normalize(t.PartNo))
                 .ToDictionary(g => g.Key, g => g.Sum(t => t.SNP));
 
             // Plant returns for the CURRENT week, aggregated by NORMALIZED Part No. Loaded once
@@ -93,7 +93,7 @@ namespace ASID.Edge.Services
             {
                 plantReturnsByPartNo = RepositoryProvider.PlantReturns
                     .GetByWeek(currentWeekStart)
-                    .GroupBy(p => NormalizePartNo(p.PartNo))
+                    .GroupBy(p => PartNoNormalizer.Normalize(p.PartNo))
                     .ToDictionary(g => g.Key, g => g.Sum(p => p.Quantity));
             }
             catch
@@ -116,10 +116,10 @@ namespace ASID.Edge.Services
                     // the real join key; Model is display-only and is deliberately NOT required
                     // to match (daily_demand.Model and transactions.Model can differ in casing
                     // or format, and the Plant Return feature already matches by Part No alone).
-                    string normalizedPartNo = NormalizePartNo(g.Key.PartNo);
+                    string normalizedPartNo = PartNoNormalizer.Normalize(g.Key.PartNo);
 
                     var matchingTx = allTransactions
-                        .Where(t => NormalizePartNo(t.PartNo) == normalizedPartNo)
+                        .Where(t => PartNoNormalizer.Normalize(t.PartNo) == normalizedPartNo)
                         .ToList();
 
                     // P2 Inventory = cumulative Stored-only total (all weeks), repeated per week row.
@@ -175,16 +175,6 @@ namespace ASID.Edge.Services
                 .ThenBy(x => x.PartNo)
                 .ToList();
         }
-
-        /// <summary>
-        /// Normalizes a PU-Body part number for joining transactions against
-        /// daily_demand. The legacy KanbanParser stripped leading 'P' characters from
-        /// scanned part numbers, so the two tables can hold the same part with and
-        /// without that prefix. Comparison is therefore whitespace-trimmed,
-        /// leading-'P'-tolerant and case-insensitive on BOTH sides.
-        /// </summary>
-        private static string NormalizePartNo(string? value) =>
-            (value ?? string.Empty).Trim().TrimStart('P', 'p').ToUpperInvariant();
 
         /// <summary>
         /// Week attribution timestamp for scrapped units: CreatedAt when set, otherwise UpdatedAt.
