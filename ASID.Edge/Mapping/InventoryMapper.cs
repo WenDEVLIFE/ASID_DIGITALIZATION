@@ -18,10 +18,15 @@ namespace ASID.Edge.Mapping
             IEnumerable<DailyDemand>? dailyDemands = null,
             DateTime? demandWeekStart = null)
         {
-            var demandByModelPartNo = dailyDemands?
+            // Demand is keyed by NORMALIZED Part No only and looked up the same way. The legacy
+            // KanbanParser stripped the leading 'P' tag (P12345 -> 12345) while the Excel-imported
+            // plan may still carry it, and casing can differ between the two sources, so a raw
+            // join would miss. Model is display-only and deliberately NOT part of the join,
+            // matching the semantics already used by DashboardService.GetDailyDemand.
+            var demandByPartNo = dailyDemands?
                 .Where(d => demandWeekStart == null
                     || IsoWeekHelper.IsInWeek(d.ProductionDate, demandWeekStart.Value))
-                .GroupBy(d => (d.Model, d.PartNo))
+                .GroupBy(d => PartNoNormalizer.Normalize(d.PartNo))
                 .ToDictionary(g => g.Key, g => g.Sum(d => d.Quantity));
 
             return transactions
@@ -61,9 +66,8 @@ namespace ASID.Edge.Mapping
                              .Sum(x => x.SNP),
                     };
 
-                    var key = (g.Key.Model, g.Key.PartNo);
-                    if (demandByModelPartNo != null &&
-                        demandByModelPartNo.TryGetValue(key, out var demand))
+                    if (demandByPartNo != null &&
+                        demandByPartNo.TryGetValue(PartNoNormalizer.Normalize(g.Key.PartNo), out var demand))
                     {
                         item.P2SupermarketBackground = GetBackgroundBrush(item.InventoryP2Supermarket, demand);
                     }

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using ASID.Edge.Helpers;
 using ASID.Edge.Models;
 using ASID.Edge.Repositories;
 
@@ -10,11 +11,11 @@ namespace ASID.Edge.Services
         public KanbanData Parse(string qr)
         {
             var p = qr.Split('|');
-            // Do NOT strip leading 'P': part numbers legitimately start with it and the
-            // old TrimStart('P') corrupted stored values (e.g. P12345 -> 12345), breaking
-            // the daily_demand join. Dashboard matching is now prefix-tolerant so legacy
-            // already-corrupted rows still join.
-            var partNo = (p.ElementAtOrDefault(1) ?? "").Trim();
+            // Field 1 carries the 'P' TAG prefix, exactly like field 2's 'Q' and
+            // field 3's 'S' tags — strip it so the stored part number is the value only
+            // (e.g. "P64718710F" -> "64718710F"). NOTE: TrimStart removes ALL leading 'P'
+            // characters; that matches the previous behaviour and the sibling fields.
+            var partNo = (p.ElementAtOrDefault(1) ?? "").TrimStart('P').Trim();
 
             return new KanbanData
             {
@@ -46,9 +47,13 @@ namespace ASID.Edge.Services
 
             try
             {
+                // The production plan may store the part number with or without the 'P'
+                // tag prefix, so compare via the shared normalizer on both sides.
+                var target = PartNoNormalizer.Normalize(partNo);
+
                 // 1. Check in-memory DailyDemand list if populated
                 var uiMatch = RepositoryProvider.DailyDemand?
-                    .FirstOrDefault(d => string.Equals(d.PartNo, partNo, StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(d => PartNoNormalizer.Normalize(d.PartNo) == target);
                 if (uiMatch != null && !string.IsNullOrWhiteSpace(uiMatch.Model))
                 {
                     return uiMatch.Model;
@@ -57,7 +62,7 @@ namespace ASID.Edge.Services
                 // 2. Query DailyDemands repository
                 var dbDemands = RepositoryProvider.DailyDemands?.GetAll();
                 var dbMatch = dbDemands?
-                    .FirstOrDefault(d => string.Equals(d.PartNo, partNo, StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(d => PartNoNormalizer.Normalize(d.PartNo) == target);
                 if (dbMatch != null && !string.IsNullOrWhiteSpace(dbMatch.Model))
                 {
                     return dbMatch.Model;
